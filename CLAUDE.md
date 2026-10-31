@@ -8,7 +8,7 @@ It does not repeat the design rules. The three rule files split the work like th
 | --- | --- |
 | [GUIDELINES.md](GUIDELINES.md) | **What** to build and how to structure it: stack, architecture, patterns, REST, security, data, testing, review checklist |
 | [COMMIT.md](COMMIT.md) | **How to record** a change: Conventional Commits format, types, scopes |
-| DECISIONS.md (this file) | **How to work**: the decisions to make before, during and after a change |
+| CLAUDE.md (this file) | **How to work**: the decisions to make before, during and after a change |
 
 Read GUIDELINES.md before writing any code or design document. Design decisions about the system itself (for example "batches are deducted first-expiry-first-out") are logged in `docs/decisions.md`, as GUIDELINES.md section 10 says. This file is about working style, not about the system.
 
