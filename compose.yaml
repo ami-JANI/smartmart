@@ -1,0 +1,46 @@
+# Two PostgreSQL servers for SmartMart: a primary (read-write) and a
+# streaming replica (read-only). See GUIDELINES.md section 8.2.
+# The Spring Boot application service is added here once it exists.
+#
+#   cp .env.example .env   # then set real passwords
+#   docker compose up -d
+
+services:
+  db-primary:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REPLICATION_USER: ${REPLICATION_USER}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - primary-data:/var/lib/postgresql/data
+      - ./db/primary/init-replication.sh:/docker-entrypoint-initdb.d/init-replication.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      retries: 10
+
+  db-replica:
+    image: postgres:16
+    user: postgres
+    depends_on:
+      db-primary:
+        condition: service_healthy
+    environment:
+      PRIMARY_HOST: db-primary
+      REPLICATION_USER: ${REPLICATION_USER}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - replica-data:/var/lib/postgresql/data
+      - ./db/replica/start-replica.sh:/start-replica.sh:ro
+    entrypoint: ["bash", "/start-replica.sh"]
+
+volumes:
+  primary-data:
+  replica-data:
