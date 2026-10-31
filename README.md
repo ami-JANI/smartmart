@@ -58,10 +58,11 @@ Alongside the application, the project is expected to produce the course's softw
 
 ## Repository Status
 
-The repository contains only this README. The technology stack, architecture, database, and deployment approach have not been chosen, so there are no install, run, or test commands yet. Setup instructions will be added here when the codebase exists.
+The repository contains this README and the commit rules in [COMMIT.md](COMMIT.md). The technology stack, architecture, database, and deployment approach have not been chosen, so there are no install, run, or test commands yet. Setup instructions will be added here when the codebase exists.
 
 ## Contributing
 
+- Write every commit message in the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format described in [COMMIT.md](COMMIT.md). After cloning, run `git config core.hooksPath .githooks` and `git config commit.template .gitmessage` once so Git checks your messages locally. GitHub Actions also checks every pushed commit.
 - Use GitHub issues to report problems or propose changes to the agreed scope. Discuss substantial changes with the team first.
 - Create a focused branch for each change instead of committing directly to `main`.
 - Open a pull request with a short explanation, and get a review from another team member before merging.

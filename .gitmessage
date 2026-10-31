@@ -1,0 +1,13 @@
+
+# <type>(<scope>)[!]: <description>      (72 characters or fewer)
+#
+# Types:  feat fix docs style refactor perf test build ci chore revert
+# Scopes: pos inventory purchasing auth reports db ui api srs uml plan deps repo
+#
+# Body: explain what and why, after one blank line. Wrap at 72 characters.
+#
+# Footers, after one blank line:
+#   BREAKING CHANGE: <what breaks and what to do>
+#   Refs: #<issue>
+#
+# Full rules: COMMIT.md

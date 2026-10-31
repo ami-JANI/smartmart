@@ -1,0 +1,42 @@
+#!/bin/sh
+# Validates a commit message against COMMIT.md (Conventional Commits 1.0.0).
+# Usage: commit-msg <file-containing-message>
+
+file="$1"
+types='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+
+# Strip comment lines and trailing blank lines, as Git does.
+msg=$(grep -v '^#' "$file" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
+header=$(printf '%s\n' "$msg" | sed -n '1p')
+second=$(printf '%s\n' "$msg" | sed -n '2p')
+
+fail() {
+  echo "commit-msg: $1" >&2
+  echo "  header: $header" >&2
+  echo "  Expected: <type>(<scope>)[!]: <description>   See COMMIT.md" >&2
+  exit 1
+}
+
+case "$header" in
+  "Merge "*|"fixup! "*|"squash! "*|"amend! "*) exit 0 ;;
+esac
+
+[ -n "$header" ] || fail "empty commit message"
+
+printf '%s\n' "$header" | grep -Eq "^($types)(\([a-z0-9-]+\))?!?: [^ ].*$" \
+  || fail "header does not follow the Conventional Commits format"
+
+printf '%s\n' "$header" | grep -Eq '\.$' \
+  && fail "description must not end with a period"
+
+len=$(printf '%s' "$header" | wc -m | tr -d ' ')
+[ "$len" -le 72 ] || fail "header is $len characters; keep it to 72 or fewer"
+
+[ -z "$second" ] || fail "leave one blank line between the header and the body"
+
+if printf '%s\n' "$msg" | grep -Eiq '^breaking[ -]change:' \
+   && ! printf '%s\n' "$msg" | grep -Eq '^BREAKING[ -]CHANGE: .+'; then
+  fail "the BREAKING CHANGE footer must be uppercase and followed by ': <description>'"
+fi
+
+exit 0
