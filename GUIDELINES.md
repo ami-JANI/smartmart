@@ -52,7 +52,7 @@ The stack matches the CSE 3220 lab (L3 slides and the instructor's demo reposito
 
 ### 3.1 Style: modular monolith, layered inside
 
-- SmartMart is **one deployable Spring Boot application** with one PostgreSQL database. This is a **modular monolith** (L4).
+- SmartMart is **one deployable Spring Boot application** with one logical PostgreSQL database, stored on **two database servers**: a primary that takes every write and a streaming replica that serves read-only queries (section 8.2). This is a **modular monolith** (L4).
 - We do **not** build microservices. For one branch they add network calls, distributed transactions (L15) and CAP trade-offs (L11) with no benefit. Microservices, Saga and multi-branch sync are described only as future work in the report.
 - Inside each module we use **N-tier layering** (L3): presentation → business logic → data access. Each layer calls only the layer below it.
 
@@ -272,7 +272,9 @@ From L6 (password hashing and JWT), L12 (rate limiting) and the lab's RBAC task.
 
 ## 8. Data and persistence
 
-- **PostgreSQL** is the only database. Every schema change is a **Liquibase changeset** committed with the code that needs it (`feat(db): ...`). Never edit the schema by hand and never change a changeset that has already been merged.
+### 8.1 Schema and data rules
+
+- **PostgreSQL** is the only database engine. Every schema change is a **Liquibase changeset** committed with the code that needs it (`feat(db): ...`). Never edit the schema by hand and never change a changeset that has already been merged.
 - Set `spring.jpa.hibernate.ddl-auto=validate`, so Hibernate never changes the schema.
 - **Money** uses `BigDecimal` in Java and `NUMERIC(12,2)` in the database. Never `double` or `float`.
 - Quantities are integers or `NUMERIC` for weighed goods; never negative stock.
@@ -280,6 +282,59 @@ From L6 (password hashing and JWT), L12 (rate limiting) and the lab's RBAC task.
 - Stock is deducted from batches **first-expiry-first-out**.
 - Every table has a primary key, `created_at` and `updated_at`.
 - Naming: tables and columns in `snake_case`, tables plural (`products`, `stock_batches`).
+
+### 8.2 Primary and replica
+
+SmartMart runs **two PostgreSQL servers**. This is a team decision (see `docs/decisions.md`), not a stretch goal.
+
+| Server | Role | Used for |
+| --- | --- | --- |
+| `db-primary` | Read-write | Every write, and every read inside a write transaction |
+| `db-replica` | Read-only hot standby, kept up to date by **streaming replication** from the primary | Reports, dashboards, and list or search screens |
+
+**Routing in the application**
+
+- The application has two `DataSource`s: one for the primary and one for the replica. A `RoutingDataSource` (extending Spring's `AbstractRoutingDataSource`) picks one per transaction:
+  - `@Transactional(readOnly = true)` goes to the **replica**.
+  - Any other `@Transactional` goes to the **primary**.
+- Wrap the routing data source in a `LazyConnectionDataSourceProxy`. Without it, the connection is taken before Spring marks the transaction read-only, and every query goes to the primary.
+- The routing key comes from `TransactionSynchronizationManager.isCurrentTransactionReadOnly()`. Services do not choose a database themselves, and no code outside `common/config` refers to "primary" or "replica".
+- Liquibase runs **only against the primary**. The replica receives schema changes through replication.
+
+**What must read from the primary**
+
+The replica can be a little behind the primary (replication lag, usually well under a second, longer under load). So a read that must see a write that was just made **must not** be `readOnly = true`:
+
+- Stock checks and stock deduction during checkout (they are inside the sale's write transaction anyway).
+- Showing the invoice or receipt straight after a sale.
+- Login and loading the current user's roles, so a role change applies at once.
+- Purchase order status checks before a state transition (section 5.6).
+
+Reports, dashboards, sales history and product search may read from the replica. A report can therefore miss the last second or so of sales. That is acceptable for SmartMart, and the report screen should show the time it was generated.
+
+**Replication mode and its trade-off**
+
+- Replication is **asynchronous** (`synchronous_commit` stays at its default, and `synchronous_standby_names` is empty). The primary confirms a commit without waiting for the replica.
+- **Risk:** if the primary crashes, the replica may not yet have the last few seconds of committed writes. Those writes are lost when the replica is promoted. For a shop, that means the last sale or two may need to be re-entered from the paper or POS receipt.
+- **Alternative we did not choose:** synchronous replication loses no committed write, but every sale waits for the replica, and if the replica is down, the primary stops accepting writes. For one branch with two servers, that turns a replica failure into a shop outage, so we accept the small loss window instead.
+
+**Failover (manual)**
+
+When the primary fails:
+
+1. Confirm the primary is really down, so there are never two primaries accepting writes.
+2. Promote the replica: `SELECT pg_promote();` (or `pg_ctl promote`). It becomes read-write.
+3. Point both the primary and replica URLs of the application at the promoted server, and restart the application.
+4. Re-enter any sales from the last few seconds that are missing (see the risk above).
+5. Later, rebuild the old primary as the new replica with `pg_basebackup`. Never start it again as a primary.
+
+Automatic failover tools (Patroni, repmgr, pgpool) are out of scope; mention them only as future work.
+
+- If the replica is down, the application keeps working by setting the replica URL to the primary. This is a configuration change, not extra code.
+- The primary keeps a replication slot (`replica_1`) so it holds WAL until the replica has received it. If the replica will be down for long, drop the slot (`SELECT pg_drop_replication_slot('replica_1');`) so the primary's disk does not fill, and rebuild the replica later.
+- `compose.yaml` and `db/` start both servers locally with this setup.
+- Both servers' connection settings come from environment variables (`DB_PRIMARY_URL`, `DB_REPLICA_URL`, and the credentials), per section 7.
+- The replication password is a secret like any other. Commit `.env.example`, never `.env`.
 
 ## 9. Testing
 
@@ -296,7 +351,7 @@ From L14 (cyclomatic complexity and basis path testing) and the white-box / blac
 
 - Diagrams live in `docs/uml/` and are updated in the same sprint as the code they describe: use case, class, activity, sequence and deployment diagrams.
 - The class diagram shows every pattern in section 5 with its roles labelled.
-- The deployment diagram shows the browser, the Spring Boot container, and the PostgreSQL container (Docker Compose). Add Nginx as a reverse proxy (L13) only if we deploy it.
+- The deployment diagram shows the browser, the Spring Boot container, and the two PostgreSQL containers, primary and replica, with the replication link between them (Docker Compose). Add Nginx as a reverse proxy (L13) only if we deploy it.
 - Public service interfaces have Javadoc that states the contract (inputs, outputs, exceptions).
 - When a design decision is made, record it in `docs/decisions.md`: the date, the decision, and why.
 
@@ -321,6 +376,7 @@ Check every change against this list before pushing.
 - [ ] Endpoints follow the REST rules and are restricted by role.
 - [ ] Passwords are hashed; no secrets in the code or the commit.
 - [ ] Money uses `BigDecimal`; schema changes are Liquibase changesets.
+- [ ] Read-only service methods that may run on the replica are `@Transactional(readOnly = true)`; reads that must see a just-made write are not.
 - [ ] Tests are added or updated and pass.
 - [ ] The commit message follows COMMIT.md.
 
