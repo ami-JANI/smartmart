@@ -5,9 +5,20 @@ spring:
     name: SmartMart
   config:
     import: optional:file:.env[.properties]
-  datasource:
-    url: ${DB_PRIMARY_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+
+# Two PostgreSQL servers (GUIDELINES.md section 8.2). Read-only
+# transactions use the replica; everything else uses the primary.
+smartmart:
+  datasource:
+    primary:
+      pool-name: primary
+      jdbc-url: ${DB_PRIMARY_URL}
+      username: ${DB_USER}
+      password: ${DB_PASSWORD}
+    replica:
+      pool-name: replica
+      jdbc-url: ${DB_REPLICA_URL}
+      username: ${DB_USER}
+      password: ${DB_PASSWORD}
