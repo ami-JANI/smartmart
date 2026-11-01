@@ -1,0 +1,13 @@
+# Settings come from environment variables, or from .env during local
+# development (copy .env.example to .env). See GUIDELINES.md section 7.
+spring:
+  application:
+    name: SmartMart
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_PRIMARY_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
