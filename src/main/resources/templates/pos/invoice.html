@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--/*
+  Invoice page, shown straight after a sale (SCRUM-47, FR-POS-13). Cashier.
+  The server reads it from the primary database, so it is complete at once.
+
+  Model attributes
+    invoice      number, soldAt (LocalDateTime), cashierName, subtotal, promotionSavings,
+                 discountName (or null), discountAmount, total, vatIncluded, cashReceived, changeDue,
+                 lines: productName, saleUnit (PIECE or KG), quantity, unitPrice, lineTotal, free
+    storeName    optional, defaults to "SmartMart"
+    receiptHeader optional text under the store name, from the store settings
+    activeNav    "pos"
+  Printing: the screen buttons, header and footer are hidden by the print rules in app.css.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Invoice - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <div class="page-header no-print">
+        <h1>Invoice</h1>
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" data-print hidden>Print</button>
+            <a class="btn btn-primary" th:href="@{/pos}" href="/pos">New sale</a>
+        </div>
+    </div>
+
+    <article class="card invoice" aria-label="Invoice">
+        <header class="invoice-head">
+            <p class="invoice-store" th:text="${storeName != null} ? ${storeName} : 'SmartMart'">SmartMart</p>
+            <p class="invoice-header-text" th:if="${receiptHeader}" th:text="${receiptHeader}">Receipt header</p>
+        </header>
+
+        <dl class="invoice-meta">
+            <div><dt>Invoice no.</dt><dd th:text="${invoice.number}">INV-0001</dd></div>
+            <div><dt>Date and time</dt><dd th:text="${#temporals.format(invoice.soldAt, 'dd MMM yyyy, HH:mm')}">01 Jan 2027, 10:30</dd></div>
+            <div><dt>Cashier</dt><dd th:text="${invoice.cashierName}">Cashier</dd></div>
+        </dl>
+
+        <table class="table invoice-table">
+            <caption class="visually-hidden">Items sold</caption>
+            <thead>
+            <tr>
+                <th scope="col">Item</th>
+                <th scope="col" class="num">Qty</th>
+                <th scope="col" class="num">Price</th>
+                <th scope="col" class="num">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="line : ${invoice.lines}">
+                <td>
+                    <span th:text="${line.productName}">Product</span>
+                    <span class="badge badge-ok" th:if="${line.free}">Free</span>
+                </td>
+                <td class="num">
+                    <span th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', line.saleUnit == 'KG' ? 3 : 0, 'POINT')}">1</span>
+                    <span class="muted" th:if="${line.saleUnit == 'KG'}">kg</span>
+                </td>
+                <td class="num"><span th:replace="~{fragments/money :: amount(${line.unitPrice})}">৳ 0.00</span></td>
+                <td class="num"><span th:replace="~{fragments/money :: amount(${line.lineTotal})}">৳ 0.00</span></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <dl class="totals invoice-totals">
+            <div><dt>Subtotal</dt><dd><span th:replace="~{fragments/money :: amount(${invoice.subtotal})}">৳ 0.00</span></dd></div>
+            <div th:if="${invoice.promotionSavings != null and invoice.promotionSavings.signum() > 0}">
+                <dt>Promotion savings</dt>
+                <dd>&minus; <span th:replace="~{fragments/money :: amount(${invoice.promotionSavings})}">৳ 0.00</span></dd>
+            </div>
+            <div th:if="${invoice.discountAmount != null and invoice.discountAmount.signum() > 0}">
+                <dt th:text="'Discount' + (${invoice.discountName != null} ? ' (' + ${invoice.discountName} + ')' : '')">Discount</dt>
+                <dd>&minus; <span th:replace="~{fragments/money :: amount(${invoice.discountAmount})}">৳ 0.00</span></dd>
+            </div>
+            <div class="totals-total"><dt>Total</dt><dd><span th:replace="~{fragments/money :: amount(${invoice.total})}">৳ 0.00</span></dd></div>
+            <div class="totals-note"><dt>VAT included</dt><dd><span th:replace="~{fragments/money :: amount(${invoice.vatIncluded})}">৳ 0.00</span></dd></div>
+            <div><dt>Cash received</dt><dd><span th:replace="~{fragments/money :: amount(${invoice.cashReceived})}">৳ 0.00</span></dd></div>
+            <div><dt>Change due</dt><dd><span th:replace="~{fragments/money :: amount(${invoice.changeDue})}">৳ 0.00</span></dd></div>
+        </dl>
+
+        <p class="invoice-thanks">Thank you for shopping with us.</p>
+    </article>
+
+    <!--/* Inside <main>, because the layout takes only the main element of a page. */-->
+    <script th:src="@{/js/pos.js}" src="/js/pos.js" defer></script>
+</main>
+</body>
+</html>

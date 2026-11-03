@@ -1,4 +1,4 @@
-/* POS helpers (SCRUM-44, SCRUM-46). Plain JavaScript, no libraries.
+/* POS helpers (SCRUM-44, SCRUM-46, SCRUM-47). Plain JavaScript, no libraries.
    A keyboard-wedge barcode scanner types the barcode and presses Enter, so the
    barcode field must always have focus. The payment page shows the change due
    while the cashier types. The server checks everything again, and the pages
@@ -24,6 +24,12 @@
         cash.addEventListener('input', update);
         update();
     }
+
+    // Invoice page: the Print button is hidden until this script runs, because it needs JavaScript.
+    Array.prototype.forEach.call(document.querySelectorAll('[data-print]'), function (button) {
+        button.hidden = false;
+        button.addEventListener('click', function () { window.print(); });
+    });
 
     var field = document.querySelector('[data-autofocus]');
     if (!field) { return; }

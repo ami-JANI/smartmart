@@ -425,3 +425,39 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 .change-due strong.is-short { color: var(--color-error); }
 .stock-error { font-size: 1.1rem; }
 .stock-error p { margin: .5rem 0; font-size: 1rem; }
+
+/* ---------- Invoice page and printing (SCRUM-47) ---------- */
+
+.invoice { max-width: 34rem; margin: 0 auto; }
+.invoice-head { text-align: center; margin-bottom: 1rem; }
+.invoice-store { margin: 0; font-size: 1.5rem; font-weight: 700; }
+.invoice-header-text { margin: .25rem 0 0; color: var(--color-muted); white-space: pre-line; }
+.invoice-meta { display: grid; gap: .25rem 1.5rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); margin: 0 0 1rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--color-border); }
+.invoice-meta dt { color: var(--color-muted); font-size: .85rem; }
+.invoice-meta dd { margin: 0; font-weight: 600; }
+.invoice-table { margin-bottom: 1rem; }
+.invoice-table th, .invoice-table td { padding-left: .25rem; padding-right: .25rem; }
+.invoice-totals { margin-bottom: 0; }
+.invoice-thanks { margin: 1.25rem 0 0; text-align: center; color: var(--color-muted); }
+
+@media print {
+    @page { margin: 10mm; }
+
+    html, body { background: #fff; color: #000; }
+    body { display: block; min-height: 0; font-size: 11pt; }
+
+    .site-header, .site-footer, .skip-link, .no-print, .alert { display: none !important; }
+    main.container { max-width: none; padding: 0; }
+
+    .card, .invoice { border: 0; padding: 0; max-width: none; background: #fff; }
+    .table-wrap { border: 0; overflow: visible; }
+    .table thead th { background: #fff; border-bottom: 1px solid #000; }
+    .table th, .table td { border-bottom: 1px solid #ccc; }
+    .badge { border: 1px solid #000; background: #fff; color: #000; }
+    .totals dt { color: #000; }
+    .totals .totals-total { border-top: 1px solid #000; }
+    .invoice-thanks, .invoice-header-text, .invoice-meta dt, .muted { color: #000; }
+    a { color: #000; text-decoration: none; }
+
+    tr, .invoice-totals { break-inside: avoid; }
+}
