@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+  Shared page layout (SCRUM-38). Every page uses it:
+
+    <html th:replace="~{layout/base :: layout(~{::title}, ~{::main})}">
+    <head><title>Page name</title></head>
+    <body><main>...page content...</main></body>
+    </html>
+
+  Model attributes read here (all optional):
+    username  name of the logged-in user; the nav and logout button show only when set
+    storeName store name for the header and footer; defaults to "SmartMart"
+-->
+<html lang="en" th:fragment="layout(title, content)" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${title}">SmartMart</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<header class="site-header">
+    <div class="container header-bar">
+        <a class="brand" th:href="@{/}" href="/" th:text="${storeName != null} ? ${storeName} : 'SmartMart'">SmartMart</a>
+
+        <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-label="Show menu">
+        <label for="nav-toggle" class="nav-toggle" aria-hidden="true">Menu</label>
+
+        <nav class="site-nav" aria-label="Main" th:if="${username != null}">
+            <ul>
+                <li><a th:href="@{/}" href="/">Home</a></li>
+                <!-- Role-based menu items are added here by SCRUM-39. -->
+            </ul>
+            <div class="nav-user">
+                <span class="nav-username" th:text="${username}">user</span>
+                <form th:action="@{/logout}" action="/logout" method="post">
+                    <button type="submit" class="btn btn-secondary btn-small">Log out</button>
+                </form>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<main id="main-content" class="container" th:replace="${content}">
+    <p>Page content goes here.</p>
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <span th:text="${storeName != null} ? ${storeName} : 'SmartMart'">SmartMart</span>
+        &middot; Super shop management system
+    </div>
+</footer>
+</body>
+</html>

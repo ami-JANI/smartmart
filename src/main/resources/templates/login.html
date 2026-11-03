@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+  Login page (SCRUM-38). Posts to Spring Security's form login.
+  Field names are Spring Security's defaults (username, password); if the
+  login story (SCRUM-17) uses other names, change them here only.
+  Reads: param.error (wrong credentials), param.logout (just logged out).
+-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Log in - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <section class="card auth-card">
+        <h1>Log in</h1>
+
+        <p class="alert alert-error" role="alert" th:if="${param.error}">
+            Wrong username or password. Check them and try again.
+        </p>
+        <p class="alert alert-info" role="status" th:if="${param.logout}">
+            You have been logged out.
+        </p>
+
+        <form th:action="@{/login}" action="/login" method="post" class="form" novalidate>
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" autocomplete="username"
+                       autocapitalize="none" spellcheck="false" required autofocus>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Log in</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>
