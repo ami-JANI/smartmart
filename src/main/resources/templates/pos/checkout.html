@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--/*
+  Cash payment step (SCRUM-46). Cashier.
+
+  Model attributes
+    cart          the cart being paid: subtotal, promotionSavings, discountAmount, discountName,
+                  total, vatIncluded
+    checkoutForm  form object: cashReceived, bound with BindingResult
+    stockError    optional text when the sale was refused for lack of stock (409), for example
+                  "Not enough stock for Soap". Nothing was saved and the cart is unchanged.
+    error         optional text for any other failure
+    activeNav     "pos"
+  Request
+    POST /pos/checkout   cashReceived. On success the server redirects to the invoice page.
+  The server decides: cash below the total or too little stock is refused there. The change
+  shown while typing is only a help for the cashier (static/js/pos.js).
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Cash payment - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container container-wide pos">
+    <div class="page-header">
+        <h1>Cash payment</h1>
+        <a class="btn btn-secondary" th:href="@{/pos}" href="/pos">&larr; Back to the cart</a>
+    </div>
+
+    <div class="alert alert-error stock-error" role="alert" th:if="${stockError}">
+        <strong th:text="${stockError}">Not enough stock for this product</strong>
+        <p>The sale was not completed and nothing was saved. Go back to the cart, lower the quantity or remove the item, then pay again.</p>
+        <a class="btn btn-secondary btn-small" th:href="@{/pos}" href="/pos">Fix the cart</a>
+    </div>
+    <p class="alert alert-error" role="alert" th:if="${error}" th:text="${error}">Something went wrong.</p>
+
+    <div class="pos-grid">
+        <section class="card">
+            <h2>Amount to pay</h2>
+            <p class="amount-due"><span th:replace="~{fragments/money :: amount(${cart.total})}">৳ 0.00</span></p>
+            <dl class="totals" th:replace="~{fragments/totals :: totals(${cart})}"></dl>
+        </section>
+
+        <section class="card">
+            <h2>Cash</h2>
+            <form th:action="@{/pos/checkout}" th:object="${checkoutForm}" method="post" class="form"
+                  th:attr="data-total=${cart.total}" data-total="0" novalidate>
+                <div class="field" th:classappend="${#fields.hasErrors('cashReceived')} ? 'has-error'">
+                    <label for="cashReceived">Cash received (৳)</label>
+                    <input type="number" id="cashReceived" th:field="*{cashReceived}" class="scan-input"
+                           step="0.01" min="0" inputmode="decimal" autocomplete="off" required data-autofocus
+                           th:attrappend="aria-describedby=${#fields.hasErrors('cashReceived')} ? 'cashReceived-error'">
+                    <p class="field-error" id="cashReceived-error" th:if="${#fields.hasErrors('cashReceived')}" th:errors="*{cashReceived}">Error</p>
+                </div>
+
+                <p class="change-due">
+                    Change due
+                    <strong id="change-due" aria-live="polite">৳ 0.00</strong>
+                </p>
+
+                <button type="submit" class="btn btn-primary btn-block btn-large">Complete sale</button>
+            </form>
+        </section>
+    </div>
+
+    <!--/* Inside <main>, because the layout takes only the main element of a page. */-->
+    <script th:src="@{/js/pos.js}" src="/js/pos.js" defer></script>
+</main>
+</body>
+</html>

@@ -119,19 +119,7 @@
                 <p class="hint">Only one discount per sale. It does not apply to items on a promotion.</p>
             </form>
 
-            <dl class="totals">
-                <div><dt>Subtotal</dt><dd><span th:replace="~{fragments/money :: amount(${cart.subtotal})}">৳ 0.00</span></dd></div>
-                <div th:if="${cart.promotionSavings != null and cart.promotionSavings.signum() > 0}">
-                    <dt>Promotion savings</dt>
-                    <dd>&minus; <span th:replace="~{fragments/money :: amount(${cart.promotionSavings})}">৳ 0.00</span></dd>
-                </div>
-                <div th:if="${cart.discountAmount != null and cart.discountAmount.signum() > 0}">
-                    <dt th:text="'Discount' + (${cart.discountName != null} ? ' (' + ${cart.discountName} + ')' : '')">Discount</dt>
-                    <dd>&minus; <span th:replace="~{fragments/money :: amount(${cart.discountAmount})}">৳ 0.00</span></dd>
-                </div>
-                <div class="totals-total"><dt>Total</dt><dd><span th:replace="~{fragments/money :: amount(${cart.total})}">৳ 0.00</span></dd></div>
-                <div class="totals-note"><dt>VAT included</dt><dd><span th:replace="~{fragments/money :: amount(${cart.vatIncluded})}">৳ 0.00</span></dd></div>
-            </dl>
+            <dl class="totals" th:replace="~{fragments/totals :: totals(${cart})}"></dl>
 
             <div class="summary-actions">
                 <form th:action="@{/pos/cart/undo}" method="post">

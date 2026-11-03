@@ -416,3 +416,12 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
     border-radius: var(--radius);
     background: #fff;
 }
+
+/* ---------- Cash payment step (SCRUM-46) ---------- */
+
+.amount-due { margin: 0 0 1rem; font-size: 2.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.change-due { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 1rem; font-size: 1.25rem; }
+.change-due strong { font-size: 1.75rem; font-variant-numeric: tabular-nums; }
+.change-due strong.is-short { color: var(--color-error); }
+.stock-error { font-size: 1.1rem; }
+.stock-error p { margin: .5rem 0; font-size: 1rem; }
