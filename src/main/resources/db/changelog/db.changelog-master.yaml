@@ -4,3 +4,6 @@ databaseChangeLog:
   - include:
       file: changes/create-categories.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/create-products.yaml
+      relativeToChangelogFile: true

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmart.inventory.domain.Category;
 import com.smartmart.inventory.repository.CategoryRepository;
+import com.smartmart.inventory.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +24,7 @@ class CategoryServiceImpl implements CategoryService {
     private static final String CANNOT_DELETE = "Cannot delete: this category has products or child categories";
 
     private final CategoryRepository categories;
+    private final ProductRepository products;
 
     @Override
     @Transactional(readOnly = true)
@@ -78,12 +80,11 @@ class CategoryServiceImpl implements CategoryService {
         saveChecked(category);
     }
 
-    // SCRUM-24 adds the check for products in this category.
     @Override
     @Transactional
     public void delete(Long id) {
         Category category = find(id);
-        if (categories.existsByParent_Id(id)) {
+        if (categories.existsByParent_Id(id) || products.existsByCategory_Id(id)) {
             throw new CategoryRuleException(CANNOT_DELETE);
         }
         try {

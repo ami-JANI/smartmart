@@ -30,6 +30,6 @@ public interface CategoryService {
     /** Moves a category, or to the top level when {@code parentId} is null. Refused under itself or a descendant. */
     void move(Long id, Long parentId);
 
-    /** Deletes a category. Refused while it has child categories. */
+    /** Deletes a category. Refused while it has products or child categories. */
     void delete(Long id);
 }

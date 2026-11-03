@@ -11,6 +11,8 @@ spring:
 # Two PostgreSQL servers (GUIDELINES.md section 8.2). Read-only
 # transactions use the replica; everything else uses the primary.
 smartmart:
+  store:
+    low-stock-default: 10
   datasource:
     primary:
       pool-name: primary

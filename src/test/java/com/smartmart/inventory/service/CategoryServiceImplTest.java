@@ -17,11 +17,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.smartmart.inventory.domain.Category;
 import com.smartmart.inventory.repository.CategoryRepository;
+import com.smartmart.inventory.repository.ProductRepository;
 
 class CategoryServiceImplTest {
 
     private final CategoryRepository repository = mock(CategoryRepository.class);
-    private final CategoryServiceImpl service = new CategoryServiceImpl(repository);
+    private final ProductRepository products = mock(ProductRepository.class);
+    private final CategoryServiceImpl service = new CategoryServiceImpl(repository, products);
 
     private Category category(long id, String name, Category parent) {
         Category category = new Category(name, parent);
@@ -170,6 +172,17 @@ class CategoryServiceImplTest {
                 .isInstanceOf(CategoryRuleException.class)
                 .hasMessageContaining("Cannot delete");
         verify(repository, never()).delete(grocery);
+    }
+
+    @Test
+    void deleteWithProductsIsRefused() {
+        Category rice = category(2L, "Rice", null);
+        when(products.existsByCategory_Id(2L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.delete(2L))
+                .isInstanceOf(CategoryRuleException.class)
+                .hasMessageContaining("Cannot delete");
+        verify(repository, never()).delete(rice);
     }
 
     @Test
