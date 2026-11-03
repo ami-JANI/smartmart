@@ -20,7 +20,7 @@
     <title>Cash payment - SmartMart</title>
 </head>
 <body>
-<main id="main-content" class="container container-wide pos">
+<main id="main-content" class="container pos">
     <div class="page-header">
         <h1>Cash payment</h1>
         <a class="btn btn-secondary" th:href="@{/pos}" href="/pos">&larr; Back to the cart</a>
@@ -33,7 +33,7 @@
     </div>
     <p class="alert alert-error" role="alert" th:if="${error}" th:text="${error}">Something went wrong.</p>
 
-    <div class="pos-grid">
+    <div class="pos-grid pay-grid">
         <section class="card">
             <h2>Amount to pay</h2>
             <p class="amount-due"><span th:replace="~{fragments/money :: amount(${cart.total})}">৳ 0.00</span></p>
