@@ -1,7 +1,10 @@
 package com.smartmart.inventory.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -13,9 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.smartmart.common.config.StoreSettings;
 import com.smartmart.inventory.domain.Category;
 import com.smartmart.inventory.domain.Product;
+import com.smartmart.inventory.domain.StockBatch;
 import com.smartmart.inventory.repository.CategoryRepository;
 import com.smartmart.inventory.repository.ProductRepository;
+import com.smartmart.inventory.repository.StockBatchRepository;
 
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -26,19 +34,24 @@ class ProductServiceImpl implements ProductService {
 
     private final ProductRepository products;
     private final CategoryRepository categories;
+    private final StockBatchRepository batches;
     private final StoreSettings settings;
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductSummary> search(String text, Long categoryId, Pageable pageable) {
-        return products.findAll(inCategory(categoryId).and(matching(text)), pageable).map(this::summaryOf);
+    public Page<ProductSummary> search(String text, Long categoryId, boolean lowStockOnly, Pageable pageable) {
+        Specification<Product> filter = inCategory(categoryId).and(matching(text)).and(lowOnStock(lowStockOnly));
+        Page<Product> page = products.findAll(filter, pageable);
+        Map<Long, BigDecimal> totals = totalsFor(page.map(Product::getId).getContent());
+        return page.map(product -> summaryOf(product, totals.getOrDefault(product.getId(), BigDecimal.ZERO)));
     }
 
     // Reads the primary, so the page opened straight after a save is never out of date.
     @Override
     @Transactional
     public ProductSummary get(Long id) {
-        return summaryOf(find(id));
+        Product product = find(id);
+        return summaryOf(product, totalsFor(List.of(id)).getOrDefault(id, BigDecimal.ZERO));
     }
 
     @Override
@@ -92,9 +105,13 @@ class ProductServiceImpl implements ProductService {
         }
     }
 
-    // Total stock stays 0 until stock batches exist (SCRUM-25).
-    private ProductSummary summaryOf(Product product) {
-        BigDecimal totalStock = BigDecimal.ZERO;
+    private Map<Long, BigDecimal> totalsFor(List<Long> productIds) {
+        return batches.totalsFor(productIds).stream()
+                .collect(Collectors.toMap(StockBatchRepository.ProductTotal::getProductId,
+                        StockBatchRepository.ProductTotal::getTotal));
+    }
+
+    private ProductSummary summaryOf(Product product, BigDecimal totalStock) {
         return new ProductSummary(product.getId(), product.getName(), product.getBarcode(),
                 product.getCategory().getId(), product.getCategory().getName(), product.getPrice(),
                 product.getSaleUnit().name(), product.getLowStockThreshold(), product.isActive(),
@@ -116,6 +133,23 @@ class ProductServiceImpl implements ProductService {
             return builder.or(
                     builder.like(builder.lower(root.get("name")), pattern, '\\'),
                     builder.like(root.get("barcode"), pattern, '\\'));
+        };
+    }
+
+    // The same rule as Product.isLowOnStock, written for the database so paging counts stay right.
+    private Specification<Product> lowOnStock(boolean lowStockOnly) {
+        return (root, query, builder) -> {
+            if (!lowStockOnly) {
+                return builder.conjunction();
+            }
+            Subquery<BigDecimal> total = query.subquery(BigDecimal.class);
+            Root<StockBatch> batch = total.from(StockBatch.class);
+            total.select(builder.sum(batch.<BigDecimal>get("quantity")))
+                    .where(builder.equal(batch.get("product"), root));
+            Expression<BigDecimal> stock = builder.coalesce(total, BigDecimal.ZERO);
+            Expression<BigDecimal> threshold =
+                    builder.coalesce(root.<BigDecimal>get("lowStockThreshold"), settings.lowStockDefault());
+            return builder.lessThanOrEqualTo(stock, threshold);
         };
     }
 

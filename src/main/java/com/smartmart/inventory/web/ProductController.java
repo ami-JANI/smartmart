@@ -1,8 +1,6 @@
 package com.smartmart.inventory.web;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.PageRequest;
@@ -24,11 +22,13 @@ import com.smartmart.inventory.domain.SaleUnit;
 import com.smartmart.inventory.service.CategoryService;
 import com.smartmart.inventory.service.ProductRuleException;
 import com.smartmart.inventory.service.ProductService;
+import com.smartmart.inventory.service.ProductSummary;
+import com.smartmart.inventory.service.StockBatchService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/** The product list, form and detail pages in templates/inventory (SCRUM-24). */
+/** The product list, form and detail pages in templates/inventory, and adding stock batches (SCRUM-24, SCRUM-25). */
 @Controller
 @RequestMapping("/products")
 @RequiredArgsConstructor
@@ -39,27 +39,29 @@ class ProductController {
     private static final String DETAIL_PAGE = "inventory/product-detail";
     private static final String BACK_TO_LIST = "redirect:/products";
     private static final String FORM = "productForm";
+    private static final String BATCH_FORM = "stockBatchForm";
     private static final Set<String> SORTABLE = Set.of("name", "barcode", "price");
     private static final int MAX_PAGE_SIZE = 100;
 
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final StockBatchService stockBatchService;
 
-    // The low-stock filter only keeps its setting for now; it starts filtering with SCRUM-25.
     @GetMapping
     String list(@RequestParam(required = false) String q,
                 @RequestParam(required = false) Long category,
                 @RequestParam(required = false) Boolean lowStock,
                 @PageableDefault(size = 20) Pageable requested,
                 Model model) {
+        boolean lowStockOnly = Boolean.TRUE.equals(lowStock);
         Sort.Order order = sortOrder(requested);
         Pageable pageable = PageRequest.of(requested.getPageNumber(), Math.min(requested.getPageSize(), MAX_PAGE_SIZE),
                 Sort.by(order).and(Sort.by("id")));
-        model.addAttribute("page", productService.search(q, category, pageable));
+        model.addAttribute("page", productService.search(q, category, lowStockOnly, pageable));
         model.addAttribute("categories", categoryService.options());
         model.addAttribute("selectedCategory", category);
         model.addAttribute("q", q);
-        model.addAttribute("lowStockOnly", Boolean.TRUE.equals(lowStock));
+        model.addAttribute("lowStockOnly", lowStockOnly);
         model.addAttribute("sortField", order.getProperty());
         model.addAttribute("sortDir", order.getDirection().name().toLowerCase());
         model.addAttribute("activeNav", "products");
@@ -91,11 +93,24 @@ class ProductController {
 
     @GetMapping("/{id}")
     String detail(@PathVariable Long id, Model model) {
-        model.addAttribute("product", productService.get(id));
-        // Stock batches arrive with SCRUM-25.
-        model.addAttribute("totalStock", BigDecimal.ZERO);
-        model.addAttribute("batches", List.of());
-        model.addAttribute("activeNav", "products");
+        model.addAttribute(BATCH_FORM, new StockBatchForm());
+        addDetailData(model, id);
+        return DETAIL_PAGE;
+    }
+
+    @PostMapping("/{id}/batches")
+    String addBatch(@PathVariable Long id, @Valid @ModelAttribute(BATCH_FORM) StockBatchForm form, BindingResult errors,
+                    Model model, RedirectAttributes redirect) {
+        if (!errors.hasErrors()) {
+            try {
+                stockBatchService.add(id, form.toData());
+                redirect.addFlashAttribute("message", "Batch added");
+                return "redirect:/products/" + id;
+            } catch (ProductRuleException refusal) {
+                errors.rejectValue(refusal.getField(), "batch.rule", refusal.getMessage());
+            }
+        }
+        addDetailData(model, id);
         return DETAIL_PAGE;
     }
 
@@ -127,6 +142,14 @@ class ProductController {
                 .filter(order -> SORTABLE.contains(order.getProperty()))
                 .findFirst()
                 .orElse(Sort.Order.asc("name"));
+    }
+
+    private void addDetailData(Model model, Long productId) {
+        ProductSummary product = productService.get(productId);
+        model.addAttribute("product", product);
+        model.addAttribute("totalStock", product.totalStock());
+        model.addAttribute("batches", stockBatchService.forProduct(productId));
+        model.addAttribute("activeNav", "products");
     }
 
     private void addFormData(Model model, Long productId) {

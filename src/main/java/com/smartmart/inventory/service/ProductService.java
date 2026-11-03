@@ -11,8 +11,9 @@ public interface ProductService {
      *
      * @param text       part of a name or barcode, ignoring case; null or blank for all
      * @param categoryId products directly in this category; null for all
+     * @param lowStockOnly true to keep only products that are low on stock
      */
-    Page<ProductSummary> search(String text, Long categoryId, Pageable pageable);
+    Page<ProductSummary> search(String text, Long categoryId, boolean lowStockOnly, Pageable pageable);
 
     /**
      * Returns one product, always up to date.

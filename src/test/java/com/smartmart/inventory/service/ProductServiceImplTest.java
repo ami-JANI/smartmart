@@ -22,13 +22,15 @@ import com.smartmart.inventory.domain.Product;
 import com.smartmart.inventory.domain.SaleUnit;
 import com.smartmart.inventory.repository.CategoryRepository;
 import com.smartmart.inventory.repository.ProductRepository;
+import com.smartmart.inventory.repository.StockBatchRepository;
 
 class ProductServiceImplTest {
 
     private final ProductRepository products = mock(ProductRepository.class);
     private final CategoryRepository categories = mock(CategoryRepository.class);
+    private final StockBatchRepository batches = mock(StockBatchRepository.class);
     private final ProductServiceImpl service =
-            new ProductServiceImpl(products, categories, new StoreSettings(new BigDecimal("10")));
+            new ProductServiceImpl(products, categories, batches, new StoreSettings(new BigDecimal("10")));
     private final Category rice = new Category("Rice", null);
 
     @BeforeEach
