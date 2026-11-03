@@ -1,0 +1,62 @@
+@startuml checkout-activity
+title SmartMart: complete a cash sale (activity)
+skinparam shadowing false
+
+|Cashier|
+start
+:Scan items into the cart;
+:Optionally pick one discount;
+:Enter cash received;
+:Press "Complete sale";
+
+|System|
+if (Cart has at least one line?) then (no)
+  :Show "Cart is empty";
+  stop
+else (yes)
+endif
+
+partition "One transaction on the primary" {
+  :Apply promotions (buy X get Y free);
+  if (Discount picked?) then (yes)
+    :Apply discount to non-promoted lines\n(never negative, never above their total);
+  else (no)
+  endif
+  :Total = subtotal - promotion savings - discount;
+  :VAT included = total x rate / (100 + rate);
+
+  if (Cash received >= total?) then (no)
+    :Roll back;
+    |Cashier|
+    :See "Cash received is less than the total";
+    stop
+  else (yes)
+  endif
+
+  |System|
+  repeat :Take next cart line;
+    :Read unexpired batches, soonest expiry first;
+    if (Enough unexpired stock?) then (no)
+      :Roll back, save nothing;
+      |Cashier|
+      :See "Not enough stock for <product>" (409);
+      stop
+    else (yes)
+      |System|
+      :Deduct from batches in expiry order;
+    endif
+  repeat while (More lines?) is (yes)
+  -> no;
+
+  :Save payment record;
+  :Save invoice and its lines;
+}
+
+:Clear cart and undo history;
+
+|Cashier|
+:See the invoice\n(items, discount, total, VAT, cash, change);
+:Print invoice (optional);
+stop
+
+@enduml

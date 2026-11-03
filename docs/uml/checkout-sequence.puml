@@ -1,0 +1,68 @@
+@startuml checkout-sequence
+title SmartMart: complete a cash sale (sequence)
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+
+actor Cashier
+participant "Browser" as Browser
+participant "CheckoutController\n(pos.web)" as Ctrl
+participant "CheckoutFacade\n(pos.service)" as Facade
+participant "DiscountStrategy\n(Strategy)" as Disc
+participant "CashPayment\n(PaymentMethod)" as Pay
+participant "InventoryService\n(inventory.service)" as Stock
+participant "InvoiceService\n(pos.service)" as Inv
+database "Primary DB" as DB
+
+== Complete the sale ==
+Cashier -> Browser : enter cash received, press "Complete sale"
+Browser -> Ctrl : POST /api/v1/sales\n{cartId, discountId?, cashReceived}
+note right of Ctrl
+  The controller only parses input and
+  calls the facade (GUIDELINES 3.3).
+end note
+Ctrl -> Facade : completeSale(cartId, paymentDetails)
+
+group single @Transactional on the primary (FR-POS-10)
+  Facade -> Disc : isApplicable(cart) / apply(cart)
+  Disc --> Facade : discount amount (never negative,\nnever above eligible total)
+  Facade -> Facade : total = subtotal - promotion savings - discount\nVAT included = total x rate / (100 + rate)
+
+  Facade -> Pay : pay(total, details)
+  alt cash received < total
+    Pay --> Facade : refused
+    Facade --> Ctrl : PaymentRefusedException
+    Ctrl --> Browser : 400 "Cash received is less than the total"
+  else cash received >= total
+    Pay --> Facade : PaymentResult(change due)
+
+    loop each cart line
+      Facade -> Stock : deduct(productId, quantity)
+      Stock -> DB : read unexpired batches\nordered by expiry date (FEFO)
+      alt enough unexpired stock
+        Stock -> DB : reduce batch quantities, soonest expiry first
+        Stock --> Facade : ok
+      else not enough stock
+        Stock --> Facade : InsufficientStockException
+        Facade --> Ctrl : rollback, nothing saved
+        Ctrl --> Browser : 409 "Not enough stock for <product>"
+      end
+    end
+
+    Facade -> DB : save payment record
+    Facade -> Inv : createInvoice(sale, lines, payment)
+    Inv -> DB : save invoice and lines
+    Inv --> Facade : invoice
+    Facade --> Ctrl : invoice id
+  end
+end
+
+== Show the invoice (read from the primary, not the replica) ==
+Ctrl --> Browser : 201 Created, Location: /api/v1/invoices/{id}
+Browser -> Ctrl : GET invoice page
+Ctrl -> Inv : getInvoice(id)
+Inv -> DB : read invoice
+Inv --> Ctrl : invoice
+Ctrl --> Browser : invoice page (print-friendly)
+Browser --> Cashier : items, discount, total, VAT, cash, change
+
+@enduml
