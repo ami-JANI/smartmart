@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--
+  Product form, create and edit (SCRUM-42). Inventory staff.
+
+  Model attributes
+    productForm  form object: name, barcode, categoryId, price, saleUnit (PIECE or KG),
+                 lowStockThreshold (optional), bound with BindingResult
+    editing      true when editing an existing product
+    productId    id of the product being edited (only when editing)
+    categories   flat list: id, path
+    saleUnits    PIECE and KG
+    activeNav    "products"
+  Requests
+    POST /products        create
+    POST /products/{id}   update
+  A duplicate barcode comes back as a field error on "barcode" (the REST API answers 409)
+  and shows under the barcode field.
+-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Product - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <div class="page-header">
+        <h1 th:text="${editing} ? 'Edit product' : 'New product'">New product</h1>
+    </div>
+
+    <section class="card form-narrow">
+        <form th:action="${editing} ? @{/products/{id}(id=${productId})} : @{/products}" th:object="${productForm}"
+              action="/products" method="post" class="form" novalidate>
+
+            <p class="alert alert-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</span>
+            </p>
+
+            <div class="field" th:classappend="${#fields.hasErrors('name')} ? 'has-error'">
+                <label for="name">Name</label>
+                <input type="text" id="name" th:field="*{name}" maxlength="150" required
+                       th:attrappend="aria-describedby=${#fields.hasErrors('name')} ? 'name-error'">
+                <p class="field-error" id="name-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('barcode')} ? 'has-error'">
+                <label for="barcode">Barcode</label>
+                <input type="text" id="barcode" th:field="*{barcode}" maxlength="50" inputmode="numeric"
+                       autocomplete="off" required
+                       th:attrappend="aria-describedby=${#fields.hasErrors('barcode')} ? 'barcode-error'">
+                <p class="field-error" id="barcode-error" th:if="${#fields.hasErrors('barcode')}" th:errors="*{barcode}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('categoryId')} ? 'has-error'">
+                <label for="categoryId">Category</label>
+                <select id="categoryId" th:field="*{categoryId}" required>
+                    <option value="">Choose a category</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.path}">Category</option>
+                </select>
+                <p class="field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('saleUnit')} ? 'has-error'">
+                <label for="saleUnit">Sold by</label>
+                <select id="saleUnit" th:field="*{saleUnit}" required>
+                    <option th:each="u : ${saleUnits}" th:value="${u}" th:text="${u == 'KG'} ? 'Weight (kg)' : 'Piece'">Piece</option>
+                </select>
+                <p class="field-error" th:if="${#fields.hasErrors('saleUnit')}" th:errors="*{saleUnit}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('price')} ? 'has-error'">
+                <label for="price">Price (৳, VAT included, per piece or per kg)</label>
+                <input type="number" id="price" th:field="*{price}" step="0.01" min="0.01" inputmode="decimal" required
+                       th:attrappend="aria-describedby=${#fields.hasErrors('price')} ? 'price-error'">
+                <p class="field-error" id="price-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('lowStockThreshold')} ? 'has-error'">
+                <label for="lowStockThreshold">Low-stock threshold</label>
+                <input type="number" id="lowStockThreshold" th:field="*{lowStockThreshold}" step="0.001" min="0" inputmode="decimal"
+                       th:attrappend="aria-describedby=${#fields.hasErrors('lowStockThreshold')} ? 'threshold-error'">
+                <p class="hint">Optional. Leave empty to use the store default.</p>
+                <p class="field-error" id="threshold-error" th:if="${#fields.hasErrors('lowStockThreshold')}" th:errors="*{lowStockThreshold}">Error</p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Save changes' : 'Create product'">Save</button>
+                <a class="btn btn-secondary" th:href="@{/products}" href="/products">Cancel</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>
