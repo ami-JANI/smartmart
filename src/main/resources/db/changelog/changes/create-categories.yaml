@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-categories
+      author: smartmart
+      changes:
+        - createTable:
+            tableName: categories
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_categories
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_categories_parent
+                    references: categories(id)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        # NULLS NOT DISTINCT keeps top-level names unique too (FR-INV-1).
+        - sql:
+            sql: >
+              ALTER TABLE categories ADD CONSTRAINT uq_categories_parent_name
+              UNIQUE NULLS NOT DISTINCT (parent_id, name)

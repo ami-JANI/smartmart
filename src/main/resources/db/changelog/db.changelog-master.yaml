@@ -1,3 +1,6 @@
 # Liquibase master changelog. Each schema change is a changeset included
 # here (GUIDELINES.md section 8.1).
-databaseChangeLog: []
+databaseChangeLog:
+  - include:
+      file: changes/create-categories.yaml
+      relativeToChangelogFile: true
