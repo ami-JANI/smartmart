@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  401: not logged in. Spring Boot shows templates/error/<status>.html on its own.
+  Form login normally redirects to /login first; this page covers requests that cannot be redirected.
+-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Please log in - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <section class="card message-card">
+        <p class="message-code" aria-hidden="true">401</p>
+        <h1>Please log in</h1>
+        <p>You need to be logged in to see this page.</p>
+        <a class="btn btn-primary" th:href="@{/login}" href="/login">Go to the login page</a>
+    </section>
+</main>
+</body>
+</html>

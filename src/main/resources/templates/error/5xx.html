@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- 5xx: server error. Shows no stack trace or technical detail (GUIDELINES.md section 6). -->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Something went wrong - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <section class="card message-card">
+        <p class="message-code" aria-hidden="true">Error</p>
+        <h1>Something went wrong</h1>
+        <p>The server could not finish this request. Nothing was lost: try again, and if it keeps happening, tell your manager.</p>
+        <a class="btn btn-primary" th:href="@{/}" href="/">Back to home</a>
+    </section>
+</main>
+</body>
+</html>

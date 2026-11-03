@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- 404: no such page or record. -->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Page not found - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <section class="card message-card">
+        <p class="message-code" aria-hidden="true">404</p>
+        <h1>Page not found</h1>
+        <p>The page or record you asked for does not exist.</p>
+        <a class="btn btn-primary" th:href="@{/}" href="/">Back to home</a>
+    </section>
+</main>
+</body>
+</html>

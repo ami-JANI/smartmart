@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- 403: logged in, but the role is not allowed to open this page. -->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Not allowed - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <section class="card message-card">
+        <p class="message-code" aria-hidden="true">403</p>
+        <h1>You are not allowed to open this page</h1>
+        <p>Your role does not include this part of SmartMart. If you think this is a mistake, ask an administrator.</p>
+        <a class="btn btn-primary" th:href="@{/}" href="/">Back to home</a>
+    </section>
+</main>
+</body>
+</html>

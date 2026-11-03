@@ -9,6 +9,11 @@
 
   Model attributes read here (all optional):
     username  name of the logged-in user; the nav and logout button show only when set
+    roles     collection of role names of the logged-in user, without a ROLE_ prefix:
+              ADMIN, MANAGER, CASHIER, INVENTORY_STAFF. A menu item shows only when
+              the user holds a role allowed to open it (GUIDELINES.md section 7).
+              The menu only hides links; the server still denies the pages (SCRUM-20).
+    activeNav name of the current menu item (users, categories, products, pos), optional
     storeName store name for the header and footer; defaults to "SmartMart"
 -->
 <html lang="en" th:fragment="layout(title, content)" xmlns:th="http://www.thymeleaf.org">
@@ -31,7 +36,18 @@
         <nav class="site-nav" aria-label="Main" th:if="${username != null}">
             <ul>
                 <li><a th:href="@{/}" href="/">Home</a></li>
-                <!-- Role-based menu items are added here by SCRUM-39. -->
+                <li th:if="${roles != null and roles.contains('ADMIN')}">
+                    <a th:href="@{/users}" href="/users" th:attr="aria-current=${activeNav == 'users'} ? 'page'">Users</a>
+                </li>
+                <li th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">
+                    <a th:href="@{/categories}" href="/categories" th:attr="aria-current=${activeNav == 'categories'} ? 'page'">Categories</a>
+                </li>
+                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('MANAGER'))}">
+                    <a th:href="@{/products}" href="/products" th:attr="aria-current=${activeNav == 'products'} ? 'page'">Products</a>
+                </li>
+                <li th:if="${roles != null and roles.contains('CASHIER')}">
+                    <a th:href="@{/pos}" href="/pos" th:attr="aria-current=${activeNav == 'pos'} ? 'page'">Point of sale</a>
+                </li>
             </ul>
             <div class="nav-user">
                 <span class="nav-username" th:text="${username}">user</span>
