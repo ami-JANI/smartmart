@@ -1,0 +1,108 @@
+@startuml use-case
+title SmartMart: use case diagram (v1)
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Administrator" as Admin
+actor "Manager" as Manager
+actor "Cashier" as Cashier
+actor "Inventory staff" as Staff
+
+rectangle "SmartMart" {
+
+  package "User management" {
+    usecase "Log in" as UC_Login
+    usecase "Log out" as UC_Logout
+    usecase "Manage users\n(create, edit, deactivate)" as UC_Users
+    usecase "Assign roles" as UC_Roles
+  }
+
+  package "Inventory" {
+    usecase "Manage categories" as UC_Cat
+    usecase "Manage products" as UC_Prod
+    usecase "Record stock batches\n(with expiry date)" as UC_Batch
+    usecase "View stock and expiry" as UC_StockView
+    usecase "Receive low-stock and\nnear-expiry alerts" as UC_Alerts
+  }
+
+  package "Point of sale" {
+    usecase "Scan items into cart" as UC_Cart
+    usecase "Undo last cart change" as UC_Undo
+    usecase "Apply a discount" as UC_Disc
+    usecase "Complete cash sale" as UC_Checkout
+    usecase "View invoice" as UC_Invoice
+    usecase "Define discounts\nand promotions" as UC_DefDisc
+  }
+
+  package "Purchasing" {
+    usecase "Manage suppliers" as UC_Supp
+    usecase "Create purchase order" as UC_PO
+    usecase "Approve purchase order" as UC_POApprove
+    usecase "Receive delivery" as UC_Receive
+    usecase "Return goods to supplier" as UC_Return
+  }
+
+  package "Reporting" {
+    usecase "View sales, purchase,\ninventory and profit reports" as UC_Reports
+    usecase "View dashboard" as UC_Dash
+  }
+}
+
+' Every role logs in and out
+Admin --> UC_Login
+Manager --> UC_Login
+Cashier --> UC_Login
+Staff --> UC_Login
+Admin --> UC_Logout
+Manager --> UC_Logout
+Cashier --> UC_Logout
+Staff --> UC_Logout
+
+' Administrator
+Admin --> UC_Users
+Admin --> UC_Roles
+UC_Users ..> UC_Roles : <<include>>
+
+' Manager
+Manager --> UC_StockView
+Manager --> UC_Alerts
+Manager --> UC_DefDisc
+Manager --> UC_POApprove
+Manager --> UC_Reports
+Manager --> UC_Dash
+
+' Cashier
+Cashier --> UC_Cart
+Cashier --> UC_Undo
+Cashier --> UC_Disc
+Cashier --> UC_Checkout
+Cashier --> UC_Invoice
+UC_Undo ..> UC_Cart : <<extend>>
+UC_Disc ..> UC_Checkout : <<extend>>
+UC_Checkout ..> UC_Invoice : <<include>>
+
+' Inventory staff
+Staff --> UC_Cat
+Staff --> UC_Prod
+Staff --> UC_Batch
+Staff --> UC_Alerts
+Staff --> UC_Supp
+Staff --> UC_PO
+Staff --> UC_Receive
+Staff --> UC_Return
+UC_Prod ..> UC_Cat : <<include>>
+UC_Receive ..> UC_Batch : <<include>>
+
+note bottom of Admin
+  A user can hold more than one role
+  (SRS FR-AUTH-7), so one person may
+  appear as several actors.
+end note
+
+note bottom of UC_Alerts
+  Alerts are planned for a later sprint (SCRUM-34).
+  Purchasing and reporting are specified in a later SRS version.
+end note
+
+@enduml
