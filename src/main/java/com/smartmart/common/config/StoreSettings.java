@@ -9,7 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Spring: one immutable bean per application (GUIDELINES.md section 5.4).
  *
  * @param lowStockDefault low-stock threshold for products without their own
+ * @param vatRate         VAT percentage included in every selling price
  */
 @ConfigurationProperties("smartmart.store")
-public record StoreSettings(BigDecimal lowStockDefault) {
+public record StoreSettings(BigDecimal lowStockDefault, BigDecimal vatRate) {
 }

@@ -1,5 +1,7 @@
 package com.smartmart.inventory.service;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -21,6 +23,12 @@ public interface ProductService {
      * @throws ProductNotFoundException if it does not exist
      */
     ProductSummary get(Long id);
+
+    /**
+     * Finds the product a scanned barcode belongs to, if it can be sold. May lag
+     * slightly behind recent changes.
+     */
+    Optional<ProductSummary> findActiveByBarcode(String barcode);
 
     /**
      * Adds a product.

@@ -13,6 +13,7 @@ spring:
 smartmart:
   store:
     low-stock-default: 10
+    vat-rate: 15
   datasource:
     primary:
       pool-name: primary

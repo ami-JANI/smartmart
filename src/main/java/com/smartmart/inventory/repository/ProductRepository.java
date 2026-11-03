@@ -1,5 +1,7 @@
 package com.smartmart.inventory.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,6 +16,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Override
     @EntityGraph(attributePaths = "category")
     Page<Product> findAll(Specification<Product> filter, Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    Optional<Product> findByBarcodeAndActiveTrue(String barcode);
 
     boolean existsByBarcode(String barcode);
 

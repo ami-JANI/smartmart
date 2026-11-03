@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -52,6 +53,13 @@ class ProductServiceImpl implements ProductService {
     public ProductSummary get(Long id) {
         Product product = find(id);
         return summaryOf(product, totalsFor(List.of(id)).getOrDefault(id, BigDecimal.ZERO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ProductSummary> findActiveByBarcode(String barcode) {
+        return products.findByBarcodeAndActiveTrue(barcode).map(product ->
+                summaryOf(product, totalsFor(List.of(product.getId())).getOrDefault(product.getId(), BigDecimal.ZERO)));
     }
 
     @Override
