@@ -268,3 +268,56 @@ main.container {
     border-radius: var(--radius);
     background: #fff;
 }
+
+/* ---------- Page header, tables, badges, checkbox groups (SCRUM-40) ---------- */
+
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+    margin-bottom: var(--space);
+}
+.page-header h1 { margin: 0; }
+
+.table-wrap {
+    overflow-x: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+.table { width: 100%; border-collapse: collapse; }
+.table caption { text-align: left; padding: .75rem 1rem; color: var(--color-muted); }
+.table th, .table td { padding: .65rem 1rem; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--color-border); }
+.table thead th { background: #eef2f5; font-weight: 600; white-space: nowrap; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.table .actions { white-space: nowrap; text-align: right; }
+.table .actions form { display: inline; }
+.table-empty { padding: 1.5rem 1rem; text-align: center; color: var(--color-muted); }
+
+.badge {
+    display: inline-block;
+    padding: .1rem .55rem;
+    margin: 0 .25rem .25rem 0;
+    font-size: .85rem;
+    border-radius: 999px;
+    background: #e3e9ee;
+    color: var(--color-text);
+}
+.badge-ok { background: var(--color-success-bg); color: var(--color-success); }
+.badge-off { background: #eceff1; color: var(--color-muted); }
+.badge-warn { background: #fff4d6; color: #7a5200; }
+.badge-bad { background: var(--color-error-bg); color: var(--color-error); }
+
+.form fieldset { margin: 0 0 1rem; padding: .75rem 1rem; border: 1px solid var(--color-border); border-radius: var(--radius); }
+.form fieldset.has-error { border-color: var(--color-error); }
+.form legend { padding: 0 .35rem; font-weight: 600; }
+.check-list { list-style: none; margin: 0; padding: 0; }
+.check-list label { display: flex; align-items: center; gap: .6rem; min-height: 2.5rem; margin: 0; font-weight: 400; cursor: pointer; }
+.check-list input[type="checkbox"] { width: 1.25rem; height: 1.25rem; }
+
+.form-narrow { max-width: 34rem; }
+.form-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.hint { margin: .25rem 0 0; color: var(--color-muted); font-size: .9rem; }

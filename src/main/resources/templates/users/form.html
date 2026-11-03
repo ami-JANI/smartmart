@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--
+  User form, create and edit (SCRUM-40). Administrator only.
+
+  Model attributes
+    userForm   form object: username, fullName, password, roles (list of role names), bound with BindingResult
+    editing    true when editing an existing user
+    userId     id of the user being edited (only when editing)
+    allRoles   every role name the administrator can assign: ADMIN, MANAGER, CASHIER, INVENTORY_STAFF
+    activeNav  "users"
+  Requests
+    POST /users          create
+    POST /users/{id}     update; an empty password keeps the old one
+  Field errors (for example a taken username) come from the BindingResult and show next to the field.
+-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <div class="page-header">
+        <h1 th:text="${editing} ? 'Edit user' : 'New user'">New user</h1>
+    </div>
+
+    <section class="card form-narrow">
+        <form th:action="${editing} ? @{/users/{id}(id=${userId})} : @{/users}" th:object="${userForm}"
+              action="/users" method="post" class="form" novalidate>
+
+            <p class="alert alert-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</span>
+            </p>
+
+            <div class="field" th:classappend="${#fields.hasErrors('username')} ? 'has-error'">
+                <label for="username">Username</label>
+                <input type="text" id="username" th:field="*{username}" maxlength="50" autocomplete="off"
+                       autocapitalize="none" spellcheck="false" required
+                       th:attrappend="aria-describedby=${#fields.hasErrors('username')} ? 'username-error'">
+                <p class="field-error" id="username-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('fullName')} ? 'has-error'">
+                <label for="fullName">Full name</label>
+                <input type="text" id="fullName" th:field="*{fullName}" maxlength="100" required
+                       th:attrappend="aria-describedby=${#fields.hasErrors('fullName')} ? 'fullName-error'">
+                <p class="field-error" id="fullName-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('password')} ? 'has-error'">
+                <label for="password">Password</label>
+                <input type="password" id="password" th:field="*{password}" autocomplete="new-password"
+                       th:required="${!editing}"
+                       th:attrappend="aria-describedby=${#fields.hasErrors('password')} ? 'password-error'">
+                <p class="hint" th:if="${editing}">Leave empty to keep the current password.</p>
+                <p class="field-error" id="password-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Error</p>
+            </div>
+
+            <fieldset th:classappend="${#fields.hasErrors('roles')} ? 'has-error'">
+                <legend>Roles</legend>
+                <ul class="check-list">
+                    <li th:each="role : ${allRoles}">
+                        <label>
+                            <input type="checkbox" th:field="*{roles}" th:value="${role}">
+                            <span th:text="${#strings.replace(#strings.capitalize(#strings.toLowerCase(role)), '_', ' ')}">Role</span>
+                        </label>
+                    </li>
+                </ul>
+                <p class="hint">A user can have more than one role.</p>
+                <p class="field-error" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}">Error</p>
+            </fieldset>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Save changes' : 'Create user'">Save</button>
+                <a class="btn btn-secondary" th:href="@{/users}" href="/users">Cancel</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>
