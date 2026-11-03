@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!--
+<!--/*
   Shared page layout (SCRUM-38). Every page uses it:
 
     <html th:replace="~{layout/base :: layout(~{::title}, ~{::main})}">
@@ -15,7 +15,7 @@
               The menu only hides links; the server still denies the pages (SCRUM-20).
     activeNav name of the current menu item (users, categories, products, pos), optional
     storeName store name for the header and footer; defaults to "SmartMart"
--->
+*/-->
 <html lang="en" th:fragment="layout(title, content)" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">

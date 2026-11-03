@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!--
+<!--/*
   One level of the category tree, calls itself for the children (SCRUM-41).
   Used by inventory/categories.html.
   nodes          list of nodes: id, name, parentId (null for a top-level category), children
   parentOptions  flat list for the "move under" select: id, path (for example "Food > Rice")
--->
+*/-->
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 <ul class="tree" th:fragment="tree(nodes, parentOptions)">
