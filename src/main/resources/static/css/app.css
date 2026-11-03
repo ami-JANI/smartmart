@@ -352,3 +352,52 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 
 .section-title { margin-top: 1.5rem; }
 .section-gap { margin-top: 1.5rem; }
+
+/* ---------- Point of sale: cart screen (SCRUM-44) ---------- */
+
+.container-wide { max-width: 90rem; }
+
+.scan-card { margin-bottom: 1rem; }
+.scan-form { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.scan-form label { font-weight: 600; font-size: 1.1rem; }
+.scan-input {
+    flex: 1 1 14rem;
+    min-height: 3.25rem;
+    padding: .5rem .9rem;
+    font: inherit;
+    font-size: 1.4rem;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius);
+    background: #fff;
+}
+.scan-form .btn { min-height: 3.25rem; }
+
+.btn-large { min-height: 3.5rem; font-size: 1.2rem; }
+.btn[disabled], .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.pos-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 60rem) { .pos-grid { grid-template-columns: minmax(0, 1fr) 22rem; } }
+
+.cart-table td, .cart-table th { padding-top: .5rem; padding-bottom: .5rem; }
+.cart-table tr.line-free td { background: var(--color-success-bg); }
+.qty-form { display: inline-flex; align-items: center; gap: .4rem; justify-content: flex-end; }
+.qty-form input[type="number"] {
+    width: 6.5rem;
+    min-height: 2.5rem;
+    padding: .3rem .5rem;
+    font: inherit;
+    text-align: right;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+.summary h2 { margin-bottom: .5rem; }
+.totals { margin: 0 0 1rem; }
+.totals > div { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem 0; }
+.totals dt { color: var(--color-muted); }
+.totals dd { margin: 0; font-variant-numeric: tabular-nums; }
+.totals .totals-total { border-top: 2px solid var(--color-text); margin-top: .35rem; padding-top: .6rem; font-size: 1.5rem; font-weight: 700; }
+.totals .totals-total dt { color: var(--color-text); }
+.totals .totals-note { font-size: .9rem; }
+.summary-actions { display: grid; gap: .75rem; }
+.summary-actions form { margin: 0; }

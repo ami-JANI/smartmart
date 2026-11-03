@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--/*
+  POS cart screen (SCRUM-44). Cashier.
+
+  Model attributes
+    cart        lines, subtotal, promotionSavings, total, vatIncluded, canUndo (boolean).
+                Each line: id, productName, barcode, saleUnit (PIECE or KG), unitPrice,
+                quantity, lineTotal, free (true for a free promotion unit line).
+    weightPrompt  null, or the scanned weighed product (barcode, productName) that needs a weight
+    error       optional text, for example "Product not found"; nothing was added
+    message     optional success text
+    activeNav   "pos"
+  Requests (all POST, all redirect back to GET /pos)
+    /pos/cart/items                  barcode [, weight]   scan a product; weighed products need weight
+    /pos/cart/items/{lineId}/quantity  quantity
+    /pos/cart/items/{lineId}/remove
+    /pos/cart/undo
+  The scan field has data-autofocus; static/js/pos.js keeps the focus there.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Point of sale - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container container-wide pos">
+    <h1 class="visually-hidden">Point of sale</h1>
+
+    <p class="alert alert-error" role="alert" th:if="${error}" th:text="${error}">Product not found</p>
+    <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Done.</p>
+
+    <section class="card scan-card" aria-label="Scan a product">
+        <!--/* A weighed product was scanned: ask for the weight first (FR-POS-2). */-->
+        <form th:if="${weightPrompt != null}" th:action="@{/pos/cart/items}" method="post" class="scan-form">
+            <input type="hidden" name="barcode" th:value="${weightPrompt.barcode}">
+            <label for="weight">Weight in kg for <strong th:text="${weightPrompt.productName}">Product</strong></label>
+            <input type="number" id="weight" name="weight" step="0.001" min="0.001" inputmode="decimal"
+                   class="scan-input" required data-autofocus>
+            <button type="submit" class="btn btn-primary">Add</button>
+            <a class="btn btn-secondary" th:href="@{/pos}" href="/pos">Cancel</a>
+        </form>
+
+        <form th:unless="${weightPrompt != null}" th:action="@{/pos/cart/items}" method="post" class="scan-form">
+            <label for="barcode">Scan or type a barcode</label>
+            <input type="text" id="barcode" name="barcode" class="scan-input" inputmode="numeric"
+                   autocomplete="off" autocapitalize="none" spellcheck="false" required autofocus data-autofocus>
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+    </section>
+
+    <div class="pos-grid">
+        <section aria-label="Cart">
+            <div class="table-wrap">
+                <table class="table cart-table">
+                    <caption class="visually-hidden">Items in the cart</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Item</th>
+                        <th scope="col" class="num">Price</th>
+                        <th scope="col" class="num">Quantity</th>
+                        <th scope="col" class="num">Total</th>
+                        <th scope="col"><span class="visually-hidden">Remove</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="line : ${cart.lines}" th:classappend="${line.free} ? 'line-free'">
+                        <td>
+                            <span th:text="${line.productName}">Product</span>
+                            <span class="badge badge-ok" th:if="${line.free}">Free</span>
+                            <br><span class="muted" th:text="${line.barcode}">0000000000000</span>
+                        </td>
+                        <td class="num">
+                            <span th:replace="~{fragments/money :: amount(${line.unitPrice})}">৳ 0.00</span>
+                            <span class="muted" th:text="${line.saleUnit == 'KG'} ? '/ kg' : ''"></span>
+                        </td>
+                        <td class="num">
+                            <span th:if="${line.free}" th:text="${line.quantity}">1</span>
+                            <form th:unless="${line.free}" th:action="@{/pos/cart/items/{id}/quantity(id=${line.id})}"
+                                  method="post" class="qty-form">
+                                <label class="visually-hidden" th:for="${'qty-' + line.id}">Quantity of <span th:text="${line.productName}"></span></label>
+                                <input type="number" th:id="${'qty-' + line.id}" name="quantity" th:value="${line.quantity}"
+                                       inputmode="decimal" required
+                                       th:attr="step=${line.saleUnit == 'KG'} ? '0.001' : '1', min=${line.saleUnit == 'KG'} ? '0.001' : '1'">
+                                <button type="submit" class="btn btn-secondary btn-small">Set</button>
+                            </form>
+                        </td>
+                        <td class="num"><span th:replace="~{fragments/money :: amount(${line.lineTotal})}">৳ 0.00</span></td>
+                        <td class="actions">
+                            <form th:unless="${line.free}" th:action="@{/pos/cart/items/{id}/remove(id=${line.id})}" method="post">
+                                <button type="submit" class="btn btn-secondary btn-small">Remove<span class="visually-hidden"> <span th:text="${line.productName}"></span></span></button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(cart.lines)}">
+                        <td colspan="5" class="table-empty">The cart is empty. Scan the first item.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <aside class="card summary" aria-label="Sale summary">
+            <h2>Summary</h2>
+            <dl class="totals">
+                <div><dt>Subtotal</dt><dd><span th:replace="~{fragments/money :: amount(${cart.subtotal})}">৳ 0.00</span></dd></div>
+                <div th:if="${cart.promotionSavings != null and cart.promotionSavings.signum() > 0}">
+                    <dt>Promotion savings</dt>
+                    <dd>&minus; <span th:replace="~{fragments/money :: amount(${cart.promotionSavings})}">৳ 0.00</span></dd>
+                </div>
+                <div class="totals-total"><dt>Total</dt><dd><span th:replace="~{fragments/money :: amount(${cart.total})}">৳ 0.00</span></dd></div>
+                <div class="totals-note"><dt>VAT included</dt><dd><span th:replace="~{fragments/money :: amount(${cart.vatIncluded})}">৳ 0.00</span></dd></div>
+            </dl>
+
+            <div class="summary-actions">
+                <form th:action="@{/pos/cart/undo}" method="post">
+                    <button type="submit" class="btn btn-secondary btn-block" th:disabled="${!cart.canUndo}">Undo last change</button>
+                </form>
+                <a class="btn btn-primary btn-block btn-large" th:href="@{/pos/checkout}" href="/pos/checkout"
+                   th:unless="${#lists.isEmpty(cart.lines)}">Pay</a>
+                <button type="button" class="btn btn-primary btn-block btn-large" disabled
+                        th:if="${#lists.isEmpty(cart.lines)}">Pay</button>
+            </div>
+        </aside>
+    </div>
+
+    <!--/* Inside <main>, because the layout takes only the main element of a page. */-->
+    <script th:src="@{/js/pos.js}" src="/js/pos.js" defer></script>
+</main>
+</body>
+</html>
