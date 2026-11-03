@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -87,6 +88,47 @@ class CartTest {
 
         assertThat(cart.lines()).hasSize(1);
         assertThat(cart.subtotal()).isEqualByComparingTo("30.00");
+    }
+
+    @Test
+    void restoringASnapshotBringsBackTheOldLines() {
+        cart.add(piece(1, "10.00", "2"));
+        CartSnapshot snapshot = cart.snapshot();
+
+        cart.changeQuantity(1L, new BigDecimal("5"));
+        cart.add(piece(2, "5.00", "1"));
+        cart.restore(snapshot);
+
+        assertThat(cart.lines()).hasSize(1);
+        assertThat(cart.subtotal()).isEqualByComparingTo("20.00");
+    }
+
+    @Test
+    void aSnapshotDoesNotChangeWhenTheCartDoes() {
+        cart.add(piece(1, "10.00", "2"));
+        CartSnapshot snapshot = cart.snapshot();
+
+        cart.remove(1L);
+
+        assertThat(snapshot.lines()).hasSize(1);
+        assertThatThrownBy(() -> snapshot.lines().clear()).isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void historyGivesBackTheNewestFirstAndKeepsOnlyTheLastTwenty() {
+        CartHistory history = new CartHistory();
+        assertThat(history.pop()).isEmpty();
+
+        for (int i = 1; i <= 21; i++) {
+            history.push(new CartSnapshot(List.of(piece(i, "1", "1"))));
+        }
+
+        assertThat(history.pop().orElseThrow().lines().get(0).productId()).isEqualTo(21L);
+        for (int i = 0; i < 18; i++) {
+            history.pop();
+        }
+        assertThat(history.pop().orElseThrow().lines().get(0).productId()).isEqualTo(2L);
+        assertThat(history.isEmpty()).isTrue();
     }
 
     @Test

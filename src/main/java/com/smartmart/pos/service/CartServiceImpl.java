@@ -12,8 +12,10 @@ import com.smartmart.inventory.domain.SaleUnit;
 import com.smartmart.inventory.service.ProductService;
 import com.smartmart.inventory.service.ProductSummary;
 import com.smartmart.pos.domain.Cart;
+import com.smartmart.pos.domain.CartHistory;
 import com.smartmart.pos.domain.CartLine;
 import com.smartmart.pos.domain.CartRuleException;
+import com.smartmart.pos.domain.CartSnapshot;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,16 +26,17 @@ class CartServiceImpl implements CartService {
     private static final BigDecimal HUNDRED = new BigDecimal("100");
 
     private final Cart cart;
+    private final CartHistory history;
     private final ProductService products;
     private final StoreSettings settings;
 
-    // Promotions and discounts arrive with SCRUM-30, and undo with SCRUM-29.
+    // Promotions and discounts arrive with SCRUM-30.
     @Override
     public CartView view() {
         BigDecimal subtotal = cart.subtotal();
         List<CartLineView> lines = cart.lines().stream().map(this::viewOf).toList();
         return new CartView(lines, subtotal, BigDecimal.ZERO, null, null, BigDecimal.ZERO,
-                subtotal, vatIncludedIn(subtotal), false);
+                subtotal, vatIncludedIn(subtotal), !history.isEmpty());
     }
 
     @Override
@@ -45,18 +48,39 @@ class CartServiceImpl implements CartService {
             return Optional.of(new WeightPrompt(product.barcode(), product.name()));
         }
         BigDecimal quantity = unit == SaleUnit.KG ? weight : BigDecimal.ONE;
-        cart.add(new CartLine(product.id(), product.name(), product.barcode(), unit, product.price(), quantity));
+        CartLine line = new CartLine(product.id(), product.name(), product.barcode(), unit, product.price(), quantity);
+        recordingForUndo(() -> cart.add(line));
         return Optional.empty();
     }
 
     @Override
     public void changeQuantity(Long lineId, BigDecimal quantity) {
-        cart.changeQuantity(lineId, quantity);
+        recordingForUndo(() -> cart.changeQuantity(lineId, quantity));
     }
 
     @Override
     public void remove(Long lineId) {
-        cart.remove(lineId);
+        recordingForUndo(() -> cart.remove(lineId));
+    }
+
+    @Override
+    public void undo() {
+        cart.restore(history.pop().orElseThrow(() -> new CartRuleException("Nothing to undo")));
+    }
+
+    @Override
+    public void clear() {
+        cart.clear();
+        history.clear();
+    }
+
+    // Records only real changes: a refused change throws first, and one that changes nothing is skipped.
+    private void recordingForUndo(Runnable change) {
+        CartSnapshot before = cart.snapshot();
+        change.run();
+        if (!before.equals(cart.snapshot())) {
+            history.push(before);
+        }
     }
 
     private CartLineView viewOf(CartLine line) {

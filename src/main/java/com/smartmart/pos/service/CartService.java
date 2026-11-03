@@ -25,4 +25,10 @@ public interface CartService {
 
     /** Removes a line. {@code lineId} comes from {@link CartLineView#id()}. */
     void remove(Long lineId);
+
+    /** Reverses the last change, one step at a time. Refused when there is nothing to undo. */
+    void undo();
+
+    /** Empties the cart and its undo history, ready for the next sale. */
+    void clear();
 }

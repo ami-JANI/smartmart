@@ -20,7 +20,7 @@ import com.smartmart.pos.service.CartService;
 
 import lombok.RequiredArgsConstructor;
 
-/** The cart screen, pos/cart.html (SCRUM-28). */
+/** The cart screen, pos/cart.html (SCRUM-28, SCRUM-29). */
 @Controller
 @RequestMapping("/pos")
 @RequiredArgsConstructor
@@ -56,6 +56,13 @@ class CartController {
     @PostMapping("/cart/items/{lineId}/remove")
     String remove(@PathVariable Long lineId) {
         cartService.remove(lineId);
+        return BACK_TO_CART;
+    }
+
+    @PostMapping("/cart/undo")
+    String undo(RedirectAttributes redirect) {
+        cartService.undo();
+        redirect.addFlashAttribute("message", "Last change undone");
         return BACK_TO_CART;
     }
 

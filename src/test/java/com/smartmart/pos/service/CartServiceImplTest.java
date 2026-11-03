@@ -14,12 +14,13 @@ import com.smartmart.common.config.StoreSettings;
 import com.smartmart.inventory.service.ProductService;
 import com.smartmart.inventory.service.ProductSummary;
 import com.smartmart.pos.domain.Cart;
+import com.smartmart.pos.domain.CartHistory;
 import com.smartmart.pos.domain.CartRuleException;
 
 class CartServiceImplTest {
 
     private final ProductService products = mock(ProductService.class);
-    private final CartServiceImpl service = new CartServiceImpl(new Cart(), products,
+    private final CartServiceImpl service = new CartServiceImpl(new Cart(), new CartHistory(), products,
             new StoreSettings(new BigDecimal("10"), new BigDecimal("15")));
 
     private void product(long id, String barcode, String unit, String price) {
@@ -97,6 +98,93 @@ class CartServiceImplTest {
         assertThat(cart.total()).isEqualByComparingTo("0");
         assertThat(cart.vatIncluded()).isEqualByComparingTo("0");
         assertThat(cart.canUndo()).isFalse();
+    }
+
+    @Test
+    void undoReversesAddQuantityAndRemoveOneStepAtATime() {
+        product(1, "1111", "PIECE", "10.00");
+        product(2, "2222", "PIECE", "5.00");
+        service.scan("1111", null);
+        service.scan("2222", null);
+        service.changeQuantity(1L, new BigDecimal("4"));
+        service.remove(2L);
+        assertThat(service.view().subtotal()).isEqualByComparingTo("40.00");
+
+        service.undo();
+        assertThat(service.view().subtotal()).isEqualByComparingTo("45.00");
+
+        service.undo();
+        assertThat(service.view().subtotal()).isEqualByComparingTo("15.00");
+
+        service.undo();
+        assertThat(service.view().subtotal()).isEqualByComparingTo("10.00");
+
+        service.undo();
+        assertThat(service.view().lines()).isEmpty();
+        assertThat(service.view().canUndo()).isFalse();
+    }
+
+    @Test
+    void undoWithNothingToUndoIsRefused() {
+        assertThatThrownBy(service::undo)
+                .isInstanceOf(CartRuleException.class).hasMessage("Nothing to undo");
+    }
+
+    @Test
+    void refusedQuantityIsNotAnUndoStep() {
+        product(1, "1111", "PIECE", "10.00");
+        service.scan("1111", null);
+
+        assertThatThrownBy(() -> service.changeQuantity(1L, BigDecimal.ZERO)).isInstanceOf(CartRuleException.class);
+
+        service.undo();
+        assertThat(service.view().lines()).isEmpty();
+    }
+
+    @Test
+    void weightPromptIsNotAnUndoStep() {
+        product(2, "2222", "KG", "75.50");
+
+        service.scan("2222", null);
+
+        assertThat(service.view().canUndo()).isFalse();
+    }
+
+    @Test
+    void settingTheSameQuantityIsNotAnUndoStep() {
+        product(1, "1111", "PIECE", "10.00");
+        service.scan("1111", null);
+
+        service.changeQuantity(1L, BigDecimal.ONE);
+        service.undo();
+
+        assertThat(service.view().lines()).isEmpty();
+    }
+
+    @Test
+    void theLastTwentyChangesCanBeUndoneAndOlderOnesAreForgotten() {
+        product(1, "1111", "PIECE", "10.00");
+        for (int i = 0; i < 21; i++) {
+            service.scan("1111", null);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            service.undo();
+        }
+
+        assertThat(service.view().lines().get(0).quantity()).isEqualByComparingTo("1");
+        assertThat(service.view().canUndo()).isFalse();
+    }
+
+    @Test
+    void clearEmptiesTheCartAndItsHistory() {
+        product(1, "1111", "PIECE", "10.00");
+        service.scan("1111", null);
+
+        service.clear();
+
+        assertThat(service.view().lines()).isEmpty();
+        assertThat(service.view().canUndo()).isFalse();
     }
 
     @Test

@@ -6,7 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** The items a cashier is selling, one line per product, in the order they were first scanned. */
+/**
+ * The items a cashier is selling, one line per product, in the order they were
+ * first scanned. The originator in the Memento pattern: it creates snapshots of
+ * itself and restores itself from them, for undo (FR-POS-4).
+ */
 public class Cart implements Serializable {
 
     private final Map<Long, CartLine> lines = new LinkedHashMap<>();
@@ -26,6 +30,19 @@ public class Cart implements Serializable {
     public void remove(Long productId) {
         lineFor(productId);
         lines.remove(productId);
+    }
+
+    public void clear() {
+        lines.clear();
+    }
+
+    public CartSnapshot snapshot() {
+        return new CartSnapshot(lines());
+    }
+
+    public void restore(CartSnapshot snapshot) {
+        lines.clear();
+        snapshot.lines().forEach(line -> lines.put(line.productId(), line));
     }
 
     public List<CartLine> lines() {

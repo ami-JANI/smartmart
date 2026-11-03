@@ -182,6 +182,39 @@ class CartPageTests {
     }
 
     @Test
+    void undoButtonIsDisabledUntilThereIsAChange() throws Exception {
+        cartPage().andExpect(content().string(containsString("disabled=\"disabled\">Undo last change")));
+
+        String barcode = barcode();
+        product("Soap", barcode, SaleUnit.PIECE, "10.00", true);
+        awaitAdded(barcode);
+
+        cartPage().andExpect(content().string(not(containsString("disabled=\"disabled\">Undo last change"))));
+    }
+
+    @Test
+    void undoReversesTheLastChange() throws Exception {
+        String barcode = barcode();
+        Long id = product("Soap", barcode, SaleUnit.PIECE, "10.00", true);
+        awaitAdded(barcode);
+        mvc.perform(post("/pos/cart/items/" + id + "/remove").session(session).with(csrf()));
+        cartPage().andExpect(content().string(containsString("The cart is empty")));
+
+        mvc.perform(post("/pos/cart/undo").session(session).with(csrf()))
+                .andExpect(redirectedUrl("/pos"))
+                .andExpect(flash().attribute("message", "Last change undone"));
+
+        cartPage().andExpect(content().string(containsString("Soap")));
+    }
+
+    @Test
+    void undoWithNothingToUndoShowsAnError() throws Exception {
+        mvc.perform(post("/pos/cart/undo").session(session).with(csrf()))
+                .andExpect(redirectedUrl("/pos"))
+                .andExpect(flash().attribute("error", "Nothing to undo"));
+    }
+
+    @Test
     void eachSessionHasItsOwnCart() throws Exception {
         String barcode = barcode();
         product("Soap", barcode, SaleUnit.PIECE, "10.00", true);
