@@ -3,9 +3,11 @@
   POS cart screen (SCRUM-44). Cashier.
 
   Model attributes
-    cart        lines, subtotal, promotionSavings, total, vatIncluded, canUndo (boolean).
+    cart        lines, subtotal, promotionSavings, discountId (or null), discountName (or null),
+                discountAmount, total, vatIncluded, canUndo (boolean).
                 Each line: id, productName, barcode, saleUnit (PIECE or KG), unitPrice,
                 quantity, lineTotal, free (true for a free promotion unit line).
+    discounts   active discounts the manager defined: id, name, description (for example "10% off")
     weightPrompt  null, or the scanned weighed product (barcode, productName) that needs a weight
     error       optional text, for example "Product not found"; nothing was added
     message     optional success text
@@ -14,7 +16,9 @@
     /pos/cart/items                  barcode [, weight]   scan a product; weighed products need weight
     /pos/cart/items/{lineId}/quantity  quantity
     /pos/cart/items/{lineId}/remove
+    /pos/cart/discount               discountId (empty removes the discount)
     /pos/cart/undo
+  The cashier only picks a discount from the list; amounts are set by managers (docs/decisions.md).
   The scan field has data-autofocus; static/js/pos.js keeps the focus there.
 */-->
 <html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
@@ -100,11 +104,30 @@
 
         <aside class="card summary" aria-label="Sale summary">
             <h2>Summary</h2>
+
+            <form th:action="@{/pos/cart/discount}" method="post" class="discount-form">
+                <label for="discountId">Discount</label>
+                <div class="inline-form">
+                    <select id="discountId" name="discountId">
+                        <option value="">No discount</option>
+                        <option th:each="d : ${discounts}" th:value="${d.id}"
+                                th:text="${d.name + ' (' + d.description + ')'}"
+                                th:selected="${cart.discountId != null and d.id == cart.discountId}">Discount</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-small">Apply</button>
+                </div>
+                <p class="hint">Only one discount per sale. It does not apply to items on a promotion.</p>
+            </form>
+
             <dl class="totals">
                 <div><dt>Subtotal</dt><dd><span th:replace="~{fragments/money :: amount(${cart.subtotal})}">৳ 0.00</span></dd></div>
                 <div th:if="${cart.promotionSavings != null and cart.promotionSavings.signum() > 0}">
                     <dt>Promotion savings</dt>
                     <dd>&minus; <span th:replace="~{fragments/money :: amount(${cart.promotionSavings})}">৳ 0.00</span></dd>
+                </div>
+                <div th:if="${cart.discountAmount != null and cart.discountAmount.signum() > 0}">
+                    <dt th:text="'Discount' + (${cart.discountName != null} ? ' (' + ${cart.discountName} + ')' : '')">Discount</dt>
+                    <dd>&minus; <span th:replace="~{fragments/money :: amount(${cart.discountAmount})}">৳ 0.00</span></dd>
                 </div>
                 <div class="totals-total"><dt>Total</dt><dd><span th:replace="~{fragments/money :: amount(${cart.total})}">৳ 0.00</span></dd></div>
                 <div class="totals-note"><dt>VAT included</dt><dd><span th:replace="~{fragments/money :: amount(${cart.vatIncluded})}">৳ 0.00</span></dd></div>

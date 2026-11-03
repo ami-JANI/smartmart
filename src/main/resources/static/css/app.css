@@ -401,3 +401,18 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 .totals .totals-note { font-size: .9rem; }
 .summary-actions { display: grid; gap: .75rem; }
 .summary-actions form { margin: 0; }
+
+/* ---------- Discount choice on the cart (SCRUM-45) ---------- */
+
+.discount-form { margin-bottom: 1rem; }
+.discount-form label { display: block; margin-bottom: .25rem; font-weight: 600; }
+.discount-form .inline-form { padding: 0; }
+.discount-form select {
+    flex: 1 1 10rem;
+    min-height: 2.5rem;
+    padding: .4rem .6rem;
+    font: inherit;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fff;
+}
