@@ -343,3 +343,12 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 
 .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .75rem; margin-top: var(--space); }
 .pager-status { color: var(--color-muted); }
+
+/* ---------- Product page and batches (SCRUM-43) ---------- */
+
+.details { display: grid; gap: 1rem 2rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); margin: 0; }
+.details dt { color: var(--color-muted); font-size: .9rem; }
+.details dd { margin: 0; font-size: 1.1rem; }
+
+.section-title { margin-top: 1.5rem; }
+.section-gap { margin-top: 1.5rem; }

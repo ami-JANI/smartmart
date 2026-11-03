@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--
+  Product page with total stock, its batches and the add-batch form (SCRUM-43).
+  Inventory staff add batches; managers can view.
+
+  Model attributes
+    product         id, name, barcode, categoryName, price, saleUnit (PIECE or KG), lowStock (boolean)
+    totalStock      total quantity over all batches that can still be sold
+    batches         list: batchNumber, quantity, cost (per unit), expiryDate (LocalDate or null),
+                    expired (boolean). Listed soonest expiry first, as stock is sold (FR-POS-11).
+    stockBatchForm  form object: batchNumber, quantity, cost, expiryDate (optional),
+                    bound with BindingResult
+    message         optional success text
+    roles           the global roles attribute (layout/base.html)
+    activeNav       "products"
+  Request
+    POST /products/{id}/batches   batchNumber, quantity, cost, expiryDate
+-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Product - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container"
+      th:with="isKg=${product.saleUnit == 'KG'}">
+    <div class="page-header">
+        <h1 th:text="${product.name}">Product name</h1>
+        <a class="btn btn-secondary" th:href="@{/products/{id}/edit(id=${product.id})}" href="#"
+           th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">Edit product</a>
+    </div>
+
+    <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
+
+    <section class="card">
+        <h2 class="visually-hidden">Product details</h2>
+        <dl class="details">
+            <div><dt>Barcode</dt><dd th:text="${product.barcode}">0000000000000</dd></div>
+            <div><dt>Category</dt><dd th:text="${product.categoryName}">Category</dd></div>
+            <div>
+                <dt>Price</dt>
+                <dd>
+                    <span th:text="'৳ ' + ${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">৳ 0.00</span>
+                    <span class="muted" th:text="${isKg} ? '/ kg' : '/ piece'">/ piece</span>
+                </dd>
+            </div>
+            <div>
+                <dt>Total stock</dt>
+                <dd>
+                    <strong th:text="${#numbers.formatDecimal(totalStock, 1, 'COMMA', isKg ? 3 : 0, 'POINT')}">0</strong>
+                    <span th:text="${isKg} ? 'kg' : 'pieces'">pieces</span>
+                    <span class="badge badge-warn" th:if="${product.lowStock}">Low stock</span>
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <h2 class="section-title">Stock batches</h2>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Batch number</th>
+                <th scope="col" class="num">Quantity</th>
+                <th scope="col" class="num">Cost (per unit)</th>
+                <th scope="col">Expiry date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="b : ${batches}">
+                <td th:text="${b.batchNumber}">B-001</td>
+                <td class="num" th:text="${#numbers.formatDecimal(b.quantity, 1, 'COMMA', isKg ? 3 : 0, 'POINT')}">0</td>
+                <td class="num" th:text="'৳ ' + ${#numbers.formatDecimal(b.cost, 1, 'COMMA', 2, 'POINT')}">৳ 0.00</td>
+                <td>
+                    <span th:if="${b.expiryDate != null}" th:text="${#temporals.format(b.expiryDate, 'dd MMM yyyy')}">01 Jan 2027</span>
+                    <span class="muted" th:if="${b.expiryDate == null}">No expiry date</span>
+                    <span class="badge badge-bad" th:if="${b.expired}">Expired</span>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(batches)}">
+                <td colspan="4" class="table-empty">No batches yet. Add the first delivery below.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <section class="card form-narrow section-gap" th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">
+        <h2>Add a batch</h2>
+        <form th:action="@{/products/{id}/batches(id=${product.id})}" th:object="${stockBatchForm}"
+              action="#" method="post" class="form" novalidate>
+
+            <p class="alert alert-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</span>
+            </p>
+
+            <div class="field" th:classappend="${#fields.hasErrors('batchNumber')} ? 'has-error'">
+                <label for="batchNumber">Batch number</label>
+                <input type="text" id="batchNumber" th:field="*{batchNumber}" maxlength="50" autocomplete="off" required
+                       th:attrappend="aria-describedby=${#fields.hasErrors('batchNumber')} ? 'batchNumber-error'">
+                <p class="field-error" id="batchNumber-error" th:if="${#fields.hasErrors('batchNumber')}" th:errors="*{batchNumber}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('quantity')} ? 'has-error'">
+                <label for="quantity" th:text="${isKg} ? 'Quantity (kg)' : 'Quantity (pieces)'">Quantity</label>
+                <input type="number" id="quantity" th:field="*{quantity}" inputmode="decimal" required
+                       th:attr="step=${isKg} ? '0.001' : '1', min=${isKg} ? '0.001' : '1'"
+                       th:attrappend="aria-describedby=${#fields.hasErrors('quantity')} ? 'quantity-error'">
+                <p class="field-error" id="quantity-error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('cost')} ? 'has-error'">
+                <label for="cost">Cost per unit (৳)</label>
+                <input type="number" id="cost" th:field="*{cost}" step="0.01" min="0" inputmode="decimal" required
+                       th:attrappend="aria-describedby=${#fields.hasErrors('cost')} ? 'cost-error'">
+                <p class="field-error" id="cost-error" th:if="${#fields.hasErrors('cost')}" th:errors="*{cost}">Error</p>
+            </div>
+
+            <div class="field" th:classappend="${#fields.hasErrors('expiryDate')} ? 'has-error'">
+                <label for="expiryDate">Expiry date</label>
+                <input type="date" id="expiryDate" th:field="*{expiryDate}"
+                       th:attrappend="aria-describedby=${#fields.hasErrors('expiryDate')} ? 'expiryDate-error'">
+                <p class="hint">Optional. Leave empty if the product does not expire.</p>
+                <p class="field-error" id="expiryDate-error" th:if="${#fields.hasErrors('expiryDate')}" th:errors="*{expiryDate}">Error</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add batch</button>
+        </form>
+    </section>
+
+    <p><a th:href="@{/products}" href="/products">&larr; Back to products</a></p>
+</main>
+</body>
+</html>
