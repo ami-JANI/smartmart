@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+  Category tree page (SCRUM-41). Inventory staff.
+
+  Model attributes
+    categories     list of top-level nodes (id, name, parentId, children), see inventory/category-tree.html
+    parentOptions  flat list of every category: id, path
+    categoryForm   form object for "add" with name and parentId, bound with BindingResult
+    message        optional success text (for example from a redirect)
+    error          optional text for a rejected rename or move, for example a category under itself
+    activeNav      "categories"
+  Requests
+    POST /categories                  name, parentId (empty = top level)
+    POST /categories/{id}/rename      name
+    POST /categories/{id}/move        parentId (empty = top level)
+-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Categories - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <h1>Categories</h1>
+
+    <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
+    <p class="alert alert-error" role="alert" th:if="${error}" th:text="${error}">Could not save.</p>
+
+    <div class="two-column">
+        <section class="card">
+            <h2>Category tree</h2>
+            <p class="muted" th:if="${#lists.isEmpty(categories)}">No categories yet. Add the first one.</p>
+            <th:block th:unless="${#lists.isEmpty(categories)}">
+                <ul th:replace="~{inventory/category-tree :: tree(${categories}, ${parentOptions})}"></ul>
+            </th:block>
+        </section>
+
+        <section class="card">
+            <h2>Add a category</h2>
+            <form th:action="@{/categories}" th:object="${categoryForm}" method="post" class="form" novalidate>
+                <div class="field" th:classappend="${#fields.hasErrors('name')} ? 'has-error'">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" th:field="*{name}" maxlength="100" required
+                           th:attrappend="aria-describedby=${#fields.hasErrors('name')} ? 'name-error'">
+                    <p class="field-error" id="name-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name is required</p>
+                </div>
+                <div class="field" th:classappend="${#fields.hasErrors('parentId')} ? 'has-error'">
+                    <label for="parentId">Put under</label>
+                    <select id="parentId" th:field="*{parentId}">
+                        <option value="">(top level)</option>
+                        <option th:each="option : ${parentOptions}" th:value="${option.id}" th:text="${option.path}">Parent</option>
+                    </select>
+                    <p class="field-error" th:if="${#fields.hasErrors('parentId')}" th:errors="*{parentId}">Parent error</p>
+                </div>
+                <button type="submit" class="btn btn-primary">Add category</button>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

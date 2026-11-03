@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--
+  One level of the category tree, calls itself for the children (SCRUM-41).
+  Used by inventory/categories.html.
+  nodes          list of nodes: id, name, parentId (null for a top-level category), children
+  parentOptions  flat list for the "move under" select: id, path (for example "Food > Rice")
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<ul class="tree" th:fragment="tree(nodes, parentOptions)">
+    <li th:each="node : ${nodes}">
+        <div class="tree-row">
+            <span class="tree-name" th:text="${node.name}">Category</span>
+
+            <details class="tree-action">
+                <summary>Rename</summary>
+                <form th:action="@{/categories/{id}/rename(id=${node.id})}" method="post" class="inline-form">
+                    <label class="visually-hidden" th:for="${'rename-' + node.id}">New name for <span th:text="${node.name}"></span></label>
+                    <input type="text" th:id="${'rename-' + node.id}" name="name" th:value="${node.name}" maxlength="100" required>
+                    <button type="submit" class="btn btn-secondary btn-small">Save</button>
+                </form>
+            </details>
+
+            <details class="tree-action">
+                <summary>Move</summary>
+                <form th:action="@{/categories/{id}/move(id=${node.id})}" method="post" class="inline-form">
+                    <label class="visually-hidden" th:for="${'move-' + node.id}">Move <span th:text="${node.name}"></span> under</label>
+                    <select th:id="${'move-' + node.id}" name="parentId">
+                        <option value="">(top level)</option>
+                        <option th:each="option : ${parentOptions}"
+                                th:if="${option.id != node.id}"
+                                th:value="${option.id}"
+                                th:text="${option.path}"
+                                th:selected="${option.id == node.parentId}">Parent</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-small">Move</button>
+                </form>
+            </details>
+        </div>
+
+        <th:block th:if="${!#lists.isEmpty(node.children)}">
+            <ul th:replace="~{inventory/category-tree :: tree(${node.children}, ${parentOptions})}"></ul>
+        </th:block>
+    </li>
+</ul>
+</body>
+</html>
