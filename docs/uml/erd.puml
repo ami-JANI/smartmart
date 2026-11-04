@@ -1,0 +1,95 @@
+@startuml erd
+title SmartMart: entity relationship diagram v1 (auth and inventory)
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+
+' Tables created by the Liquibase changesets in
+' src/main/resources/db/changelog/changes. PK = primary key, FK = foreign key,
+' UQ = unique. Money is NUMERIC(12,2); quantities are NUMERIC(12,3).
+
+package "User management" {
+
+  entity users {
+    * id : bigint <<PK>>
+    --
+    * username : varchar(50) <<UQ>>
+    * full_name : varchar(100)
+    * password_hash : varchar(100)
+    * active : boolean = true
+    * created_at : timestamptz
+    * updated_at : timestamptz
+  }
+
+  entity roles {
+    * id : bigint <<PK>>
+    --
+    * name : varchar(30) <<UQ>>
+    * created_at : timestamptz
+    * updated_at : timestamptz
+  }
+
+  entity user_roles {
+    * user_id : bigint <<PK, FK>>
+    * role_id : bigint <<PK, FK>>
+    --
+    * created_at : timestamptz
+    * updated_at : timestamptz
+  }
+}
+
+package "Inventory" {
+
+  entity categories {
+    * id : bigint <<PK>>
+    --
+    * name : varchar(100)
+    parent_id : bigint <<FK>>
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    ..
+    UQ (parent_id, name) NULLS NOT DISTINCT
+  }
+
+  entity products {
+    * id : bigint <<PK>>
+    --
+    * name : varchar(120)
+    * barcode : varchar(20) <<UQ>>
+    * category_id : bigint <<FK>>
+    * sale_unit : varchar(10)
+    * price : numeric(12,2)
+    low_stock_threshold : numeric(12,3)
+    * active : boolean
+    * created_at : timestamptz
+    * updated_at : timestamptz
+  }
+
+  entity stock_batches {
+    * id : bigint <<PK>>
+    --
+    * product_id : bigint <<FK>>
+    * batch_number : varchar(50)
+    * quantity : numeric(12,3)
+    * cost : numeric(12,2)
+    expiry_date : date
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    ..
+    CHECK (quantity >= 0)
+  }
+}
+
+users ||--o{ user_roles
+roles ||--o{ user_roles
+categories |o--o{ categories : parent
+categories ||--o{ products
+products ||--o{ stock_batches
+
+note bottom of user_roles
+  Deleting a user deletes its rows here.
+  The roles table holds the four roles
+  ADMIN, MANAGER, CASHIER, INVENTORY_STAFF.
+end note
+
+@enduml

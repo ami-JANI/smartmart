@@ -1,0 +1,95 @@
+@startuml class-diagram
+title SmartMart: class diagram v1 (auth and inventory domain)
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+hide empty members
+
+' Entities and value types built so far, in com.smartmart.auth.domain and
+' com.smartmart.inventory.domain. Every entity also has createdAt and
+' updatedAt (Instant), left out here to keep the diagram readable.
+' Modelling patterns from GUIDELINES.md section 5.11 are shown as notes.
+
+package "auth.domain" {
+
+  class User <<Entity>> <<Player>> {
+    - id : Long
+    - username : String
+    - fullName : String
+    - passwordHash : String
+    - active : boolean
+    + roleNames() : Set<RoleName>
+    + update(username, fullName, roles) : void
+    + changePassword(passwordHash) : void
+    + deactivate() : void
+  }
+
+  class Role <<Entity>> <<Role>> {
+    - id : Long
+    - name : RoleName
+  }
+
+  enum RoleName {
+    ADMIN
+    MANAGER
+    CASHIER
+    INVENTORY_STAFF
+  }
+
+  User "0..*" o--> "1..*" Role : holds >
+  Role --> "1" RoleName
+
+  note "Player–Role\nA User (player) holds one or more Roles.\nRoles are objects, not subclasses of User,\nso a user's roles change without changing class." as N_PR
+  N_PR .. User
+  N_PR .. Role
+}
+
+package "inventory.domain" {
+
+  class Category <<Entity>> {
+    - id : Long
+    - name : String
+    + rename(newName) : void
+    + moveUnder(newParent) : void
+  }
+
+  class Product <<Entity>> <<Abstraction>> {
+    - id : Long
+    - name : String
+    - barcode : String
+    - saleUnit : SaleUnit
+    - price : BigDecimal
+    - lowStockThreshold : BigDecimal [0..1]
+    - active : boolean
+    + update(...) : void
+    + isLowOnStock(totalStock, storeDefault) : boolean
+  }
+
+  class StockBatch <<Entity>> <<Occurrence>> {
+    - id : Long
+    - batchNumber : String
+    - quantity : BigDecimal
+    - cost : BigDecimal
+    - expiryDate : LocalDate [0..1]
+  }
+
+  enum SaleUnit {
+    PIECE
+    KG
+    - maxDecimals : int
+    + allows(quantity) : boolean
+  }
+
+  Category "0..*" --> "0..1" Category : parent >
+  Product "0..*" --> "1" Category : category >
+  StockBatch "0..*" --> "1" Product : product >
+  Product --> "1" SaleUnit
+
+  note "General Hierarchy\nA Category has an optional parent Category,\nforming a tree: Grocery → Rice → Miniket." as N_GH
+  N_GH .. Category
+
+  note "Abstraction–Occurrence\nProduct holds the shared data (name, barcode,\ncategory, price). Each StockBatch is one delivery\n(batch number, quantity, cost, expiry date).\nName and price are never copied into a batch." as N_AO
+  N_AO .. Product
+  N_AO .. StockBatch
+}
+
+@enduml
