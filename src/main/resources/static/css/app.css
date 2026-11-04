@@ -327,7 +327,9 @@ main.container {
 
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: var(--space); }
 .toolbar label { font-weight: 600; }
-.toolbar select {
+.toolbar .toolbar-check { display: flex; align-items: center; gap: .4rem; min-height: 2.5rem; font-weight: 400; cursor: pointer; }
+.toolbar input[type="search"] { flex: 1 1 12rem; min-width: 0; }
+.toolbar select, .toolbar input[type="search"] {
     min-height: 2.5rem;
     padding: .4rem .6rem;
     font: inherit;

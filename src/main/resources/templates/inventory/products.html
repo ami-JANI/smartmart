@@ -8,14 +8,17 @@
                     totalStock, lowStock), number (0-based), size, totalPages, totalElements, first, last
     categories      flat list for the filter: id, path (for example "Food > Rice")
     selectedCategory id of the chosen category, or null for all
+    q               the name or barcode text searched for, or null
+    lowStockOnly    true when only low-stock products are shown
     sortField       name, barcode or price
     sortDir         asc or desc
     message         optional success text
     roles           the global roles attribute (layout/base.html); only INVENTORY_STAFF see New and Edit
     activeNav       "products"
   Request
-    GET /products?category=12&sort=name,asc&page=0&size=20
-    An empty category value means "all categories".
+    GET /products?q=rice&category=12&lowStock=true&sort=name,asc&page=0&size=20
+    q matches part of the name or barcode. Empty q, category or lowStock values mean "no filter".
+    Without a size the server uses 20 per page (FR-INV-4).
 */-->
 <html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -23,7 +26,9 @@
 </head>
 <body>
 <main id="main-content" class="container"
-      th:with="catParam=${selectedCategory != null} ? ${selectedCategory} : ''">
+      th:with="catParam=${selectedCategory != null} ? ${selectedCategory} : '',
+               qParam=${q != null} ? ${q} : '',
+               lowParam=${lowStockOnly} ? 'true' : ''">
     <div class="page-header">
         <h1>Products</h1>
         <a class="btn btn-primary" th:href="@{/products/new}" href="/products/new"
@@ -33,12 +38,18 @@
     <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
 
     <form th:action="@{/products}" method="get" class="toolbar">
+        <label for="q">Search</label>
+        <input type="search" id="q" name="q" th:value="${q}" maxlength="120" autocomplete="off"
+               placeholder="Name or barcode">
         <label for="category">Category</label>
         <select id="category" name="category">
             <option value="">All categories</option>
             <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.path}"
                     th:selected="${selectedCategory != null and c.id == selectedCategory}">Category</option>
         </select>
+        <label class="toolbar-check">
+            <input type="checkbox" name="lowStock" value="true" th:checked="${lowStockOnly}"> Low stock only
+        </label>
         <input type="hidden" name="sort" th:value="${sortField + ',' + sortDir}">
         <input type="hidden" name="size" th:value="${page.size}">
         <button type="submit" class="btn btn-secondary btn-small">Filter</button>
@@ -50,16 +61,16 @@
             <thead>
             <tr>
                 <th scope="col" th:aria-sort="${sortField == 'name'} ? (${sortDir == 'asc'} ? 'ascending' : 'descending') : 'none'">
-                    <a th:href="@{/products(category=${catParam}, sort=${'name,' + (sortField == 'name' and sortDir == 'asc' ? 'desc' : 'asc')}, size=${page.size}, page=0)}"
+                    <a th:href="@{/products(q=${qParam}, category=${catParam}, lowStock=${lowParam}, sort=${'name,' + (sortField == 'name' and sortDir == 'asc' ? 'desc' : 'asc')}, size=${page.size}, page=0)}"
                        class="sort-link">Name</a>
                 </th>
                 <th scope="col" th:aria-sort="${sortField == 'barcode'} ? (${sortDir == 'asc'} ? 'ascending' : 'descending') : 'none'">
-                    <a th:href="@{/products(category=${catParam}, sort=${'barcode,' + (sortField == 'barcode' and sortDir == 'asc' ? 'desc' : 'asc')}, size=${page.size}, page=0)}"
+                    <a th:href="@{/products(q=${qParam}, category=${catParam}, lowStock=${lowParam}, sort=${'barcode,' + (sortField == 'barcode' and sortDir == 'asc' ? 'desc' : 'asc')}, size=${page.size}, page=0)}"
                        class="sort-link">Barcode</a>
                 </th>
                 <th scope="col">Category</th>
                 <th scope="col" class="num" th:aria-sort="${sortField == 'price'} ? (${sortDir == 'asc'} ? 'ascending' : 'descending') : 'none'">
-                    <a th:href="@{/products(category=${catParam}, sort=${'price,' + (sortField == 'price' and sortDir == 'asc' ? 'desc' : 'asc')}, size=${page.size}, page=0)}"
+                    <a th:href="@{/products(q=${qParam}, category=${catParam}, lowStock=${lowParam}, sort=${'price,' + (sortField == 'price' and sortDir == 'asc' ? 'desc' : 'asc')}, size=${page.size}, page=0)}"
                        class="sort-link">Price</a>
                 </th>
                 <th scope="col" class="num">In stock</th>
@@ -93,10 +104,10 @@
 
     <nav class="pager" aria-label="Pages" th:if="${page.totalPages > 1}">
         <a class="btn btn-secondary btn-small" th:unless="${page.first}"
-           th:href="@{/products(category=${catParam}, sort=${sortField + ',' + sortDir}, size=${page.size}, page=${page.number - 1})}">Previous</a>
+           th:href="@{/products(q=${qParam}, category=${catParam}, lowStock=${lowParam}, sort=${sortField + ',' + sortDir}, size=${page.size}, page=${page.number - 1})}">Previous</a>
         <span class="pager-status" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}">Page 1 of 3</span>
         <a class="btn btn-secondary btn-small" th:unless="${page.last}"
-           th:href="@{/products(category=${catParam}, sort=${sortField + ',' + sortDir}, size=${page.size}, page=${page.number + 1})}">Next</a>
+           th:href="@{/products(q=${qParam}, category=${catParam}, lowStock=${lowParam}, sort=${sortField + ',' + sortDir}, size=${page.size}, page=${page.number + 1})}">Next</a>
     </nav>
 </main>
 </body>
