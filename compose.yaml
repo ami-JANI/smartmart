@@ -1,9 +1,11 @@
-# Two PostgreSQL servers for SmartMart: a primary (read-write) and a
-# streaming replica (read-only). See GUIDELINES.md section 8.2.
-# The Spring Boot application service is added here once it exists.
+# SmartMart: the Spring Boot application and two PostgreSQL servers, a
+# primary (read-write) and a streaming replica (read-only). See
+# GUIDELINES.md section 8.2.
 #
 #   cp .env.example .env   # then set real passwords
-#   docker compose up -d
+#   docker compose up -d --build
+#
+# The application is then at http://localhost:8080.
 
 services:
   db-primary:
@@ -40,6 +42,28 @@ services:
       - replica-data:/var/lib/postgresql/data
       - ./db/replica/start-replica.sh:/start-replica.sh:ro
     entrypoint: ["bash", "/start-replica.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      retries: 20
+
+  app:
+    build: .
+    depends_on:
+      db-primary:
+        condition: service_healthy
+      db-replica:
+        condition: service_healthy
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # Inside Compose the servers are reached by service name, so these
+      # replace the localhost URLs in .env, which are for running the
+      # application on the host.
+      DB_PRIMARY_URL: jdbc:postgresql://db-primary:5432/${DB_NAME}
+      DB_REPLICA_URL: jdbc:postgresql://db-replica:5432/${DB_NAME}
+    ports:
+      - "8080:8080"
 
 volumes:
   primary-data:
