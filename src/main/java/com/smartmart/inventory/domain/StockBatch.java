@@ -66,4 +66,15 @@ public class StockBatch {
         this.cost = cost;
         this.expiryDate = expiryDate;
     }
+
+    /**
+     * Takes up to {@code wanted} from this batch, never leaving it below 0.
+     *
+     * @return the quantity actually taken
+     */
+    public BigDecimal take(BigDecimal wanted) {
+        BigDecimal taken = quantity.min(wanted);
+        quantity = quantity.subtract(taken);
+        return taken;
+    }
 }

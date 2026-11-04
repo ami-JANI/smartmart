@@ -1,5 +1,6 @@
 package com.smartmart.inventory.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /** Records deliveries of a product (FR-INV-6, FR-INV-7). */
@@ -18,4 +19,17 @@ public interface StockBatchService {
      * @throws ProductRuleException     if the quantity does not fit the product's sale unit
      */
     void add(Long productId, StockBatchData data);
+
+    /**
+     * Takes {@code quantity} of a product out of stock, first-expiry-first-out
+     * (FR-POS-11): from the unexpired batch that expires soonest, then the next,
+     * with batches without an expiry date last. Expired batches are skipped.
+     * Runs in the caller's transaction, so a sale's deductions commit or roll
+     * back together.
+     *
+     * @throws ProductNotFoundException   if the product does not exist
+     * @throws InsufficientStockException if the unexpired batches hold less than
+     *                                    {@code quantity}; nothing is deducted
+     */
+    void deduct(Long productId, BigDecimal quantity);
 }
