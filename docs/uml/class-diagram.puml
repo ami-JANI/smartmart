@@ -1,11 +1,11 @@
 @startuml class-diagram
-title SmartMart: class diagram v1 (auth and inventory domain)
+title SmartMart: class diagram v1 (auth, inventory and purchasing domain)
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 hide empty members
 
-' Entities and value types built so far, in com.smartmart.auth.domain and
-' com.smartmart.inventory.domain. Every entity also has createdAt and
+' Entities and value types built so far, in com.smartmart.auth.domain,
+' com.smartmart.inventory.domain and com.smartmart.purchasing.domain. Every entity also has createdAt and
 ' updatedAt (Instant), left out here to keep the diagram readable.
 ' Modelling patterns from GUIDELINES.md section 5.11 are shown as notes.
 
@@ -90,6 +90,20 @@ package "inventory.domain" {
   note "Abstraction–Occurrence\nProduct holds the shared data (name, barcode,\ncategory, price). Each StockBatch is one delivery\n(batch number, quantity, cost, expiry date).\nName and price are never copied into a batch." as N_AO
   N_AO .. Product
   N_AO .. StockBatch
+}
+
+package "purchasing.domain" {
+
+  class Supplier <<Entity>> {
+    - id : Long
+    - name : String
+    - contactPerson : String [0..1]
+    - phone : String
+    - email : String [0..1]
+    - address : String [0..1]
+    - active : boolean
+    + update(name, contactPerson, phone, email, address, active)
+  }
 }
 
 @enduml

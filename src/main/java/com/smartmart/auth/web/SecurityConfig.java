@@ -56,6 +56,7 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products/new", "/products/*/edit").hasRole(INVENTORY_STAFF)
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").hasAnyRole(INVENTORY_STAFF, MANAGER)
                         .requestMatchers("/products/**").hasRole(INVENTORY_STAFF)
+                        .requestMatchers("/suppliers/**").hasRole(INVENTORY_STAFF)
                         .anyRequest().denyAll())
                 .addFilterBefore(new FreshRolesFilter(userDetailsService), AnonymousAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(notLoggedIn()))

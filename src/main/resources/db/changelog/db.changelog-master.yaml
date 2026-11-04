@@ -13,3 +13,6 @@ databaseChangeLog:
   - include:
       file: changes/create-users-and-roles.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/create-suppliers.yaml
+      relativeToChangelogFile: true
