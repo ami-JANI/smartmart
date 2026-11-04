@@ -74,6 +74,17 @@ public class User {
         return roles.stream().map(Role::getName).collect(Collectors.toSet());
     }
 
+    /** Changes the name and roles. The password stays as it is. */
+    public void update(String username, String fullName, Set<Role> roles) {
+        this.username = username;
+        this.fullName = fullName;
+        this.roles = new HashSet<>(roles);
+    }
+
+    public void changePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     public void deactivate() {
         this.active = false;
     }

@@ -9,10 +9,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -24,7 +26,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
  * {@code /login?error}; logging out returns to {@code /login?logout}.
  * <p>
  * Every page is listed with the roles that may open it; anything not listed
- * is denied. A logged-in user with the wrong role gets 403. A visitor who is
+ * is denied. Roles are reloaded on every request ({@link FreshRolesFilter}).
+ * A logged-in user with the wrong role gets 403. A visitor who is
  * not logged in is sent to the login page, or gets 401 from {@code /api/}.
  */
 @Configuration
@@ -43,7 +46,7 @@ class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, UserDetailsService userDetailsService) throws Exception {
         http.authorizeHttpRequests(requests -> requests
                         .requestMatchers("/css/**", "/js/**", "/error").permitAll()
                         .requestMatchers("/").authenticated()
@@ -54,6 +57,7 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").hasAnyRole(INVENTORY_STAFF, MANAGER)
                         .requestMatchers("/products/**").hasRole(INVENTORY_STAFF)
                         .anyRequest().denyAll())
+                .addFilterBefore(new FreshRolesFilter(userDetailsService), AnonymousAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(notLoggedIn()))
                 .formLogin(form -> form.loginPage("/login").permitAll())
                 .logout(logout -> logout.permitAll());
