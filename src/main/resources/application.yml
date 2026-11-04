@@ -15,6 +15,10 @@ spring:
 # Two PostgreSQL servers (GUIDELINES.md section 8.2). Read-only
 # transactions use the replica; everything else uses the primary.
 smartmart:
+  # First administrator, created at startup if missing (FR-AUTH-3).
+  admin:
+    username: ${ADMIN_USERNAME:}
+    password: ${ADMIN_PASSWORD:}
   store:
     low-stock-default: 10
     vat-rate: 15

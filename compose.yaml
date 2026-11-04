@@ -57,6 +57,8 @@ services:
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       # Inside Compose the servers are reached by service name, so these
       # replace the localhost URLs in .env, which are for running the
       # application on the host.

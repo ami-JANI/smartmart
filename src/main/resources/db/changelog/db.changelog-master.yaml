@@ -10,3 +10,6 @@ databaseChangeLog:
   - include:
       file: changes/create-stock-batches.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/create-users-and-roles.yaml
+      relativeToChangelogFile: true

@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -25,12 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ModelAttribute;
 
 import com.smartmart.inventory.domain.SaleUnit;
 import com.smartmart.inventory.repository.ProductRepository;
@@ -41,24 +36,13 @@ import com.smartmart.inventory.service.ProductService;
 
 /**
  * Runs the real product page against the two databases from compose.yaml.
- * The add-batch form shows only for inventory staff, so the test supplies that
- * role as SCRUM-17 will. Each test removes what it created.
+ * The add-batch form shows only for inventory staff, so the test logs in with
+ * that role. Each test removes what it created.
  */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureMockMvc
-@WithMockUser
-@Import(StockBatchPageTests.InventoryStaffRole.class)
+@WithMockUser(roles = "INVENTORY_STAFF")
 class StockBatchPageTests {
-
-    @TestConfiguration
-    @ControllerAdvice
-    static class InventoryStaffRole {
-
-        @ModelAttribute("roles")
-        List<String> roles() {
-            return List.of("INVENTORY_STAFF");
-        }
-    }
 
     private final MockMvc mvc;
     private final ProductService products;
