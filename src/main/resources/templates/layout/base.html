@@ -30,8 +30,10 @@
     <div class="container header-bar">
         <a class="brand" th:href="@{/}" href="/" th:text="${storeName != null} ? ${storeName} : 'SmartMart'">SmartMart</a>
 
-        <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-label="Show menu">
-        <label for="nav-toggle" class="nav-toggle" aria-hidden="true">Menu</label>
+        <th:block th:if="${username != null}">
+            <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-label="Show menu">
+            <label for="nav-toggle" class="nav-toggle" aria-hidden="true">Menu</label>
+        </th:block>
 
         <nav class="site-nav" aria-label="Main" th:if="${username != null}">
             <ul>
