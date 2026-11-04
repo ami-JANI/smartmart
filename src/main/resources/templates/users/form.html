@@ -55,7 +55,8 @@
                 <p class="field-error" id="password-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Error</p>
             </div>
 
-            <fieldset th:classappend="${#fields.hasErrors('roles')} ? 'has-error'">
+            <fieldset th:classappend="${#fields.hasErrors('roles')} ? 'has-error'"
+                      th:attrappend="aria-describedby=${#fields.hasErrors('roles')} ? 'roles-error'">
                 <legend>Roles</legend>
                 <ul class="check-list">
                     <li th:each="role : ${allRoles}">
@@ -66,7 +67,7 @@
                     </li>
                 </ul>
                 <p class="hint">A user can have more than one role.</p>
-                <p class="field-error" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}">Error</p>
+                <p class="field-error" id="roles-error" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}">Error</p>
             </fieldset>
 
             <div class="form-actions">

@@ -54,19 +54,21 @@
 
             <div class="field" th:classappend="${#fields.hasErrors('categoryId')} ? 'has-error'">
                 <label for="categoryId">Category</label>
-                <select id="categoryId" th:field="*{categoryId}" required>
+                <select id="categoryId" th:field="*{categoryId}" required
+                        th:attrappend="aria-describedby=${#fields.hasErrors('categoryId')} ? 'categoryId-error'">
                     <option value="">Choose a category</option>
                     <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.path}">Category</option>
                 </select>
-                <p class="field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">Error</p>
+                <p class="field-error" id="categoryId-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">Error</p>
             </div>
 
             <div class="field" th:classappend="${#fields.hasErrors('saleUnit')} ? 'has-error'">
                 <label for="saleUnit">Sold by</label>
-                <select id="saleUnit" th:field="*{saleUnit}" required>
+                <select id="saleUnit" th:field="*{saleUnit}" required
+                        th:attrappend="aria-describedby=${#fields.hasErrors('saleUnit')} ? 'saleUnit-error'">
                     <option th:each="u : ${saleUnits}" th:value="${u}" th:text="${u == 'KG'} ? 'Weight (kg)' : 'Piece'">Piece</option>
                 </select>
-                <p class="field-error" th:if="${#fields.hasErrors('saleUnit')}" th:errors="*{saleUnit}">Error</p>
+                <p class="field-error" id="saleUnit-error" th:if="${#fields.hasErrors('saleUnit')}" th:errors="*{saleUnit}">Error</p>
             </div>
 
             <div class="field" th:classappend="${#fields.hasErrors('price')} ? 'has-error'">
