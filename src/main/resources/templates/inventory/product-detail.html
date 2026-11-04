@@ -5,9 +5,10 @@
 
   Model attributes
     product         id, name, barcode, categoryName, price, saleUnit (PIECE or KG), lowStock (boolean)
-    totalStock      total quantity over all batches that can still be sold
+    totalStock      sum of the quantities of all the product's batches (FR-INV-7)
     batches         list: batchNumber, quantity, cost (per unit), expiryDate (LocalDate or null),
-                    expired (boolean). Listed soonest expiry first, as stock is sold (FR-POS-11).
+                    expired (boolean). Listed soonest expiry first, batches without an expiry
+                    date last, as stock is sold (FR-INV-7, FR-POS-11).
     stockBatchForm  form object: batchNumber, quantity, cost, expiryDate (optional),
                     bound with BindingResult
     message         optional success text
