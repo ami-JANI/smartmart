@@ -38,15 +38,19 @@
     <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
 
     <form th:action="@{/products}" method="get" class="toolbar">
-        <label for="q">Search</label>
-        <input type="search" id="q" name="q" th:value="${q}" maxlength="120" autocomplete="off"
-               placeholder="Name or barcode">
-        <label for="category">Category</label>
-        <select id="category" name="category">
-            <option value="">All categories</option>
-            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.path}"
-                    th:selected="${selectedCategory != null and c.id == selectedCategory}">Category</option>
-        </select>
+        <span class="toolbar-field">
+            <label for="q">Search</label>
+            <input type="search" id="q" name="q" th:value="${q}" maxlength="120" autocomplete="off"
+                   placeholder="Name or barcode">
+        </span>
+        <span class="toolbar-field">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="">All categories</option>
+                <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.path}"
+                        th:selected="${selectedCategory != null and c.id == selectedCategory}">Category</option>
+            </select>
+        </span>
         <label class="toolbar-check">
             <input type="checkbox" name="lowStock" value="true" th:checked="${lowStockOnly}"> Low stock only
         </label>

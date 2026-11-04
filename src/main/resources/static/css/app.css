@@ -1,21 +1,30 @@
 /* SmartMart shared stylesheet. One file for every page (SCRUM-38). */
 
 :root {
-    --color-bg: #f4f6f8;
+    /* Slate and stock green ("Inventory & Stock Management" palette), darkened where
+       needed so text keeps a 4.5:1 contrast and control borders 3:1. */
+    --color-bg: #f8fafc;
     --color-surface: #ffffff;
-    --color-text: #1b2733;
-    --color-muted: #5b6b7a;
-    --color-border: #cfd8e0;
-    --color-primary: #0b6b3a;
-    --color-primary-dark: #084f2b;
-    --color-header: #12372a;
+    --color-subtle: #f1f5f9;
+    --color-text: #0f172a;
+    --color-muted: #475569;
+    --color-border: #e2e8f0;
+    --color-input-border: #64748b;
+    --color-primary: #047857;
+    --color-primary-dark: #065f46;
+    --color-header: #334155;
     --color-header-text: #ffffff;
-    --color-error: #a61b1b;
-    --color-error-bg: #fdecec;
-    --color-info: #0b4f8a;
-    --color-info-bg: #e8f2fc;
-    --color-success: #0b6b3a;
-    --color-success-bg: #e6f5ec;
+    --color-ring: #1d4ed8;
+    --color-error: #b91c1c;
+    --color-error-bg: #fef2f2;
+    --color-info: #1d4ed8;
+    --color-info-bg: #eff6ff;
+    --color-success: #047857;
+    --color-success-bg: #ecfdf5;
+    --color-warn: #92400e;
+    --color-warn-bg: #fef3c7;
+    --control-height: 2.75rem;
+    --transition: 150ms ease;
     --radius: 6px;
     --space: 1rem;
     --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -40,6 +49,7 @@ h1 { font-size: 1.6rem; margin: 0 0 var(--space); }
 h2 { font-size: 1.25rem; margin: 0 0 var(--space); }
 
 a { color: var(--color-primary); }
+a:hover { color: var(--color-primary-dark); }
 
 .container {
     width: 100%;
@@ -67,9 +77,10 @@ main.container {
 .skip-link:focus { left: 0; }
 
 :focus-visible {
-    outline: 3px solid #f5a623;
+    outline: 3px solid var(--color-ring);
     outline-offset: 2px;
 }
+.site-header :focus-visible { outline-color: var(--color-header-text); }
 
 /* ---------- Header and navigation ---------- */
 
@@ -99,11 +110,12 @@ main.container {
 .nav-toggle {
     display: none;
     cursor: pointer;
-    padding: .4rem .8rem;
+    min-height: var(--control-height);
+    padding: .55rem .9rem;
     border: 1px solid rgba(255, 255, 255, .6);
     border-radius: var(--radius);
 }
-.nav-toggle-input:focus-visible + .nav-toggle { outline: 3px solid #f5a623; outline-offset: 2px; }
+.nav-toggle-input:focus-visible + .nav-toggle { outline: 3px solid var(--color-header-text); outline-offset: 2px; }
 
 .site-nav {
     display: flex;
@@ -175,12 +187,12 @@ main.container {
 .form input[type="date"],
 .form select {
     width: 100%;
-    min-height: 2.75rem;
+    min-height: var(--control-height);
     padding: .5rem .75rem;
     font: inherit;
     color: inherit;
     background: #fff;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-input-border);
     border-radius: var(--radius);
 }
 
@@ -191,7 +203,7 @@ main.container {
 
 .btn {
     display: inline-block;
-    min-height: 2.75rem;
+    min-height: var(--control-height);
     padding: .5rem 1.25rem;
     font: inherit;
     font-weight: 600;
@@ -200,11 +212,15 @@ main.container {
     cursor: pointer;
     border: 1px solid transparent;
     border-radius: var(--radius);
+    transition: background-color var(--transition), border-color var(--transition), color var(--transition);
 }
 .btn-primary { background: var(--color-primary); color: #fff; }
-.btn-primary:hover { background: var(--color-primary-dark); }
+.btn-primary:hover { background: var(--color-primary-dark); color: #fff; }
 .btn-secondary { background: transparent; color: inherit; border-color: currentColor; }
-.btn-small { min-height: 2.25rem; padding: .25rem .9rem; }
+/* A see-through tint, so the hover also shows on the slate header. */
+.btn-secondary:hover { background: rgba(100, 116, 139, .16); color: inherit; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn-small { min-height: var(--control-height); padding: .4rem .9rem; }
 .btn-block { display: block; width: 100%; }
 
 .alert {
@@ -213,9 +229,9 @@ main.container {
     border-radius: var(--radius);
     border: 1px solid transparent;
 }
-.alert-error { color: var(--color-error); background: var(--color-error-bg); border-color: #efb4b4; }
-.alert-info { color: var(--color-info); background: var(--color-info-bg); border-color: #b3d3f0; }
-.alert-success { color: var(--color-success); background: var(--color-success-bg); border-color: #a9d9bc; }
+.alert-error { color: var(--color-error); background: var(--color-error-bg); border-color: #fecaca; }
+.alert-info { color: var(--color-info); background: var(--color-info-bg); border-color: #bfdbfe; }
+.alert-success { color: var(--color-success); background: var(--color-success-bg); border-color: #a7f3d0; }
 
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
@@ -255,17 +271,18 @@ main.container {
 .tree li { margin: .25rem 0; }
 .tree-row { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1rem; padding: .35rem 0; }
 .tree-name { font-weight: 600; margin-right: auto; }
-.tree-action summary { cursor: pointer; color: var(--color-primary); padding: .25rem 0; }
+.tree-action summary { cursor: pointer; color: var(--color-primary); padding: .65rem 0; }
+.tree-action summary:hover { color: var(--color-primary-dark); text-decoration: underline; }
 .tree-action[open] { flex-basis: 100%; }
 
 .inline-form { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .25rem 0 .5rem; }
 .inline-form input[type="text"], .inline-form input[type="number"], .inline-form select {
     flex: 1 1 12rem;
     min-width: 0;
-    min-height: 2.5rem;
+    min-height: var(--control-height);
     padding: .4rem .6rem;
     font: inherit;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-input-border);
     border-radius: var(--radius);
     background: #fff;
 }
@@ -291,7 +308,9 @@ main.container {
 .table { width: 100%; border-collapse: collapse; }
 .table caption { text-align: left; padding: .75rem 1rem; color: var(--color-muted); }
 .table th, .table td { padding: .65rem 1rem; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--color-border); }
-.table thead th { background: #eef2f5; font-weight: 600; white-space: nowrap; }
+.table thead th { background: var(--color-subtle); font-weight: 600; white-space: nowrap; }
+.table tbody tr { transition: background-color var(--transition); }
+.table tbody tr:hover td { background: var(--color-bg); }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .table .actions { white-space: nowrap; text-align: right; }
@@ -304,19 +323,19 @@ main.container {
     margin: 0 .25rem .25rem 0;
     font-size: .85rem;
     border-radius: 999px;
-    background: #e3e9ee;
+    background: var(--color-border);
     color: var(--color-text);
 }
 .badge-ok { background: var(--color-success-bg); color: var(--color-success); }
-.badge-off { background: #eceff1; color: var(--color-muted); }
-.badge-warn { background: #fff4d6; color: #7a5200; }
+.badge-off { background: var(--color-subtle); color: var(--color-muted); }
+.badge-warn { background: var(--color-warn-bg); color: var(--color-warn); }
 .badge-bad { background: var(--color-error-bg); color: var(--color-error); }
 
 .form fieldset { margin: 0 0 1rem; padding: .75rem 1rem; border: 1px solid var(--color-border); border-radius: var(--radius); }
 .form fieldset.has-error { border-color: var(--color-error); }
 .form legend { padding: 0 .35rem; font-weight: 600; }
 .check-list { list-style: none; margin: 0; padding: 0; }
-.check-list label { display: flex; align-items: center; gap: .6rem; min-height: 2.5rem; margin: 0; font-weight: 400; cursor: pointer; }
+.check-list label { display: flex; align-items: center; gap: .6rem; min-height: var(--control-height); margin: 0; font-weight: 400; cursor: pointer; }
 .check-list input[type="checkbox"] { width: 1.25rem; height: 1.25rem; }
 
 .form-narrow { max-width: 34rem; }
@@ -327,13 +346,16 @@ main.container {
 
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: var(--space); }
 .toolbar label { font-weight: 600; }
-.toolbar .toolbar-check { display: flex; align-items: center; gap: .4rem; min-height: 2.5rem; font-weight: 400; cursor: pointer; }
-.toolbar input[type="search"] { flex: 1 1 12rem; min-width: 0; }
+/* Each label stays on the same line as its control when the bar wraps on a phone. */
+.toolbar-field { display: flex; align-items: center; gap: .5rem; flex: 1 1 14rem; min-width: 0; }
+.toolbar .toolbar-check { display: flex; align-items: center; gap: .4rem; min-height: var(--control-height); font-weight: 400; cursor: pointer; }
+.toolbar .toolbar-check input { width: 1.25rem; height: 1.25rem; }
+.toolbar input[type="search"], .toolbar-field select { flex: 1 1 auto; min-width: 0; }
 .toolbar select, .toolbar input[type="search"] {
-    min-height: 2.5rem;
+    min-height: var(--control-height);
     padding: .4rem .6rem;
     font: inherit;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-input-border);
     border-radius: var(--radius);
     background: #fff;
 }
@@ -387,11 +409,11 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 .qty-form { display: inline-flex; align-items: center; gap: .4rem; justify-content: flex-end; }
 .qty-form input[type="number"] {
     width: 6.5rem;
-    min-height: 2.5rem;
+    min-height: var(--control-height);
     padding: .3rem .5rem;
     font: inherit;
     text-align: right;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-input-border);
     border-radius: var(--radius);
 }
 
@@ -413,10 +435,10 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 .discount-form .inline-form { padding: 0; }
 .discount-form select {
     flex: 1 1 10rem;
-    min-height: 2.5rem;
+    min-height: var(--control-height);
     padding: .4rem .6rem;
     font: inherit;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-input-border);
     border-radius: var(--radius);
     background: #fff;
 }
