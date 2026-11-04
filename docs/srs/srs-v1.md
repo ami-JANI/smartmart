@@ -4,14 +4,14 @@
 | --- | --- |
 | Version | 1.0 (draft for team review) |
 | Date | 2026-11-01 |
-| Covers | User management (Auth), Inventory, Point of sale (POS) |
+| Covers | User management (Auth), Inventory, Point of sale (POS), Suppliers |
 | Jira | SCRUM-18 |
 
 ## 1. Introduction
 
 ### 1.1 Purpose
 
-This document states what SmartMart must do for its first three modules, so that each Jira story has testable acceptance criteria. It is the reference for design, testing and the sprint demos. Purchasing and Reporting are specified in a later version.
+This document states what SmartMart must do for its first three modules and for suppliers, so that each Jira story has testable acceptance criteria. It is the reference for design, testing and the sprint demos. The rest of Purchasing, and Reporting, are specified in a later version.
 
 ### 1.2 Scope
 
@@ -20,8 +20,9 @@ SmartMart is a management system for **one supermarket branch** (README). Versio
 - **User management:** login, roles and user administration.
 - **Inventory:** categories, products, stock batches with expiry dates, low-stock thresholds.
 - **Point of sale:** cart, discounts and promotions, cash payment, invoice, stock deduction.
+- **Suppliers:** the supplier records that purchase orders will use.
 
-Out of scope for v1: purchasing, reports and dashboard (later SRS versions); multi-branch features; payment gateways; scale and scanner hardware drivers; the stretch goals in the README.
+Out of scope for v1: purchase orders, receiving, supplier returns, reports and dashboard (later SRS versions); multi-branch features; payment gateways; scale and scanner hardware drivers; the stretch goals in the README.
 
 ### 1.3 Definitions
 
@@ -51,7 +52,7 @@ Out of scope for v1: purchasing, reports and dashboard (later SRS versions); mul
 | Administrator | Manages user accounts and roles | User management |
 | Manager | Reviews stock and expiry; defines discounts and promotions | Inventory views, discounts, promotions |
 | Cashier | Runs checkout | POS |
-| Inventory staff | Maintains categories, products and stock batches | Inventory |
+| Inventory staff | Maintains categories, products, stock batches and suppliers | Inventory, Suppliers |
 
 A user can hold more than one role. Access rules are in FR-AUTH-5.
 
@@ -112,7 +113,7 @@ Each requirement has an ID, a statement and acceptance criteria (AC). The Jira c
     | Administrator | User and role management |
     | Manager | Stock and expiry views, discounts and promotions |
     | Cashier | POS checkout, own sales |
-    | Inventory staff | Categories, products, stock batches |
+    | Inventory staff | Categories, products, stock batches, suppliers |
 
   - Not logged in: **401** for an API call, redirect to login for a page.
   - Logged in with the wrong role: **403** and a "not allowed" page.
@@ -265,6 +266,38 @@ Each requirement has an ID, a statement and acceptance criteria (AC). The Jira c
   - It is read from the primary, so it is complete straight after the sale.
   - It has a print-friendly layout.
 
+### 3.4 Purchasing (PUR)
+
+| ID | Requirement | Jira |
+| --- | --- | --- |
+| FR-PUR-1 | Inventory staff add and edit suppliers. | SCRUM-35 |
+| FR-PUR-2 | Suppliers can be listed and searched. | SCRUM-35 |
+| FR-PUR-3 | A supplier no longer used can be deactivated, and is kept for its history. | SCRUM-35 |
+
+**Supplier fields**
+
+| Field | Rule |
+| --- | --- |
+| Name | Required, 1 to 120 characters, unique |
+| Contact person | Optional, up to 100 characters |
+| Phone | Required, 6 to 20 characters: digits, spaces, + and - |
+| Email | Optional, a valid address, up to 120 characters |
+| Address | Optional, up to 255 characters |
+| Active | Yes or no; new suppliers are active |
+
+**Acceptance criteria**
+
+- **FR-PUR-1**
+  - Every field rule in the supplier fields table is checked; each broken rule shows a message next to its field.
+  - Saving a supplier with a name another supplier already has fails with "Supplier name already in use".
+- **FR-PUR-2**
+  - The list is sorted by name and paged (default 20 per page).
+  - Search matches part of the name, contact person or phone, ignoring case.
+  - The list reads from the replica, so a supplier saved a moment ago may take up to a second to appear.
+- **FR-PUR-3**
+  - Suppliers are not deleted. An inactive supplier stays in the list, marked as inactive, and can be made active again.
+  - Purchase orders (SCRUM-36) can only be raised against active suppliers.
+
 ## 4. Non-functional requirements
 
 | ID | Requirement |
@@ -295,6 +328,7 @@ Each requirement has an ID, a statement and acceptance criteria (AC). The Jira c
 | SCRUM-31 Checkout | FR-POS-9 to 12 |
 | SCRUM-32 Invoice | FR-POS-13 |
 | SCRUM-34 Stock alerts | FR-INV-8, 9 |
+| SCRUM-35 Suppliers | FR-PUR-1 to 3 |
 | none yet | FR-POS-6 |
 
 ## 6. Open issues
