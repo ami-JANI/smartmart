@@ -43,7 +43,7 @@ import com.smartmart.inventory.service.ProductService;
  */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureMockMvc
-@WithMockUser
+@WithMockUser(roles = "INVENTORY_STAFF")
 class ProductPageTests {
 
     private final MockMvc mvc;

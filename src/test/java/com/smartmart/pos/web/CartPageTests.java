@@ -41,7 +41,7 @@ import com.smartmart.pos.service.WeightPrompt;
  */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureMockMvc
-@WithMockUser
+@WithMockUser(roles = "CASHIER")
 class CartPageTests {
 
     private final MockMvc mvc;
