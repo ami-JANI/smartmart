@@ -13,13 +13,20 @@
     // Payment page: change due = cash received - total, in whole paisa to avoid rounding drift.
     var cash = document.getElementById('cashReceived');
     var changeDue = document.getElementById('change-due');
+    var cashShort = document.getElementById('cash-short');
     if (cash && changeDue && cash.form && cash.form.dataset.total) {
         var totalCents = Math.round(parseFloat(cash.form.dataset.total) * 100);
         var update = function () {
             var received = Math.round(parseFloat(cash.value) * 100);
-            if (isNaN(received) || isNaN(totalCents)) { changeDue.textContent = formatMoney(0); return; }
+            if (isNaN(received) || isNaN(totalCents)) {
+                changeDue.textContent = formatMoney(0);
+                if (cashShort) { cashShort.hidden = true; }
+                return;
+            }
+            var short = received < totalCents;
             changeDue.textContent = formatMoney(Math.max(received - totalCents, 0));
-            changeDue.classList.toggle('is-short', received < totalCents);
+            changeDue.classList.toggle('is-short', short);
+            if (cashShort) { cashShort.hidden = !short; }
         };
         cash.addEventListener('input', update);
         update();
