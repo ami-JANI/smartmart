@@ -7,6 +7,10 @@ spring:
     import: optional:file:.env[.properties]
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+  # Liquibase owns the schema; Hibernate only checks that the entities match.
+  jpa:
+    hibernate:
+      ddl-auto: validate
 
 # Two PostgreSQL servers (GUIDELINES.md section 8.2). Read-only
 # transactions use the replica; everything else uses the primary.
