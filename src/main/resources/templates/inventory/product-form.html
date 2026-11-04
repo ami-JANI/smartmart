@@ -3,8 +3,11 @@
   Product form, create and edit (SCRUM-42). Inventory staff.
 
   Model attributes
-    productForm  form object: name, barcode, categoryId, price, saleUnit (PIECE or KG),
-                 lowStockThreshold (optional), bound with BindingResult
+    productForm  form object: name (1 to 120 characters), barcode (4 to 20 digits), categoryId,
+                 price, saleUnit (PIECE or KG), lowStockThreshold (optional), active (boolean;
+                 true for a new product), bound with BindingResult
+                 The threshold field allows 3 decimals for both units; the server refuses a
+                 decimal threshold for a PIECE product (FR-INV-5).
     editing      true when editing an existing product
     productId    id of the product being edited (only when editing)
     categories   flat list: id, path
@@ -36,15 +39,15 @@
 
             <div class="field" th:classappend="${#fields.hasErrors('name')} ? 'has-error'">
                 <label for="name">Name</label>
-                <input type="text" id="name" th:field="*{name}" maxlength="150" required
+                <input type="text" id="name" th:field="*{name}" maxlength="120" required
                        th:attrappend="aria-describedby=${#fields.hasErrors('name')} ? 'name-error'">
                 <p class="field-error" id="name-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</p>
             </div>
 
             <div class="field" th:classappend="${#fields.hasErrors('barcode')} ? 'has-error'">
                 <label for="barcode">Barcode</label>
-                <input type="text" id="barcode" th:field="*{barcode}" maxlength="50" inputmode="numeric"
-                       autocomplete="off" required
+                <input type="text" id="barcode" th:field="*{barcode}" minlength="4" maxlength="20" pattern="[0-9]{4,20}"
+                       inputmode="numeric" autocomplete="off" required
                        th:attrappend="aria-describedby=${#fields.hasErrors('barcode')} ? 'barcode-error'">
                 <p class="field-error" id="barcode-error" th:if="${#fields.hasErrors('barcode')}" th:errors="*{barcode}">Error</p>
             </div>
@@ -80,6 +83,16 @@
                 <p class="hint">Optional. Leave empty to use the store default.</p>
                 <p class="field-error" id="threshold-error" th:if="${#fields.hasErrors('lowStockThreshold')}" th:errors="*{lowStockThreshold}">Error</p>
             </div>
+
+            <ul class="check-list">
+                <li>
+                    <label>
+                        <input type="checkbox" th:field="*{active}">
+                        <span>Active</span>
+                    </label>
+                </li>
+            </ul>
+            <p class="hint">Inactive products cannot be sold.</p>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Save changes' : 'Create product'">Save</button>
