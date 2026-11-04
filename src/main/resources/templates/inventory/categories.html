@@ -7,12 +7,14 @@
     parentOptions  flat list of every category: id, path
     categoryForm   form object for "add" with name and parentId, bound with BindingResult
     message        optional success text (for example from a redirect)
-    error          optional text for a rejected rename or move, for example a category under itself
+    error          optional text for a rejected rename, move or delete, for example a category under
+                   itself, or "Cannot delete: this category has products or child categories" (FR-INV-1)
     activeNav      "categories"
   Requests
     POST /categories                  name, parentId (empty = top level)
     POST /categories/{id}/rename      name
     POST /categories/{id}/move        parentId (empty = top level)
+    POST /categories/{id}/delete      refused while the category has products or child categories
 */-->
 <html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <head>

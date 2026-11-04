@@ -36,6 +36,14 @@
                     <button type="submit" class="btn btn-secondary btn-small">Move</button>
                 </form>
             </details>
+
+            <details class="tree-action">
+                <summary>Delete</summary>
+                <form th:action="@{/categories/{id}/delete(id=${node.id})}" method="post" class="inline-form">
+                    <span class="hint">Only a category with no products and no child categories can be deleted.</span>
+                    <button type="submit" class="btn btn-secondary btn-small">Delete<span class="visually-hidden"> <span th:text="${node.name}"></span></span></button>
+                </form>
+            </details>
         </div>
 
         <th:block th:if="${!#lists.isEmpty(node.children)}">
