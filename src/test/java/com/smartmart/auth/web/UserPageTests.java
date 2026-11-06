@@ -168,4 +168,68 @@ class UserPageTests {
         mvc.perform(get("/pos").session(session)).andExpect(status().isForbidden());
         mvc.perform(get("/categories").session(session)).andExpect(status().isOk());
     }
+
+    @Test
+    void renamedUserIsStillCheckedAndCanBeLockedOut() throws Exception {
+        String username = username();
+        String renamed = username();
+        Long id = createdUser(username, RoleName.CASHIER);
+        MockHttpSession session = loggedIn(username);
+
+        userService.update(id, new UserData(renamed, "Test User", "", Set.of(RoleName.CASHIER)));
+
+        mvc.perform(get("/pos").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(renamed)));
+
+        userService.deactivate(id, "test-admin");
+
+        mvc.perform(get("/pos").session(session)).andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    void renamedAdministratorStillCannotDeactivateTheirOwnAccount() throws Exception {
+        String username = username();
+        Long id = createdUser(username, RoleName.ADMIN);
+        MockHttpSession session = loggedIn(username);
+
+        userService.update(id, new UserData(username(), "Test User", "", Set.of(RoleName.ADMIN)));
+
+        mvc.perform(post("/users/{id}/deactivate", id).session(session).with(csrf()))
+                .andExpect(redirectedUrl("/users"))
+                .andExpect(flash().attribute("error", "You cannot deactivate your own account"));
+        assertThat(users.findById(id).orElseThrow().isActive()).isTrue();
+    }
+
+    @Test
+    void usernameIsTrimmedBeforeItsLengthIsChecked() throws Exception {
+        mvc.perform(post("/users").with(admin()).with(csrf())
+                        .param("username", "  ab  ").param("fullName", "Someone").param("password", PASSWORD)
+                        .param("roles", "CASHIER"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Username must be 3 to 50 characters")));
+
+        String username = username();
+        mvc.perform(post("/users").with(admin()).with(csrf())
+                        .param("username", "  " + username + "  ").param("fullName", "Someone").param("password", PASSWORD)
+                        .param("roles", "CASHIER"))
+                .andExpect(redirectedUrl("/users"));
+        created.add(users.findByUsername(username).orElseThrow().getId());
+    }
+
+    @Test
+    void passwordOverTheBcryptLimitShowsAMessageInsteadOfAnError() throws Exception {
+        mvc.perform(post("/users").with(admin()).with(csrf())
+                        .param("username", username()).param("fullName", "Someone").param("password", "p".repeat(73))
+                        .param("roles", "CASHIER"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Password is too long")));
+
+        String username = username();
+        mvc.perform(post("/users").with(admin()).with(csrf())
+                        .param("username", username).param("fullName", "Someone").param("password", "p".repeat(72))
+                        .param("roles", "CASHIER"))
+                .andExpect(redirectedUrl("/users"));
+        created.add(users.findByUsername(username).orElseThrow().getId());
+    }
 }

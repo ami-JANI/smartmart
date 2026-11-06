@@ -23,6 +23,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserForm {
 
+    // Trimmed when set, so the length rule counts the name as it is stored (FR-AUTH-6).
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 50, message = "Username must be 3 to 50 characters")
     private String username;
@@ -37,6 +38,10 @@ public class UserForm {
 
     @NotEmpty(message = "Choose at least one role")
     private List<RoleName> roles = new ArrayList<>();
+
+    public void setUsername(String username) {
+        this.username = username == null ? null : username.strip();
+    }
 
     static UserForm of(UserSummary user) {
         UserForm form = new UserForm();

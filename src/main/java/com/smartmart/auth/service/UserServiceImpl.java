@@ -1,5 +1,6 @@
 package com.smartmart.auth.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 class UserServiceImpl implements UserService {
 
     private static final int MIN_PASSWORD_LENGTH = 8;
+    /** BCrypt reads at most 72 bytes of a password and refuses a longer one. */
+    private static final int MAX_PASSWORD_BYTES = 72;
     private static final String USERNAME_TAKEN = "Username already taken";
 
     private final UserRepository users;
@@ -86,6 +89,9 @@ class UserServiceImpl implements UserService {
     private void requirePassword(String password) {
         if (password.length() < MIN_PASSWORD_LENGTH) {
             throw new UserRuleException("password", "Password must be at least 8 characters");
+        }
+        if (password.getBytes(StandardCharsets.UTF_8).length > MAX_PASSWORD_BYTES) {
+            throw new UserRuleException("password", "Password is too long: at most 72 English letters, digits or symbols");
         }
     }
 

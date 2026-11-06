@@ -172,4 +172,37 @@ class UserServiceImplTest {
         assertThat(admin.isActive()).isTrue();
         verify(users, never()).saveAndFlush(any());
     }
+
+    @Test
+    void passwordOfAtMost72BytesIsAccepted() {
+        service.create(data("amina", "p".repeat(72), RoleName.CASHIER));
+
+        verify(users).saveAndFlush(any());
+    }
+
+    @Test
+    void passwordOfMoreThan72BytesIsRefused() {
+        assertThatThrownBy(() -> service.create(data("amina", "p".repeat(73), RoleName.CASHIER)))
+                .isInstanceOf(UserRuleException.class)
+                .hasMessageContaining("too long")
+                .extracting("field").isEqualTo("password");
+    }
+
+    @Test
+    void longPasswordCountsBytesNotLetters() {
+        String bangla = "অ".repeat(25);
+
+        assertThatThrownBy(() -> service.create(data("amina", bangla, RoleName.CASHIER)))
+                .isInstanceOf(UserRuleException.class)
+                .hasMessageContaining("too long");
+    }
+
+    @Test
+    void newPasswordOnUpdateHasTheSameLimit() {
+        stored(1L, "amina", RoleName.CASHIER);
+
+        assertThatThrownBy(() -> service.update(1L, data("amina", "p".repeat(73), RoleName.CASHIER)))
+                .isInstanceOf(UserRuleException.class)
+                .hasMessageContaining("too long");
+    }
 }

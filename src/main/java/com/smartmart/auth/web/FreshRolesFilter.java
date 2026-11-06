@@ -1,15 +1,16 @@
 package com.smartmart.auth.web;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.smartmart.auth.service.AccountDetails;
+import com.smartmart.auth.service.AccountDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,44 +19,42 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Reloads the logged-in user's roles from the primary on every request, so a
- * role change made by an administrator applies at the user's next request
- * (FR-AUTH-7). A user deactivated since logging in is logged out.
+ * Reloads the logged-in user from the primary on every request, by user id, so
+ * an administrator's change applies at the user's next request (FR-AUTH-7):
+ * new roles, a new username, or deactivation, which logs the user out. A user
+ * who no longer exists is logged out too.
  * <p>
- * Users are never deleted, so a username that is not found can only be a
- * test's mock user; it is left as it is.
+ * Only logins made through the login form carry an id. Other principals, such
+ * as the tests' mock users, are left as they are.
  */
 class FreshRolesFilter extends OncePerRequestFilter {
 
-    private final UserDetailsService userDetailsService;
+    private final AccountDetailsService accounts;
 
-    FreshRolesFilter(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
+    FreshRolesFilter(AccountDetailsService accounts) {
+        this.accounts = accounts;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         Authentication current = SecurityContextHolder.getContext().getAuthentication();
-        if (current instanceof UsernamePasswordAuthenticationToken && current.isAuthenticated()) {
-            refresh(current, request);
+        if (current instanceof UsernamePasswordAuthenticationToken && current.getPrincipal() instanceof AccountDetails account) {
+            refresh(current, account, request);
         }
         chain.doFilter(request, response);
     }
 
-    private void refresh(Authentication current, HttpServletRequest request) {
-        UserDetails user;
-        try {
-            user = userDetailsService.loadUserByUsername(current.getName());
-        } catch (UsernameNotFoundException notInDatabase) {
-            return;
-        }
+    private void refresh(Authentication current, AccountDetails account, HttpServletRequest request) {
+        Optional<AccountDetails> fresh = accounts.loadById(account.getId()).filter(AccountDetails::isEnabled);
         SecurityContext context = SecurityContextHolder.createEmptyContext();
-        if (user.isEnabled()) {
-            UsernamePasswordAuthenticationToken fresh =
+        if (fresh.isPresent()) {
+            AccountDetails user = fresh.get();
+            user.eraseCredentials();
+            UsernamePasswordAuthenticationToken token =
                     UsernamePasswordAuthenticationToken.authenticated(user, null, user.getAuthorities());
-            fresh.setDetails(current.getDetails());
-            context.setAuthentication(fresh);
+            token.setDetails(current.getDetails());
+            context.setAuthentication(token);
         } else {
             HttpSession session = request.getSession(false);
             if (session != null) {

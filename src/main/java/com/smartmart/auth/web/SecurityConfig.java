@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -19,6 +18,8 @@ import org.springframework.security.web.authentication.DelegatingAuthenticationE
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+
+import com.smartmart.auth.service.AccountDetailsService;
 
 /**
  * Session login with the form on {@code /login}, and access by role
@@ -46,7 +47,7 @@ class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, UserDetailsService userDetailsService) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, AccountDetailsService accounts) throws Exception {
         http.authorizeHttpRequests(requests -> requests
                         .requestMatchers("/css/**", "/js/**", "/error").permitAll()
                         .requestMatchers("/").authenticated()
@@ -58,7 +59,7 @@ class SecurityConfig {
                         .requestMatchers("/products/**").hasRole(INVENTORY_STAFF)
                         .requestMatchers("/suppliers/**").hasRole(INVENTORY_STAFF)
                         .anyRequest().denyAll())
-                .addFilterBefore(new FreshRolesFilter(userDetailsService), AnonymousAuthenticationFilter.class)
+                .addFilterBefore(new FreshRolesFilter(accounts), AnonymousAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(notLoggedIn()))
                 .formLogin(form -> form.loginPage("/login").permitAll())
                 .logout(logout -> logout.permitAll());
