@@ -1,13 +1,16 @@
 @startuml class-diagram
-title SmartMart: class diagram v1 (auth, inventory and purchasing domain)
+title SmartMart: class diagram v1 (auth, inventory, purchasing and POS domain)
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 hide empty members
 
-' Entities and value types built so far, in com.smartmart.auth.domain,
-' com.smartmart.inventory.domain and com.smartmart.purchasing.domain. Every entity also has createdAt and
-' updatedAt (Instant), left out here to keep the diagram readable.
-' Modelling patterns from GUIDELINES.md section 5.11 are shown as notes.
+' Domain classes built so far, in the auth, inventory, purchasing and pos
+' domain packages, plus the store settings in common.config. Every entity
+' also has createdAt and updatedAt (Instant), left out here to keep the
+' diagram readable. The design patterns of GUIDELINES.md section 5 that are
+' in use are shown as notes: Player-Role, General Hierarchy and
+' Abstraction-Occurrence (5.11), Singleton (5.4), Strategy (5.1) and
+' Memento (5.9).
 
 package "auth.domain" {
 
@@ -70,6 +73,7 @@ package "inventory.domain" {
     - quantity : BigDecimal
     - cost : BigDecimal
     - expiryDate : LocalDate [0..1]
+    + take(wanted) : BigDecimal
   }
 
   enum SaleUnit {
@@ -104,6 +108,82 @@ package "purchasing.domain" {
     - active : boolean
     + update(name, contactPerson, phone, email, address, active)
   }
+}
+
+package "pos.domain" {
+
+  class Cart <<Originator>> {
+    - lines : Map<Long, CartLine>
+    + add(line) : void
+    + changeQuantity(productId, quantity) : void
+    + remove(productId) : void
+    + clear() : void
+    + subtotal() : BigDecimal
+    + snapshot() : CartSnapshot
+    + restore(snapshot) : void
+  }
+
+  class CartLine <<Record>> {
+    + productId : Long
+    + productName : String
+    + barcode : String
+    + saleUnit : SaleUnit
+    + unitPrice : BigDecimal
+    + quantity : BigDecimal
+    + total() : BigDecimal
+  }
+
+  class CartSnapshot <<Record>> <<Memento>> {
+    + lines : List<CartLine>
+  }
+
+  class CartHistory <<Caretaker>> {
+    - snapshots : Deque<CartSnapshot>
+    + push(snapshot) : void
+    + pop() : Optional<CartSnapshot>
+    + isEmpty() : boolean
+    + clear() : void
+  }
+
+  interface DiscountStrategy <<Strategy>> {
+    + discountOn(eligibleTotal) : BigDecimal
+  }
+
+  class PercentageDiscount <<Record>> {
+    + percent : BigDecimal
+  }
+
+  class FlatAmountDiscount <<Record>> {
+    + amount : BigDecimal
+  }
+
+  Cart "1" *--> "0..*" CartLine : lines >
+  Cart ..> CartSnapshot : creates and restores from >
+  CartSnapshot "1" *--> "0..*" CartLine
+  CartHistory "1" o--> "0..20" CartSnapshot : keeps >
+  PercentageDiscount ..|> DiscountStrategy
+  FlatAmountDiscount ..|> DiscountStrategy
+
+  note "Memento\nCart (originator) saves its lines in an immutable\nCartSnapshot (memento) before each change.\nCartHistory (caretaker) keeps the last 20, so the\ncashier can undo one change at a time (FR-POS-4)." as N_MM
+  N_MM .. Cart
+  N_MM .. CartSnapshot
+  N_MM .. CartHistory
+
+  note "Strategy\nEach kind of discount is its own class, so a new\nkind is added without changing checkout code.\nA discount is never negative and never more\nthan the total it applies to (FR-POS-8)." as N_ST
+  N_ST .. DiscountStrategy
+}
+
+CartLine --> "1" SaleUnit
+
+package "common.config" {
+
+  class StoreSettings <<Record>> <<Singleton>> {
+    + lowStockDefault : BigDecimal
+    + vatRate : BigDecimal
+  }
+
+  note "Singleton\nOne immutable Spring bean per application,\nread from application.yml at startup (GUIDELINES.md 5.4).\nThe product service passes lowStockDefault to\nProduct.isLowOnStock; the cart service uses vatRate." as N_SG
+  N_SG .. StoreSettings
 }
 
 @enduml
