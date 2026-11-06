@@ -1,8 +1,8 @@
 # SmartMart: An Integrated Super Shop Management System
 
-A planned management system for a single supermarket branch. It covers point of sale, inventory, purchasing, user management, and reporting.
+A management system for a single supermarket branch. It covers point of sale, inventory, purchasing, user management, and reporting.
 
-> **Status: planning stage.** This repository contains documentation only. No application code, build setup, or tests exist yet. Everything below describes agreed scope, not implemented features.
+> **Status: in development (first sprint of a 10-week plan).** Login, roles, user administration, categories, products, stock batches, suppliers and the POS cart work. Checkout, invoices, purchase orders and reports are not built yet. The table under [Modules](#modules) shows where each module stands.
 
 ## Overview
 
@@ -23,19 +23,19 @@ SmartMart is a three-person academic project for **CSE 3219: Software Engineerin
 | Cashier | Handles checkout at the point of sale |
 | Inventory staff | Maintains products and stock, records supplier deliveries |
 
-Detailed permission rules for each role have not been defined yet.
+Each role can open only its own pages; the full rules are FR-AUTH-5 in the [SRS](docs/srs/srs-v1.md).
 
-## Planned Modules
+## Modules
 
-The modules are listed in priority order. None of them is implemented yet, and detailed requirements and acceptance criteria are still to be written.
+The modules are listed in priority order. Requirements and acceptance criteria for the first four are in the [SRS](docs/srs/srs-v1.md).
 
-| # | Module | Intended capabilities |
-| --- | --- | --- |
-| 1 | Point of sale | Barcode-based product selection, cart, checkout, discounts, payment recording, and invoice generation |
-| 2 | Inventory | Product and category management, stock tracking, low-stock alerts, and batch and expiry-date monitoring |
-| 3 | Purchasing | Supplier management, purchase orders, stock receiving, purchase records, and returns to suppliers |
-| 4 | User management | Login and role-based access for the four roles above |
-| 5 | Reporting | Sales, purchase, inventory, and profit summaries, plus a dashboard |
+| # | Module | Intended capabilities | Built so far |
+| --- | --- | --- | --- |
+| 1 | Point of sale | Barcode-based product selection, cart, checkout, discounts, payment recording, and invoice generation | Barcode and weighed-item cart with undo. Checkout, discounts, promotions and invoices are in progress. |
+| 2 | Inventory | Product and category management, stock tracking, low-stock alerts, and batch and expiry-date monitoring | Categories, products, stock batches with expiry dates, and low-stock flags. Alerts are not built yet. |
+| 3 | Purchasing | Supplier management, purchase orders, stock receiving, purchase records, and returns to suppliers | Suppliers. Purchase orders, receiving and returns are not built yet. |
+| 4 | User management | Login and role-based access for the four roles above | Login, access by role, and user administration. The lockout after repeated failed logins is not built yet. |
+| 5 | Reporting | Sales, purchase, inventory, and profit summaries, plus a dashboard | Not started. |
 
 "Payment recording" means storing how a sale was paid. It does not imply a payment gateway or live payment processing. Barcode scanner hardware has not been specified.
 
@@ -54,11 +54,81 @@ Multi-branch and other enterprise features are out of scope.
 
 ## Course Deliverables
 
-Alongside the application, the project is expected to produce the course's software engineering documents: requirements (SRS), UML and architectural design, estimation and scheduling, risk management, testing, and release documentation. None of these have been added to the repository yet.
+Alongside the application, the project produces the course's software engineering documents. Release documentation is still to come.
 
-## Repository Status
+| Document | Where |
+| --- | --- |
+| Requirements (SRS) | [docs/srs/srs-v1.md](docs/srs/srs-v1.md) |
+| Design decisions | [docs/decisions.md](docs/decisions.md) |
+| UML: use case, class, ERD, checkout sequence and activity | [docs/uml/](docs/uml/) (PlantUML sources) |
+| Sprint plan, WBS, estimate, schedule and risk register | [docs/plan/](docs/plan/) |
+| Basis path tests | [docs/testing/basis-paths.md](docs/testing/basis-paths.md) |
 
-The repository contains this README, the commit rules in [COMMIT.md](COMMIT.md), and the design and coding rules in [GUIDELINES.md](GUIDELINES.md). GUIDELINES.md sets the planned stack (Java 17, Spring Boot 3, PostgreSQL) and architecture. No application code exists yet, so there are no install, run, or test commands. Setup instructions will be added here when the codebase exists.
+## Getting Started
+
+The stack is Java 17, Spring Boot 3, PostgreSQL 16, Thymeleaf and Maven ([GUIDELINES.md](GUIDELINES.md) section 2). The application uses two database servers, a primary and a streaming replica, which Docker Compose starts for you (GUIDELINES.md section 8.2).
+
+### What you need
+
+- JDK 17 or newer
+- Docker Desktop, running
+- Git
+
+Maven is not needed: the project includes the Maven wrapper (`./mvnw`, or `mvnw.cmd` on Windows).
+
+### First time
+
+```sh
+git clone https://github.com/ami-JANI/smartmart.git
+cd smartmart
+git config core.hooksPath .githooks
+git config commit.template .gitmessage
+cp .env.example .env
+```
+
+`.env` holds the database passwords and the first administrator's login (`ADMIN_USERNAME`, `ADMIN_PASSWORD`). Change the placeholder values, and never commit `.env`. If your `.env` is older than the login feature, add the two `ADMIN_` lines from `.env.example`: without them no administrator is created, and nobody can log in.
+
+### Run everything in Docker
+
+```sh
+docker compose up -d --build
+```
+
+This starts both databases and the application. Open <http://localhost:8080> and log in with `ADMIN_USERNAME` and `ADMIN_PASSWORD`. As administrator you can then create accounts for the other roles.
+
+### Run the application on your machine
+
+Useful while developing, because a code change needs only a restart:
+
+```sh
+docker compose up -d db-primary db-replica
+./mvnw spring-boot:run
+```
+
+If port 8080 is already in use (for example by an Oracle database service on Windows), run it on another port:
+
+```sh
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8090
+```
+
+For Docker Compose, change `"8080:8080"` under `app` in `compose.yaml` to, say, `"8090:8080"` on your machine only, and do not commit that change.
+
+### Run the tests
+
+```sh
+docker compose up -d db-primary db-replica
+./mvnw verify
+```
+
+The tests need both databases running, because some of them check that read-only work reaches the replica. They clean up the data they create. GitHub Actions runs the same build on every push to `main`.
+
+### Stop
+
+```sh
+docker compose down
+```
+
+This keeps the data. `docker compose down -v` also deletes both databases.
 
 ## Contributing
 
