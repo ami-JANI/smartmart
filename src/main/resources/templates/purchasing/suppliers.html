@@ -51,9 +51,15 @@
             <tbody>
             <tr th:each="supplier : ${page.content}">
                 <td th:text="${supplier.name}">Supplier</td>
-                <td th:text="${supplier.contactPerson}">Contact</td>
+                <td>
+                    <span th:unless="${#strings.isEmpty(supplier.contactPerson)}" th:text="${supplier.contactPerson}">Contact</span>
+                    <span class="muted" th:if="${#strings.isEmpty(supplier.contactPerson)}">None</span>
+                </td>
                 <td th:text="${supplier.phone}">01700000000</td>
-                <td th:text="${supplier.email}">name@example.com</td>
+                <td>
+                    <span th:unless="${#strings.isEmpty(supplier.email)}" th:text="${supplier.email}">name@example.com</span>
+                    <span class="muted" th:if="${#strings.isEmpty(supplier.email)}">None</span>
+                </td>
                 <td>
                     <span class="badge badge-ok" th:if="${supplier.active}">Active</span>
                     <span class="badge badge-off" th:unless="${supplier.active}">Inactive</span>
