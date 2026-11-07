@@ -185,6 +185,8 @@ main.container {
 .form input[type="password"],
 .form input[type="number"],
 .form input[type="date"],
+.form input[type="tel"],
+.form input[type="email"],
 .form select {
     width: 100%;
     min-height: var(--control-height);
