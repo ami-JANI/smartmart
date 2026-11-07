@@ -406,14 +406,15 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 .btn[disabled], .btn:disabled { opacity: .5; cursor: not-allowed; }
 
 .pos-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
-@media (min-width: 60rem) { .pos-grid { grid-template-columns: minmax(0, 1fr) 22rem; } }
+/* The summary sits beside the cart only when the cart table still fits without scrolling. */
+@media (min-width: 64rem) { .pos-grid { grid-template-columns: minmax(0, 1fr) 22rem; } }
 @media (min-width: 60rem) { .pos-grid.pay-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 
-.cart-table td, .cart-table th { padding-top: .5rem; padding-bottom: .5rem; }
+.cart-table td, .cart-table th { padding: .5rem .6rem; }
 .cart-table tr.line-free td { background: var(--color-success-bg); }
 .qty-form { display: inline-flex; align-items: center; gap: .4rem; justify-content: flex-end; }
 .qty-form input[type="number"] {
-    width: 6.5rem;
+    width: 5.5rem;
     min-height: var(--control-height);
     padding: .3rem .5rem;
     font: inherit;
