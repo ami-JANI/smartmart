@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!--/* 429: too many failed logins for this username from this computer (FR-AUTH-8). */-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Too many attempts - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <section class="card message-card">
+        <p class="message-code" aria-hidden="true">429</p>
+        <h1>Too many failed logins</h1>
+        <p>Logging in with this username is blocked for one minute. Wait a minute, then try again.</p>
+        <a class="btn btn-primary" th:href="@{/login}" href="/login">Back to log in</a>
+    </section>
+</main>
+</body>
+</html>

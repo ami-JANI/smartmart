@@ -2,6 +2,7 @@ package com.smartmart.auth.web;
 
 import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults;
 
+import java.time.Clock;
 import java.util.LinkedHashMap;
 
 import org.springframework.context.annotation.Bean;
@@ -14,9 +15,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.smartmart.auth.service.AccountDetailsService;
@@ -25,7 +31,9 @@ import com.smartmart.auth.service.AccountDetailsService;
  * Session login with the form on {@code /login}, and access by role
  * (GUIDELINES.md section 7, FR-AUTH-5). A failed login returns to
  * {@code /login?error}; logging out returns to {@code /login?logout}. A
- * successful login always goes to the start page for the user's role.
+ * successful login always goes to the start page for the user's role. After
+ * five failed logins in a minute for one username and address, further
+ * attempts get 429 until the minute has passed ({@link FailedLoginLimiter}).
  * <p>
  * Every page is listed with the roles that may open it; anything not listed
  * is denied. Roles are reloaded on every request ({@link FreshRolesFilter}).
@@ -48,7 +56,13 @@ class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, AccountDetailsService accounts) throws Exception {
+    FailedLoginLimiter failedLoginLimiter() {
+        return new FailedLoginLimiter(Clock.systemUTC());
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http, AccountDetailsService accounts,
+            FailedLoginLimiter limiter) throws Exception {
         http.authorizeHttpRequests(requests -> requests
                         .requestMatchers("/css/**", "/js/**", "/error").permitAll()
                         .requestMatchers("/").authenticated()
@@ -61,11 +75,31 @@ class SecurityConfig {
                         .requestMatchers("/suppliers/**").hasRole(INVENTORY_STAFF)
                         .anyRequest().denyAll())
                 .addFilterBefore(new FreshRolesFilter(accounts), AnonymousAuthenticationFilter.class)
+                .addFilterBefore(new LoginLimitFilter(limiter), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(notLoggedIn()))
-                // Always the role's start page: a saved page may belong to another role (SCRUM-52).
-                .formLogin(form -> form.loginPage("/login").defaultSuccessUrl("/", true).permitAll())
+                .formLogin(form -> form.loginPage("/login")
+                        .successHandler(loggedIn(limiter))
+                        .failureHandler(loginFailed(limiter))
+                        .permitAll())
                 .logout(logout -> logout.permitAll());
         return http.build();
+    }
+
+    /** Always the role's start page: a saved page may belong to another role (SCRUM-52). */
+    private static AuthenticationSuccessHandler loggedIn(FailedLoginLimiter limiter) {
+        SimpleUrlAuthenticationSuccessHandler startPage = new SimpleUrlAuthenticationSuccessHandler("/");
+        return (request, response, authentication) -> {
+            limiter.recordSuccess(LoginLimitFilter.username(request), request.getRemoteAddr());
+            startPage.onAuthenticationSuccess(request, response, authentication);
+        };
+    }
+
+    private static AuthenticationFailureHandler loginFailed(FailedLoginLimiter limiter) {
+        SimpleUrlAuthenticationFailureHandler loginPage = new SimpleUrlAuthenticationFailureHandler("/login?error");
+        return (request, response, exception) -> {
+            limiter.recordFailure(LoginLimitFilter.username(request), request.getRemoteAddr());
+            loginPage.onAuthenticationFailure(request, response, exception);
+        };
     }
 
     private AuthenticationEntryPoint notLoggedIn() {

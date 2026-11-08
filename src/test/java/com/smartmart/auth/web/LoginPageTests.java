@@ -112,6 +112,21 @@ class LoginPageTests {
     }
 
     @Test
+    void sixthFailedLoginInAMinuteGets429WithRetryAfter() throws Exception {
+        for (int attempt = 1; attempt <= 5; attempt++) {
+            mvc.perform(formLogin().user(cashier.getUsername()).password("wrong-password"))
+                    .andExpect(unauthenticated())
+                    .andExpect(redirectedUrl("/login?error"));
+        }
+
+        String retryAfter = mvc.perform(formLogin().user(cashier.getUsername()).password(PASSWORD))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(unauthenticated())
+                .andReturn().getResponse().getHeader("Retry-After");
+        assertThat(Integer.parseInt(retryAfter)).isBetween(1, 60);
+    }
+
+    @Test
     void deactivatedUserCannotLogIn() throws Exception {
         cashier.deactivate();
         users.save(cashier);
