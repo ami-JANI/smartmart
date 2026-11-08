@@ -2,6 +2,7 @@ package com.smartmart.auth.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -215,6 +216,16 @@ class UserPageTests {
                         .param("roles", "CASHIER"))
                 .andExpect(redirectedUrl("/users"));
         created.add(users.findByUsername(username).orElseThrow().getId());
+    }
+
+    @Test
+    void emptyUsernameShowsOnlyTheRequiredMessage() throws Exception {
+        mvc.perform(post("/users").with(admin()).with(csrf())
+                        .param("username", "").param("fullName", "Someone").param("password", PASSWORD)
+                        .param("roles", "CASHIER"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Username is required")))
+                .andExpect(content().string(not(containsString("Username must be 3 to 50 characters"))));
     }
 
     @Test

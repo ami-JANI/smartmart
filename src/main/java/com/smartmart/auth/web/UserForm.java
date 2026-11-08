@@ -24,8 +24,9 @@ import lombok.Setter;
 public class UserForm {
 
     // Trimmed when set, so the length rule counts the name as it is stored (FR-AUTH-6).
+    // The length rule lets an empty name through, so an empty field shows only "required".
     @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be 3 to 50 characters")
+    @Pattern(regexp = "|.{3,50}", message = "Username must be 3 to 50 characters")
     private String username;
 
     @NotBlank(message = "Full name is required")
