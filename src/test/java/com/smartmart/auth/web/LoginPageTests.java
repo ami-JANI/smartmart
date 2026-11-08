@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.logout;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -77,6 +80,18 @@ class LoginPageTests {
     void correctPasswordLogsInWithTheUsersRoles() throws Exception {
         mvc.perform(formLogin().user(cashier.getUsername()).password(PASSWORD))
                 .andExpect(authenticated().withUsername(cashier.getUsername()).withRoles("CASHIER"))
+                .andExpect(redirectedUrl("/"));
+    }
+
+    @Test
+    void loginAfterOpeningAnotherRolesPageGoesToTheRoleStartPage() throws Exception {
+        MockHttpSession session = (MockHttpSession) mvc.perform(get("/products"))
+                .andExpect(redirectedUrlPattern("**/login"))
+                .andReturn().getRequest().getSession();
+
+        mvc.perform(post("/login").session(session).with(csrf())
+                        .param("username", cashier.getUsername()).param("password", PASSWORD))
+                .andExpect(authenticated())
                 .andExpect(redirectedUrl("/"));
     }
 

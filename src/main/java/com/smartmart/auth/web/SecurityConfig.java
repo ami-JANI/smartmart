@@ -24,7 +24,8 @@ import com.smartmart.auth.service.AccountDetailsService;
 /**
  * Session login with the form on {@code /login}, and access by role
  * (GUIDELINES.md section 7, FR-AUTH-5). A failed login returns to
- * {@code /login?error}; logging out returns to {@code /login?logout}.
+ * {@code /login?error}; logging out returns to {@code /login?logout}. A
+ * successful login always goes to the start page for the user's role.
  * <p>
  * Every page is listed with the roles that may open it; anything not listed
  * is denied. Roles are reloaded on every request ({@link FreshRolesFilter}).
@@ -61,7 +62,8 @@ class SecurityConfig {
                         .anyRequest().denyAll())
                 .addFilterBefore(new FreshRolesFilter(accounts), AnonymousAuthenticationFilter.class)
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(notLoggedIn()))
-                .formLogin(form -> form.loginPage("/login").permitAll())
+                // Always the role's start page: a saved page may belong to another role (SCRUM-52).
+                .formLogin(form -> form.loginPage("/login").defaultSuccessUrl("/", true).permitAll())
                 .logout(logout -> logout.permitAll());
         return http.build();
     }
