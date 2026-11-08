@@ -26,6 +26,9 @@ class LoginLimitFilter extends OncePerRequestFilter {
 
     private static final RequestMatcher LOGIN = withDefaults().matcher(HttpMethod.POST, "/login");
 
+    /** Request attribute holding the wait in whole seconds, for the 429 page. */
+    static final String RETRY_AFTER_ATTRIBUTE = "retryAfterSeconds";
+
     private final FailedLoginLimiter limiter;
 
     LoginLimitFilter(FailedLoginLimiter limiter) {
@@ -44,6 +47,8 @@ class LoginLimitFilter extends OncePerRequestFilter {
         if (wait.isPresent()) {
             long seconds = Math.max(1, (wait.get().toMillis() + 999) / 1000);
             response.setHeader(HttpHeaders.RETRY_AFTER, Long.toString(seconds));
+            // The 429 page shows the same wait (templates/error/429.html, SCRUM-56).
+            request.setAttribute(RETRY_AFTER_ATTRIBUTE, seconds);
             response.sendError(HttpStatus.TOO_MANY_REQUESTS.value());
             return;
         }

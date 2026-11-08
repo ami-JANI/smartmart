@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.smartmart.auth.domain.RoleName;
 import com.smartmart.auth.domain.User;
@@ -119,11 +120,14 @@ class LoginPageTests {
                     .andExpect(redirectedUrl("/login?error"));
         }
 
-        String retryAfter = mvc.perform(formLogin().user(cashier.getUsername()).password(PASSWORD))
+        MvcResult refused = mvc.perform(formLogin().user(cashier.getUsername()).password(PASSWORD))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(unauthenticated())
-                .andReturn().getResponse().getHeader("Retry-After");
+                .andReturn();
+        String retryAfter = refused.getResponse().getHeader("Retry-After");
         assertThat(Integer.parseInt(retryAfter)).isBetween(1, 60);
+        // The 429 page shows the same wait as the header (SCRUM-56).
+        assertThat(refused.getRequest().getAttribute("retryAfterSeconds")).isEqualTo(Long.parseLong(retryAfter));
     }
 
     @Test
