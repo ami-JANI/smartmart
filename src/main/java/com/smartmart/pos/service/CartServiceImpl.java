@@ -48,9 +48,21 @@ class CartServiceImpl implements CartService {
             return Optional.of(new WeightPrompt(product.barcode(), product.name()));
         }
         BigDecimal quantity = unit == SaleUnit.KG ? weight : BigDecimal.ONE;
-        CartLine line = new CartLine(product.id(), product.name(), product.barcode(), unit, product.price(), quantity);
+        CartLine line = newLine(product, unit, quantity);
         recordingForUndo(() -> cart.add(line));
         return Optional.empty();
+    }
+
+    // A refused weight names the product, so the cashier can retype it without scanning again.
+    private CartLine newLine(ProductSummary product, SaleUnit unit, BigDecimal quantity) {
+        try {
+            return new CartLine(product.id(), product.name(), product.barcode(), unit, product.price(), quantity);
+        } catch (CartRuleException refused) {
+            if (unit != SaleUnit.KG) {
+                throw refused;
+            }
+            throw new WeightRejectedException(refused.getMessage(), new WeightPrompt(product.barcode(), product.name()));
+        }
     }
 
     @Override

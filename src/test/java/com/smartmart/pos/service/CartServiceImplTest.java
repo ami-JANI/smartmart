@@ -66,8 +66,10 @@ class CartServiceImplTest {
     void weighedProductRefusesABadWeight() {
         product(2, "2222", "KG", "75.50");
 
-        assertThatThrownBy(() -> service.scan("2222", BigDecimal.ZERO)).isInstanceOf(CartRuleException.class);
-        assertThatThrownBy(() -> service.scan("2222", new BigDecimal("1.2345"))).isInstanceOf(CartRuleException.class);
+        assertThatThrownBy(() -> service.scan("2222", BigDecimal.ZERO))
+                .isInstanceOfSatisfying(WeightRejectedException.class,
+                        refused -> assertThat(refused.prompt()).isEqualTo(new WeightPrompt("2222", "Item 2")));
+        assertThatThrownBy(() -> service.scan("2222", new BigDecimal("1.2345"))).isInstanceOf(WeightRejectedException.class);
         assertThat(service.view().lines()).isEmpty();
     }
 

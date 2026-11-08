@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartmart.pos.domain.CartRuleException;
 import com.smartmart.pos.service.CartService;
+import com.smartmart.pos.service.WeightRejectedException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -63,6 +64,13 @@ class CartController {
     String undo(RedirectAttributes redirect) {
         cartService.undo();
         redirect.addFlashAttribute("message", "Last change undone");
+        return BACK_TO_CART;
+    }
+
+    @ExceptionHandler(WeightRejectedException.class)
+    String weightRefused(WeightRejectedException refusal, RedirectAttributes redirect) {
+        redirect.addFlashAttribute("error", refusal.getMessage());
+        redirect.addFlashAttribute("weightPrompt", refusal.prompt());
         return BACK_TO_CART;
     }
 

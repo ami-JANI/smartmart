@@ -149,8 +149,10 @@ class CartPageTests {
         mvc.perform(get("/pos").session(session).flashAttr("weightPrompt", new WeightPrompt(barcode, "Loose Rice")))
                 .andExpect(content().string(containsString("Weight in kg for")));
 
+        // A refused weight keeps the weight box open for the same product (SCRUM-49).
         mvc.perform(post("/pos/cart/items").session(session).with(csrf()).param("barcode", barcode).param("weight", "0"))
-                .andExpect(flash().attribute("error", "Weight must be greater than 0, with at most 3 decimals"));
+                .andExpect(flash().attribute("error", "Weight must be greater than 0, with at most 3 decimals"))
+                .andExpect(flash().attribute("weightPrompt", new WeightPrompt(barcode, "Loose Rice")));
 
         mvc.perform(post("/pos/cart/items").session(session).with(csrf()).param("barcode", barcode).param("weight", "1.250"))
                 .andExpect(flash().attributeCount(0));
