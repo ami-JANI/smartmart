@@ -23,6 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.smartmart.purchasing.repository.SupplierRepository;
 import com.smartmart.purchasing.service.SupplierData;
@@ -40,22 +41,28 @@ import com.smartmart.purchasing.service.SupplierService;
 class SupplierPageTests {
 
     private final MockMvc mvc;
+    private final TransactionTemplate writes;
     private final SupplierService suppliers;
     private final SupplierRepository repository;
     private final String marker = "Test-" + UUID.randomUUID();
 
     @Autowired
-    SupplierPageTests(MockMvc mvc, SupplierService suppliers, SupplierRepository repository) {
+    SupplierPageTests(MockMvc mvc, SupplierService suppliers, SupplierRepository repository, TransactionTemplate writes) {
         this.mvc = mvc;
         this.suppliers = suppliers;
         this.repository = repository;
+        this.writes = writes;
     }
 
     @AfterEach
     void removeTestData() {
-        repository.findAll().stream()
-                .filter(supplier -> supplier.getName().contains(marker))
-                .forEach(repository::delete);
+        // One read-write transaction, so the reads below go to the primary and see rows
+        // created a moment ago; a read-only read could reach a replica that is behind.
+        writes.executeWithoutResult(status -> {
+            repository.findAll().stream()
+                    .filter(supplier -> supplier.getName().contains(marker))
+                    .forEach(repository::delete);
+        });
     }
 
     private Long supplier(String name, String contact, String phone) {

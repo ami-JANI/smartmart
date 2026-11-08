@@ -26,6 +26,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.smartmart.inventory.domain.SaleUnit;
 import com.smartmart.inventory.repository.ProductRepository;
@@ -45,6 +46,7 @@ import com.smartmart.pos.service.WeightPrompt;
 class CartPageTests {
 
     private final MockMvc mvc;
+    private final TransactionTemplate writes;
     private final ProductService products;
     private final ProductRepository productRepository;
     private final CategoryService categories;
@@ -52,11 +54,13 @@ class CartPageTests {
     private Long categoryId;
 
     @Autowired
-    CartPageTests(MockMvc mvc, ProductService products, ProductRepository productRepository, CategoryService categories) {
+    CartPageTests(MockMvc mvc, ProductService products, ProductRepository productRepository, CategoryService categories,
+                  TransactionTemplate writes) {
         this.mvc = mvc;
         this.products = products;
         this.productRepository = productRepository;
         this.categories = categories;
+        this.writes = writes;
     }
 
     @BeforeEach
@@ -66,10 +70,14 @@ class CartPageTests {
 
     @AfterEach
     void removeTestData() {
-        productRepository.findAll().stream()
-                .filter(product -> product.getCategory().getId().equals(categoryId))
-                .forEach(productRepository::delete);
-        categories.delete(categoryId);
+        // One read-write transaction, so the reads below go to the primary and see rows
+        // created a moment ago; a read-only read could reach a replica that is behind.
+        writes.executeWithoutResult(status -> {
+            productRepository.findAll().stream()
+                    .filter(product -> product.getCategory().getId().equals(categoryId))
+                    .forEach(productRepository::delete);
+            categories.delete(categoryId);
+        });
     }
 
     private String barcode() {

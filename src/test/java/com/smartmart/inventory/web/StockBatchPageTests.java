@@ -26,6 +26,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.smartmart.inventory.domain.SaleUnit;
 import com.smartmart.inventory.repository.ProductRepository;
@@ -45,6 +46,7 @@ import com.smartmart.inventory.service.ProductService;
 class StockBatchPageTests {
 
     private final MockMvc mvc;
+    private final TransactionTemplate writes;
     private final ProductService products;
     private final ProductRepository productRepository;
     private final StockBatchRepository batchRepository;
@@ -53,12 +55,13 @@ class StockBatchPageTests {
 
     @Autowired
     StockBatchPageTests(MockMvc mvc, ProductService products, ProductRepository productRepository,
-                        StockBatchRepository batchRepository, CategoryService categories) {
+                        StockBatchRepository batchRepository, CategoryService categories, TransactionTemplate writes) {
         this.mvc = mvc;
         this.products = products;
         this.productRepository = productRepository;
         this.batchRepository = batchRepository;
         this.categories = categories;
+        this.writes = writes;
     }
 
     @BeforeEach
@@ -68,13 +71,17 @@ class StockBatchPageTests {
 
     @AfterEach
     void removeTestData() {
-        productRepository.findAll().stream()
-                .filter(product -> product.getCategory().getId().equals(categoryId))
-                .forEach(product -> {
-                    batchRepository.deleteAll(batchRepository.findForProduct(product.getId()));
-                    productRepository.delete(product);
-                });
-        categories.delete(categoryId);
+        // One read-write transaction, so the reads below go to the primary and see rows
+        // created a moment ago; a read-only read could reach a replica that is behind.
+        writes.executeWithoutResult(status -> {
+            productRepository.findAll().stream()
+                    .filter(product -> product.getCategory().getId().equals(categoryId))
+                    .forEach(product -> {
+                        batchRepository.deleteAll(batchRepository.findForProduct(product.getId()));
+                        productRepository.delete(product);
+                    });
+            categories.delete(categoryId);
+        });
     }
 
     private Long product(SaleUnit unit, String threshold) {
