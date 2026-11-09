@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-stock-alerts
+      author: smartmart
+      changes:
+        - createTable:
+            tableName: stock_alerts
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_stock_alerts
+              - column:
+                  name: alert_type
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_stock_alerts_product
+                    references: products(id)
+                    deleteCascade: true
+              - column:
+                  name: batch_number
+                  type: varchar(50)
+              - column:
+                  name: total_stock
+                  type: numeric(12,3)
+              - column:
+                  name: threshold
+                  type: numeric(12,3)
+              - column:
+                  name: quantity
+                  type: numeric(12,3)
+              - column:
+                  name: expiry_date
+                  type: date
+              - column:
+                  name: status
+                  type: varchar(20)
+                  defaultValue: "OPEN"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raised_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: stock_alerts
+            indexName: ix_stock_alerts_product
+            columns:
+              - column:
+                  name: product_id
+        - createIndex:
+            tableName: stock_alerts
+            indexName: ix_stock_alerts_status
+            columns:
+              - column:
+                  name: status
