@@ -2,6 +2,14 @@
 
 Design decisions about the SmartMart system, newest first. Each entry gives the date, the decision, and why (GUIDELINES.md section 10).
 
+## 2026-11-09: Near-expiry alerts default to 7 days before batch expiry
+
+**Decision.** Batches that expire within a configurable window (store setting `near-expiry-days-default`, default 7 days) trigger a `NEAR_EXPIRY` alert. Already-expired batches are excluded from sales (FR-POS-11) and flagged on the batch list, but near-expiry alerts warn inventory staff and managers before batches expire so goods can be discounted, promoted or returned.
+
+**Why.** Answers SRS Q2. Fast-moving fresh products and packaged foods in a single-branch supermarket need enough lead time (about a week) for staff to take action before the product reaches its expiry date.
+
+**Alternatives considered.** Setting near-expiry days per category or per product: rejected for v1 as overly complex for initial inventory management (simplicity first, GUIDELINES.md section 2).
+
 ## 2026-11-01: Prices include VAT at one store-wide rate
 
 **Decision.** Selling prices are entered and shown with VAT included. One VAT rate applies to the whole store and is kept in the store settings (GUIDELINES.md section 5.4). The invoice shows how much of the total is VAT. Products have no VAT rate of their own.
