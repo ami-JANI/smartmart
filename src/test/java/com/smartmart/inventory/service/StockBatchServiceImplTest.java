@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.smartmart.inventory.domain.Category;
 import com.smartmart.inventory.domain.Product;
@@ -27,7 +28,8 @@ class StockBatchServiceImplTest {
 
     private final StockBatchRepository batches = mock(StockBatchRepository.class);
     private final ProductRepository products = mock(ProductRepository.class);
-    private final StockBatchServiceImpl service = new StockBatchServiceImpl(batches, products);
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final StockBatchServiceImpl service = new StockBatchServiceImpl(batches, products, events);
 
     private Product product(SaleUnit unit) {
         Product product = new Product("Rice", "1234", new Category("Food", null), unit, BigDecimal.TEN, null, true);
@@ -50,6 +52,7 @@ class StockBatchServiceImplTest {
         assertThat(saved.getValue().getProduct()).isSameAs(rice);
         assertThat(saved.getValue().getBatchNumber()).isEqualTo("B-1");
         assertThat(saved.getValue().getQuantity()).isEqualByComparingTo("12");
+        verify(events).publishEvent(new StockChangedEvent(1L));
     }
 
     @Test
@@ -91,5 +94,17 @@ class StockBatchServiceImplTest {
 
         assertThat(service.forProduct(1L)).extracting(StockBatchSummary::expired)
                 .containsExactly(true, false, false);
+    }
+
+    @Test
+    void deductPublishesStockChangedEvent() {
+        Product rice = product(SaleUnit.PIECE);
+        StockBatch batch = new StockBatch(rice, "B-1", new BigDecimal("10"), BigDecimal.ONE, null);
+        when(batches.lockSellable(any(), any())).thenReturn(List.of(batch));
+
+        service.deduct(1L, new BigDecimal("4"));
+
+        assertThat(batch.getQuantity()).isEqualByComparingTo("6");
+        verify(events).publishEvent(new StockChangedEvent(1L));
     }
 }

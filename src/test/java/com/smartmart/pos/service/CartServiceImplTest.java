@@ -21,7 +21,7 @@ class CartServiceImplTest {
 
     private final ProductService products = mock(ProductService.class);
     private final CartServiceImpl service = new CartServiceImpl(new Cart(), new CartHistory(), products,
-            new StoreSettings(new BigDecimal("10"), new BigDecimal("15")));
+            new StoreSettings(new BigDecimal("10"), new BigDecimal("15"), 7));
 
     private void product(long id, String barcode, String unit, String price) {
         when(products.findActiveByBarcode(barcode)).thenReturn(Optional.of(new ProductSummary(id, "Item " + id, barcode,

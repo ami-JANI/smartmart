@@ -92,7 +92,13 @@ class CartPageTests {
         return mvc.perform(post("/pos/cart/items").session(session).with(csrf()).param("barcode", barcode));
     }
 
+    private void awaitReplicated(String barcode) {
+        await().pollInSameThread().atMost(Duration.ofSeconds(5))
+                .until(() -> products.findActiveByBarcode(barcode).isPresent());
+    }
+
     private void awaitAdded(String barcode) {
+        awaitReplicated(barcode);
         await().pollInSameThread().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
                 scan(barcode).andExpect(flash().attributeCount(0)));
     }
@@ -142,9 +148,9 @@ class CartPageTests {
     void weighedProductPromptsThenAddsTheWeight() throws Exception {
         String barcode = barcode();
         product("Loose Rice", barcode, SaleUnit.KG, "75.50", true);
+        awaitReplicated(barcode);
 
-        await().pollInSameThread().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
-                scan(barcode).andExpect(flash().attribute("weightPrompt", new WeightPrompt(barcode, "Loose Rice"))));
+        scan(barcode).andExpect(flash().attribute("weightPrompt", new WeightPrompt(barcode, "Loose Rice")));
 
         mvc.perform(get("/pos").session(session).flashAttr("weightPrompt", new WeightPrompt(barcode, "Loose Rice")))
                 .andExpect(content().string(containsString("Weight in kg for")));

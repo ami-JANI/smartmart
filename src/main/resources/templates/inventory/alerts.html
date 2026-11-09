@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--/*
+  Inventory alerts list (SCRUM-34, SCRUM-53).
+  Visible to INVENTORY_STAFF and MANAGER.
+
+  Model attributes:
+    alerts    list of AlertView records (newest raisedAt first)
+    activeNav "alerts"
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Stock Alerts - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <div class="page-header">
+        <h1>Stock Alerts</h1>
+    </div>
+
+    <div th:if="${alerts == null or alerts.isEmpty()}" class="empty-state">
+        <p>No open alerts. Stock levels and batch expiry dates are in good standing.</p>
+    </div>
+
+    <div th:if="${alerts != null and !alerts.isEmpty()}" class="table-wrap">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Product</th>
+                <th scope="col">Details</th>
+                <th scope="col">Raised</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="alert : ${alerts}">
+                <td>
+                    <span th:if="${alert.type.name() == 'LOW_STOCK'}" class="badge badge-warning">Low Stock</span>
+                    <span th:if="${alert.type.name() == 'NEAR_EXPIRY'}" class="badge badge-danger">Near Expiry</span>
+                </td>
+                <td>
+                    <a th:href="@{/products/{id}(id=${alert.productId})}" th:text="${alert.productName}">Product Name</a>
+                </td>
+                <td>
+                    <span th:if="${alert.type.name() == 'LOW_STOCK'}">
+                        Stock: <strong th:text="${alert.totalStock}">0</strong> / Threshold: <span th:text="${alert.threshold}">10</span>
+                    </span>
+                    <span th:if="${alert.type.name() == 'NEAR_EXPIRY'}">
+                        Batch <strong th:text="${alert.batchNumber}">B1</strong>: <span th:text="${alert.quantity}">5</span> units expiring on <strong th:text="${alert.expiryDate}">2026-11-15</strong>
+                    </span>
+                </td>
+                <td th:text="${#temporals.format(alert.raisedAt, 'yyyy-MM-dd HH:mm')}">2026-11-10 12:00</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

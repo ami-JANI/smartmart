@@ -21,6 +21,7 @@ smartmart:
     password: ${ADMIN_PASSWORD:}
   store:
     low-stock-default: 10
+    near-expiry-days-default: 7
     vat-rate: 15
   datasource:
     primary:

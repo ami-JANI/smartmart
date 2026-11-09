@@ -30,7 +30,7 @@ class ProductServiceImplTest {
     private final CategoryRepository categories = mock(CategoryRepository.class);
     private final StockBatchRepository batches = mock(StockBatchRepository.class);
     private final ProductServiceImpl service =
-            new ProductServiceImpl(products, categories, batches, new StoreSettings(new BigDecimal("10"), new BigDecimal("15")));
+            new ProductServiceImpl(products, categories, batches, new StoreSettings(new BigDecimal("10"), new BigDecimal("15"), 7));
     private final Category rice = new Category("Rice", null);
 
     @BeforeEach
