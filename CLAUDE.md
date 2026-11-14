@@ -10,7 +10,7 @@ It does not repeat the design rules. The three rule files split the work like th
 | [COMMIT.md](COMMIT.md) | **How to record** a change: Conventional Commits format, types, scopes |
 | CLAUDE.md (this file) | **How to work**: the decisions to make before, during and after a change |
 
-Read GUIDELINES.md before writing any code or design document. Design decisions about the system itself (for example "batches are deducted first-expiry-first-out") are logged in `docs/decisions.md`, as GUIDELINES.md section 10 says. This file is about working style, not about the system.
+Start each session by reading [context.md](context.md): it summarises the project (scope, team, Jira, current status) and ends with a log of recent pushes. Read GUIDELINES.md before writing any code or design document. Design decisions about the system itself (for example "batches are deducted first-expiry-first-out") are logged in `docs/decisions.md`, as GUIDELINES.md section 10 says. This file is about working style, not about the system.
 
 The four principles below are adapted from [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) (MIT licence), which is based on Andrej Karpathy's notes on common mistakes coding models make. They bias toward caution over speed. For a typo or an obvious one-line fix, use judgment.
 
