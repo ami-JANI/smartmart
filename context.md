@@ -139,3 +139,9 @@ Setup steps are in the [README](README.md#getting-started). Things that trip peo
 Appended automatically by `.github/workflows/context-log.yml` after each push to `main`: one entry per push, newest last, listing each commit with its author and Jira keys. Do not edit by hand; put lasting facts in the sections above instead.
 
 <!-- context-log: entries below this line are generated -->
+
+### 2026-11-14, pushed by ami-JANI
+
+- `56a4076` docs(repo): add context.md with the full project context (ami-JANI)
+- `f78da19` ci: append each push to main to the context.md change log (ami-JANI)
+- `41577c6` docs(repo): point assistants at context.md first (ami-JANI)
