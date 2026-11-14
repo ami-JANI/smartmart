@@ -138,6 +138,8 @@ main.container {
     text-decoration: none;
 }
 .site-nav a:hover, .site-nav a[aria-current="page"] { text-decoration: underline; }
+/* Open alert count on the Alerts menu item (SCRUM-53). */
+.site-nav .nav-badge { margin: 0 0 0 .4rem; font-weight: 700; text-decoration: none; }
 
 .nav-user { display: flex; align-items: center; gap: .75rem; }
 .nav-user form { margin: 0; }
