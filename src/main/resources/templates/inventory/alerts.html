@@ -4,25 +4,27 @@
   Visible to INVENTORY_STAFF and MANAGER.
 
   Model attributes:
-    alerts    list of AlertView records (newest raisedAt first)
+    alerts    list of AlertView records, newest raisedAt first: id, type (LOW_STOCK or NEAR_EXPIRY),
+              productId, productName, raisedAt (Instant); LOW_STOCK adds totalStock and threshold,
+              NEAR_EXPIRY adds batchNumber, quantity and expiryDate (LocalDate)
     activeNav "alerts"
+  The open alert count for the menu badge comes from AlertModelAdvice (layout/base.html).
+  Quantities are shown without trailing zeros, since AlertView has no sale unit.
 */-->
 <html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Stock Alerts - SmartMart</title>
+    <title>Stock alerts - SmartMart</title>
 </head>
 <body>
 <main id="main-content" class="container">
     <div class="page-header">
-        <h1>Stock Alerts</h1>
+        <h1>Stock alerts</h1>
     </div>
 
-    <div th:if="${alerts == null or alerts.isEmpty()}" class="empty-state">
-        <p>No open alerts. Stock levels and batch expiry dates are in good standing.</p>
-    </div>
-
-    <div th:if="${alerts != null and !alerts.isEmpty()}" class="table-wrap">
+    <div class="table-wrap">
         <table class="table">
+            <caption th:with="count=${alerts == null ? 0 : alerts.size()}"
+                     th:text="${count} + (${count == 1} ? ' open alert' : ' open alerts')">0 open alerts</caption>
             <thead>
             <tr>
                 <th scope="col">Type</th>
@@ -32,23 +34,29 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="alert : ${alerts}">
+            <tr th:each="alert : ${alerts}" th:with="lowStock=${alert.type.name() == 'LOW_STOCK'}">
                 <td>
-                    <span th:if="${alert.type.name() == 'LOW_STOCK'}" class="badge badge-warning">Low Stock</span>
-                    <span th:if="${alert.type.name() == 'NEAR_EXPIRY'}" class="badge badge-danger">Near Expiry</span>
+                    <span class="badge badge-warn" th:if="${lowStock}">Low stock</span>
+                    <span class="badge badge-bad" th:unless="${lowStock}">Near expiry</span>
                 </td>
                 <td>
-                    <a th:href="@{/products/{id}(id=${alert.productId})}" th:text="${alert.productName}">Product Name</a>
+                    <a th:href="@{/products/{id}(id=${alert.productId})}" href="#" th:text="${alert.productName}">Product</a>
                 </td>
                 <td>
-                    <span th:if="${alert.type.name() == 'LOW_STOCK'}">
-                        Stock: <strong th:text="${alert.totalStock}">0</strong> / Threshold: <span th:text="${alert.threshold}">10</span>
+                    <span th:if="${lowStock}">
+                        In stock <strong th:text="${alert.totalStock.stripTrailingZeros().toPlainString()}">3</strong>,
+                        threshold <span th:text="${alert.threshold.stripTrailingZeros().toPlainString()}">10</span>
                     </span>
-                    <span th:if="${alert.type.name() == 'NEAR_EXPIRY'}">
-                        Batch <strong th:text="${alert.batchNumber}">B1</strong>: <span th:text="${alert.quantity}">5</span> units expiring on <strong th:text="${alert.expiryDate}">2026-11-15</strong>
+                    <span th:unless="${lowStock}">
+                        Batch <strong th:text="${alert.batchNumber}">B-1</strong>:
+                        <span th:text="${alert.quantity.stripTrailingZeros().toPlainString()}">5</span> left,
+                        expires <strong th:text="${#temporals.format(alert.expiryDate, 'dd MMM yyyy')}">15 Nov 2026</strong>
                     </span>
                 </td>
-                <td th:text="${#temporals.format(alert.raisedAt, 'yyyy-MM-dd HH:mm')}">2026-11-10 12:00</td>
+                <td th:text="${#temporals.format(alert.raisedAt, 'dd MMM yyyy, HH:mm')}">10 Nov 2026, 12:00</td>
+            </tr>
+            <tr th:if="${alerts == null or alerts.isEmpty()}">
+                <td colspan="4" class="table-empty">No open alerts. Stock levels and expiry dates are fine.</td>
             </tr>
             </tbody>
         </table>
