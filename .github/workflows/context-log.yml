@@ -1,0 +1,59 @@
+name: Context log
+
+# After every push to main, append the pushed commits to the Change log
+# section of context.md and commit it back.
+#
+# No loop: the commit is pushed with GITHUB_TOKEN, which never starts
+# another workflow run, and its message also carries [skip ci]. The
+# script skips commits by github-actions[bot] in case one is ever in range.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+# One run at a time, in push order, so entries never interleave.
+concurrency:
+  group: context-log
+  cancel-in-progress: false
+
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Append this push and commit it
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          PUSHER: ${{ github.actor }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            sh .github/scripts/append-context-log.sh "$BEFORE" "$AFTER" "$PUSHER"
+            if git diff --quiet -- context.md; then
+              echo "Nothing to log."
+              exit 0
+            fi
+            printf '%s\n' \
+              "docs(repo): log pushed commits in context.md" \
+              "" \
+              "Adds the entry for the push that ended at $(git rev-parse --short "$AFTER")." \
+              "" \
+              "[skip ci]" > /tmp/msg
+            sh .githooks/commit-msg /tmp/msg
+            git commit -q -F /tmp/msg -- context.md
+            git push origin HEAD:main && exit 0
+            echo "Push rejected (attempt $attempt); retrying on the new main."
+            sleep $((attempt * 5))
+          done
+          exit 1
