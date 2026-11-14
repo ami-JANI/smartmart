@@ -145,3 +145,8 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `56a4076` docs(repo): add context.md with the full project context (ami-JANI)
 - `f78da19` ci: append each push to main to the context.md change log (ami-JANI)
 - `41577c6` docs(repo): point assistants at context.md first (ami-JANI)
+
+### 2026-11-14, pushed by ShahariarEmon112
+
+- `c562469` feat(ui): show an alerts link with the open count in the menu (ShahariarEmon112), SCRUM-53
+- `3b19ae8` fix(ui): match the alerts page to the other lists (ShahariarEmon112), SCRUM-53
