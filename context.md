@@ -168,3 +168,12 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `99d3c13` docs(pos): add basis paths for discount calculation and checkout (ami-JANI), SCRUM-30, SCRUM-31
 - `14f03dc` docs(uml): add discounts, sales and checkout to the erd and classes (ami-JANI), SCRUM-30, SCRUM-31
 - `e68a587` docs(repo): update context.md for discounts and cash checkout (ami-JANI), SCRUM-30, SCRUM-31
+
+### 2026-11-17, pushed by ShahariarEmon112
+
+- `1d8b35d` feat(db): add sample shop data behind LIQUIBASE_CONTEXTS=demo (ShahariarEmon112)
+- `cb2aac7` build: run the app container on Bangladesh time (ShahariarEmon112)
+- `9e0ee4f` feat(pos): show the invoice straight after a sale (ShahariarEmon112), SCRUM-32, SCRUM-47
+- `ecc153d` feat(ui): add a home page with a card for each role's work (ShahariarEmon112), SCRUM-38
+- `80bb1e2` fix(ui): highlight the current menu item (ShahariarEmon112), SCRUM-39
+- `ae2c18f` docs(repo): explain the demo data and the first login (ShahariarEmon112)
