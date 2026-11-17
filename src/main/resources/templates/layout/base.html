@@ -13,7 +13,7 @@
               ADMIN, MANAGER, CASHIER, INVENTORY_STAFF. A menu item shows only when
               the user holds a role allowed to open it (GUIDELINES.md section 7).
               The menu only hides links; the server still denies the pages (SCRUM-20).
-    activeNav name of the current menu item (home, users, categories, products, suppliers, alerts, pos), optional.
+    activeNav name of the current menu item (home, dashboard, users, categories, products, suppliers, alerts, pos, members), optional.
               It is also written to <body data-section>, which gives each part of the shop its
               accent colour in app.css.
     storeName store name for the header and footer; defaults to "SmartMart"
@@ -47,6 +47,10 @@
             <ul>
                 <li><a th:href="@{/}" href="/" th:attr="aria-current=${activeNav == 'home'} ? 'page'"><svg
                         th:replace="~{fragments/icons :: icon('home')}"></svg>Home</a></li>
+                <li th:if="${roles != null and roles.contains('MANAGER')}">
+                    <a th:href="@{/dashboard}" href="/dashboard" th:attr="aria-current=${activeNav == 'dashboard'} ? 'page'"><svg
+                            th:replace="~{fragments/icons :: icon('chart')}"></svg>Dashboard</a>
+                </li>
                 <li th:if="${roles != null and roles.contains('ADMIN')}">
                     <a th:href="@{/users}" href="/users" th:attr="aria-current=${activeNav == 'users'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('users')}"></svg>Users</a>
@@ -72,6 +76,10 @@
                 <li th:if="${roles != null and roles.contains('CASHIER')}">
                     <a th:href="@{/pos}" href="/pos" th:attr="aria-current=${activeNav == 'pos'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('cart')}"></svg>Point of sale</a>
+                </li>
+                <li th:if="${roles != null and roles.contains('CASHIER')}">
+                    <a th:href="@{/pos/members}" href="/pos/members" th:attr="aria-current=${activeNav == 'members'} ? 'page'"><svg
+                            th:replace="~{fragments/icons :: icon('id')}"></svg>Members</a>
                 </li>
             </ul>
             <div class="nav-user">

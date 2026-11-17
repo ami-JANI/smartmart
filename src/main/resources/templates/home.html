@@ -41,6 +41,20 @@
             <a class="btn btn-primary btn-large" th:href="@{/pos}" href="/pos" autofocus>Start a sale</a>
         </li>
 
+        <li class="home-card" data-section="members" th:if="${cashier}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('id')}"></svg></span>
+            <h2>Members</h2>
+            <p>Register a customer by phone number, so their purchases count toward them.</p>
+            <a class="btn btn-secondary" th:href="@{/pos/members}" href="/pos/members">Open members</a>
+        </li>
+
+        <li class="home-card home-card-primary" data-section="dashboard" th:if="${manager}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('chart')}"></svg></span>
+            <h2>Dashboard</h2>
+            <p>Sales this month, best sellers, top members, sales drops and live stock in one place.</p>
+            <a class="btn btn-primary btn-large" th:href="@{/dashboard}" href="/dashboard">Open the dashboard</a>
+        </li>
+
         <li class="home-card" data-section="products" th:if="${staff or manager}">
             <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('box')}"></svg></span>
             <h2>Products and stock</h2>
