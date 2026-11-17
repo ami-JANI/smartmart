@@ -150,3 +150,20 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 
 - `c562469` feat(ui): show an alerts link with the open count in the menu (ShahariarEmon112), SCRUM-53
 - `3b19ae8` fix(ui): match the alerts page to the other lists (ShahariarEmon112), SCRUM-53
+
+### 2026-11-17, pushed by ami-JANI
+
+- `c90da85` feat(db): create discounts table (ami-JANI), SCRUM-30
+- `2d85258` feat(pos): build each discount's strategy from its stored type (ami-JANI), SCRUM-30
+- `0f012b3` feat(pos): list the discounts that are valid today (ami-JANI), SCRUM-30
+- `b10ba88` feat(pos): let the cashier pick one discount on the cart (ami-JANI), SCRUM-30
+- `05a2768` feat(db): seed the first two discounts (ami-JANI), SCRUM-30
+- `7773895` feat(db): create sales, sale lines and payments tables (ami-JANI), SCRUM-31
+- `a7cffc4` feat(pos): map a completed sale with its lines and payment (ami-JANI), SCRUM-31
+- `5ce333f` feat(pos): take cash through a payment method strategy (ami-JANI), SCRUM-31
+- `4421481` feat(pos): complete a sale in one transaction through CheckoutFacade (ami-JANI), SCRUM-31
+- `4a9c350` feat(pos): complete the sale from the cash payment page (ami-JANI), SCRUM-31, SCRUM-32
+- `3f1dc72` docs(pos): record the first discount and cash sale decisions (ami-JANI), SCRUM-30, SCRUM-31
+- `99d3c13` docs(pos): add basis paths for discount calculation and checkout (ami-JANI), SCRUM-30, SCRUM-31
+- `14f03dc` docs(uml): add discounts, sales and checkout to the erd and classes (ami-JANI), SCRUM-30, SCRUM-31
+- `e68a587` docs(repo): update context.md for discounts and cash checkout (ami-JANI), SCRUM-30, SCRUM-31
