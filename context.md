@@ -187,3 +187,8 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `ecf9224` feat(ui): add a shared set of inline svg icons (ShahariarEmon112), SCRUM-38
 - `bb88711` feat(ui): redesign the layout with a gradient header and section colours (ShahariarEmon112), SCRUM-38
 - `c3a07dd` feat(ui): add a welcome banner and coloured cards to home and login (ShahariarEmon112), SCRUM-38
+
+### 2026-11-17, pushed by ShahariarEmon112
+
+- `34a042a` feat(ui): label table cells so rows can become cards on phones (ShahariarEmon112), SCRUM-38
+- `12eecb0` feat(ui): make every page responsive from 320px to desktop (ShahariarEmon112), SCRUM-38
