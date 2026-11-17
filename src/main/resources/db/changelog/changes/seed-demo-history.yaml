@@ -1,0 +1,71 @@
+# Two months of sample sales and six members, so the manager dashboard has
+# something to show on a fresh demo database. Demo context only, like
+# seed-demo-data.yaml; the tests and a real shop never load it.
+#
+# Each day has 3 to 6 sales of one product each. Cola and toothpaste sell well
+# last month but not this month, so the dashboard's "sales dropped" list shows
+# them. Historic sales do not change stock, because the demo stock describes
+# what is on the shelf today.
+databaseChangeLog:
+  - changeSet:
+      id: seed-demo-history
+      author: smartmart
+      context: demo
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              INSERT INTO customers (name, phone, created_at, updated_at) VALUES
+                ('Farhana Akter',  '01711000101', now() - interval '50 days', now()),
+                ('Tanvir Hasan',   '01711000102', now() - interval '45 days', now()),
+                ('Mitu Rahman',    '01711000103', now() - interval '40 days', now()),
+                ('Sabbir Ahmed',   '01711000104', now() - interval '30 days', now()),
+                ('Nadia Islam',    '01711000105', now() - interval '20 days', now()),
+                ('Arif Chowdhury', '01711000106', now() - interval '10 days', now());
+
+              -- One planned line per sale: which day, which product, how many, which member.
+              CREATE TEMP TABLE demo_plan AS
+                WITH products_ranked AS (
+                  SELECT id, price, sale_unit, row_number() OVER (ORDER BY barcode) - 1 AS idx
+                  FROM products WHERE barcode LIKE '2000000000%'
+                ),
+                members AS (
+                  SELECT id, row_number() OVER (ORDER BY phone) - 1 AS idx FROM customers WHERE phone LIKE '0171100010%'
+                ),
+                plan AS (
+                  SELECT d, s,
+                         (CURRENT_DATE - d) + make_interval(hours => 9 + s * 2, mins => (d * 7 + s * 13) % 60) AS sold_at,
+                         (d * 7 + s * 5) % 12 AS raw_idx,
+                         1 + (d + s) % 3 AS units,
+                         (d * 3 + s) % 10 AS member_idx
+                  FROM generate_series(1, 58) AS d, generate_series(1, 6) AS s
+                  WHERE s <= 3 + d % 4
+                )
+                SELECT p.sold_at,
+                       pr.id AS product_id,
+                       pr.price,
+                       CASE WHEN pr.sale_unit = 'KG' THEN p.units * 0.5 ELSE p.units END AS quantity,
+                       m.id AS customer_id
+                FROM plan p
+                -- This month, cola (idx 3) and toothpaste (idx 10) sales go to rice (idx 0) instead.
+                JOIN products_ranked pr ON pr.idx = CASE
+                    WHEN p.sold_at >= date_trunc('month', CURRENT_DATE) AND p.raw_idx IN (3, 10) THEN 0
+                    ELSE p.raw_idx END
+                LEFT JOIN members m ON m.idx = p.member_idx;
+
+              INSERT INTO sales (cashier_id, discount_id, customer_id, sold_at, subtotal, discount_amount, total, vat_included, created_at, updated_at)
+                SELECT u.id, NULL, dp.customer_id, dp.sold_at,
+                       round(dp.price * dp.quantity, 2), 0, round(dp.price * dp.quantity, 2),
+                       round(round(dp.price * dp.quantity, 2) * 15 / 115, 2), dp.sold_at, dp.sold_at
+                FROM demo_plan dp, users u WHERE u.username = 'cashier';
+
+              INSERT INTO sale_lines (sale_id, product_id, quantity, unit_price, line_total, created_at, updated_at)
+                SELECT s.id, dp.product_id, dp.quantity, dp.price, round(dp.price * dp.quantity, 2), dp.sold_at, dp.sold_at
+                FROM demo_plan dp JOIN sales s ON s.sold_at = dp.sold_at;
+
+              INSERT INTO payments (sale_id, method, amount, cash_received, change_due, created_at, updated_at)
+                SELECT s.id, 'CASH', s.total, s.total, 0, s.sold_at, s.sold_at
+                FROM sales s JOIN demo_plan dp ON dp.sold_at = s.sold_at;
+
+              DROP TABLE demo_plan;
