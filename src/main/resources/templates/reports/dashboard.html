@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!--/*
+  Manager dashboard. Manager only.
+
+  Model attributes
+    dashboard  com.smartmart.reports.service.Dashboard: generatedAt, monthStart, today, todaySales,
+               monthSales, previousPeriodSales (count, amount), monthChangePercent (or null), memberCount,
+               openAlerts, productCount, lowStockCount, outOfStockCount, topProducts, topCustomers,
+               droppedProducts, inventory (productId, name, categoryName, saleUnit, totalStock, status OUT/LOW/OK)
+    chart      SalesChart for the last 30 days: line, area, max, labels (x, text), points (x, y, title)
+    activeNav  "dashboard"
+  Request
+    GET /dashboard
+  Sales come from the replica and can be a second behind, so the page shows when it was built.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container dashboard" th:with="d=${dashboard}">
+    <div class="page-header">
+        <div>
+            <h1 th:text="'Welcome, ' + ${username}">Welcome, manager</h1>
+            <p class="muted dash-sub"
+               th:text="${#temporals.format(d.monthStart, 'd MMM')} + ' to ' + ${#temporals.format(d.today, 'd MMM yyyy')} + ' · updated ' + ${#temporals.format(d.generatedAt, 'HH:mm')}">
+                1 Nov to 17 Nov 2026 · updated 15:40</p>
+        </div>
+        <a class="btn btn-secondary" th:href="@{/dashboard}" href="/dashboard">Refresh</a>
+    </div>
+
+    <!--/* Stat tiles */-->
+    <ul class="stat-grid">
+        <li class="stat-tile" data-section="pos">
+            <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('coins')}"></svg></span>
+            <div>
+                <p class="stat-label">Today's sales</p>
+                <p class="stat-value"><span th:replace="~{fragments/money :: amount(${d.todaySales.amount})}">৳ 0.00</span></p>
+                <p class="stat-note" th:text="${d.todaySales.count} + (${d.todaySales.count == 1} ? ' sale' : ' sales')">0 sales</p>
+            </div>
+        </li>
+        <li class="stat-tile" data-section="products">
+            <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('chart')}"></svg></span>
+            <div>
+                <p class="stat-label">This month</p>
+                <p class="stat-value"><span th:replace="~{fragments/money :: amount(${d.monthSales.amount})}">৳ 0.00</span></p>
+                <p class="stat-note">
+                    <span th:if="${d.monthChangePercent != null}"
+                          th:class="${d.monthChangePercent.signum() >= 0} ? 'trend trend-up' : 'trend trend-down'"
+                          th:text="(${d.monthChangePercent.signum() >= 0} ? '▲ ' : '▼ ') + ${d.monthChangePercent.abs()} + '%'">▲ 12%</span>
+                    <span th:text="'vs same days last month (' + ${d.monthSales.count} + ' sales)'">vs same days last month</span>
+                </p>
+            </div>
+        </li>
+        <li class="stat-tile" data-section="users">
+            <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('id')}"></svg></span>
+            <div>
+                <p class="stat-label">Members</p>
+                <p class="stat-value" th:text="${d.memberCount}">0</p>
+                <p class="stat-note">Registered by phone at the till</p>
+            </div>
+        </li>
+        <li class="stat-tile" data-section="alerts">
+            <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('bell')}"></svg></span>
+            <div>
+                <p class="stat-label">Stock alerts</p>
+                <p class="stat-value" th:text="${d.openAlerts}">0</p>
+                <p class="stat-note" th:text="${d.lowStockCount} + ' low · ' + ${d.outOfStockCount} + ' out of ' + ${d.productCount} + ' products'">0 low · 0 out</p>
+            </div>
+        </li>
+    </ul>
+
+    <div class="dash-grid">
+        <!--/* 30-day sales chart */-->
+        <section class="card dash-chart" data-section="pos" aria-labelledby="chart-title">
+            <div class="card-head">
+                <h2 id="chart-title">Sales, last 30 days</h2>
+                <span class="muted" th:text="'Best day ৳ ' + ${#numbers.formatDecimal(chart.max, 1, 'COMMA', 2, 'POINT')}">Best day ৳ 0.00</span>
+            </div>
+            <svg class="chart" viewBox="0 -10 600 240" preserveAspectRatio="none" role="img"
+                 th:attr="aria-label='Daily sales for the last 30 days; best day ৳ ' + ${#numbers.formatDecimal(chart.max, 1, 'COMMA', 2, 'POINT')}">
+                <defs>
+                    <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#059669" stop-opacity=".35"/>
+                        <stop offset="1" stop-color="#059669" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <line class="chart-grid" x1="0" y1="200" x2="600" y2="200"/>
+                <line class="chart-grid" x1="0" y1="100" x2="600" y2="100"/>
+                <path class="chart-area" th:attr="d=${chart.area}" d=""/>
+                <polyline class="chart-line" th:attr="points=${chart.line}" points=""/>
+                <!--/* Each dot's hover text is written with th:utext, because the layout takes every
+                       literal <title> element on the page as the page title. */-->
+                <circle class="chart-dot" r="4" th:each="p : ${chart.points}" th:attr="cx=${p.x},cy=${p.y}"><th:block
+                        th:utext="'&lt;title&gt;' + ${#strings.escapeXml(p.title)} + '&lt;/title&gt;'"></th:block></circle>
+                <text class="chart-label" th:each="l : ${chart.labels}" th:attr="x=${l.x}" y="228"
+                      th:text="${l.text}">1 Nov</text>
+            </svg>
+        </section>
+
+        <!--/* Best sellers this month */-->
+        <section class="card" data-section="products" aria-labelledby="top-products">
+            <div class="card-head">
+                <h2 id="top-products"><svg th:replace="~{fragments/icons :: icon('star')}"></svg> Best sellers this month</h2>
+            </div>
+            <ol class="rank-list" th:unless="${#lists.isEmpty(d.topProducts)}">
+                <li th:each="p, i : ${d.topProducts}">
+                    <span class="rank" th:text="${i.count}">1</span>
+                    <span class="rank-main">
+                        <a th:href="@{/products/{id}(id=${p.productId})}" href="#" th:text="${p.name}">Miniket rice</a>
+                        <span class="muted" th:text="${p.quantity.stripTrailingZeros().toPlainString()} + (${p.saleUnit == 'KG'} ? ' kg sold' : ' sold')">12 sold</span>
+                    </span>
+                    <strong class="rank-value"><span th:replace="~{fragments/money :: amount(${p.amount})}">৳ 0.00</span></strong>
+                </li>
+            </ol>
+            <p class="muted" th:if="${#lists.isEmpty(d.topProducts)}">No sales yet this month.</p>
+        </section>
+
+        <!--/* Best customers this month */-->
+        <section class="card" data-section="users" aria-labelledby="top-customers">
+            <div class="card-head">
+                <h2 id="top-customers"><svg th:replace="~{fragments/icons :: icon('users')}"></svg> Top members this month</h2>
+            </div>
+            <ol class="rank-list" th:unless="${#lists.isEmpty(d.topCustomers)}">
+                <li th:each="c, i : ${d.topCustomers}">
+                    <span class="rank" th:text="${i.count}">1</span>
+                    <span class="rank-main">
+                        <strong th:text="${c.name}">Farhana Akter</strong>
+                        <span class="muted" th:text="${c.phone} + ' · ' + ${c.sales} + (${c.sales == 1} ? ' visit' : ' visits')">01711000101 · 4 visits</span>
+                    </span>
+                    <strong class="rank-value"><span th:replace="~{fragments/money :: amount(${c.amount})}">৳ 0.00</span></strong>
+                </li>
+            </ol>
+            <p class="muted" th:if="${#lists.isEmpty(d.topCustomers)}">No member purchases yet this month.</p>
+        </section>
+
+        <!--/* Products selling less than last month */-->
+        <section class="card" data-section="alerts" aria-labelledby="dropped">
+            <div class="card-head">
+                <h2 id="dropped"><svg th:replace="~{fragments/icons :: icon('trend-down')}"></svg> Sales dropped</h2>
+                <span class="muted">vs same days last month</span>
+            </div>
+            <ul class="rank-list" th:unless="${#lists.isEmpty(d.droppedProducts)}">
+                <li th:each="p : ${d.droppedProducts}">
+                    <span class="rank-main">
+                        <a th:href="@{/products/{id}(id=${p.productId})}" href="#" th:text="${p.name}">Cola 500 ml</a>
+                        <span class="muted" th:text="'was ' + ${p.previousQuantity.stripTrailingZeros().toPlainString()} + ', now ' + ${p.currentQuantity.stripTrailingZeros().toPlainString()} + (${p.saleUnit == 'KG'} ? ' kg' : ' sold')">was 40, now 0 sold</span>
+                    </span>
+                    <span class="badge badge-bad" th:text="'▼ ' + ${p.changePercent.abs()} + '%'">▼ 100%</span>
+                </li>
+            </ul>
+            <p class="muted" th:if="${#lists.isEmpty(d.droppedProducts)}">No product is selling less than last month.</p>
+        </section>
+    </div>
+
+    <!--/* Live stock of every product */-->
+    <section class="section-gap" data-section="products" aria-labelledby="inventory-title">
+        <div class="page-header">
+            <h2 id="inventory-title">Inventory status</h2>
+            <a class="btn btn-secondary btn-small" th:href="@{/alerts}" href="/alerts">See alerts</a>
+        </div>
+        <div class="table-wrap">
+            <table class="table table-stack">
+                <caption th:text="${d.outOfStockCount} + ' out of stock, ' + ${d.lowStockCount} + ' low, ' + ${#lists.size(d.inventory)} + ' products in all'">0 products</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col">Category</th>
+                    <th scope="col" class="num">In stock</th>
+                    <th scope="col">Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${d.inventory}">
+                    <td data-label="Product"><a th:href="@{/products/{id}(id=${s.productId})}" href="#" th:text="${s.name}">Bath soap</a></td>
+                    <td data-label="Category" th:text="${s.categoryName}">Personal care</td>
+                    <td data-label="In stock" class="num"
+                        th:text="${#numbers.formatDecimal(s.totalStock, 1, 'COMMA', s.saleUnit == 'KG' ? 3 : 0, 'POINT')} + (${s.saleUnit == 'KG'} ? ' kg' : '')">6</td>
+                    <td data-label="Status">
+                        <span class="badge badge-bad" th:if="${s.status.name() == 'OUT'}">Out of stock</span>
+                        <span class="badge badge-warn" th:if="${s.status.name() == 'LOW'}">Low</span>
+                        <span class="badge badge-ok" th:if="${s.status.name() == 'OK'}">In stock</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(d.inventory)}">
+                    <td colspan="4" class="table-empty">No products yet.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -42,6 +42,7 @@
     --suppliers: #0e7490;  --suppliers-soft: #cffafe;
     --users: #be185d;      --users-soft: #fce7f3;
     --home: #0f766e;       --home-soft: #ccfbf1;
+    --dashboard: #4338ca;  --dashboard-soft: #e0e7ff;
     --accent: var(--home);
     --accent-soft: var(--home-soft);
 
@@ -63,6 +64,7 @@
 [data-section="categories"] { --accent: var(--categories); --accent-soft: var(--categories-soft); }
 [data-section="suppliers"]  { --accent: var(--suppliers);  --accent-soft: var(--suppliers-soft); }
 [data-section="users"]      { --accent: var(--users);      --accent-soft: var(--users-soft); }
+[data-section="dashboard"]  { --accent: var(--dashboard);  --accent-soft: var(--dashboard-soft); }
 [data-section="members"]    { --accent: var(--users);      --accent-soft: var(--users-soft); }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -495,6 +497,86 @@ main > h1::before, .page-header h1::before {
 .home-card-primary .btn-primary { background: #fff; color: #064e3b; box-shadow: none; }
 .home-card-primary .btn-primary:hover { background: #ecfdf5; color: #064e3b; }
 @media (min-width: 48rem) { .home-card-primary { grid-column: span 2; } }
+
+/* ---------- Manager dashboard ---------- */
+
+.dash-sub { margin: .3rem 0 0; }
+.stat-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14.5rem), 1fr));
+    list-style: none;
+    margin: 0 0 1.1rem;
+    padding: 0;
+}
+.stat-tile {
+    display: flex;
+    align-items: flex-start;
+    gap: .9rem;
+    padding: 1.1rem 1.2rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+}
+.stat-icon {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 14px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000));
+    box-shadow: 0 8px 18px -10px var(--accent);
+}
+.stat-icon .icon { width: 1.5rem; height: 1.5rem; }
+.stat-tile p { margin: 0; }
+.stat-label { color: var(--color-muted); font-weight: 600; font-size: .9rem; }
+.stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.stat-note { color: var(--color-muted); font-size: .85rem; }
+.trend { font-weight: 800; }
+.trend-up { color: #047857; }
+.trend-down { color: var(--color-error); }
+
+.dash-grid { display: grid; gap: 1.1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 48rem) { .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 80rem) {
+    .dash-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .dash-chart { grid-column: span 2; }
+}
+.dash-grid .card { border-top: 4px solid var(--accent); }
+.card-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .75rem; }
+.card-head h2 { display: flex; align-items: center; gap: .45rem; margin: 0; font-size: 1.1rem; }
+.card-head h2 .icon { color: var(--accent); }
+
+.chart { display: block; width: 100%; height: 14rem; overflow: visible; }
+.chart-grid { stroke: var(--color-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.chart-area { fill: url(#chart-fill); }
+.chart-line { fill: none; stroke: #059669; stroke-width: 2.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.chart-dot { fill: #fff; stroke: #059669; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.chart-label { fill: var(--color-muted); font-size: 13px; text-anchor: middle; }
+
+.rank-list { list-style: none; margin: 0; padding: 0; }
+.rank-list li { display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-bottom: 1px solid var(--color-border); }
+.rank-list li:last-child { border-bottom: 0; }
+.rank {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    font-weight: 800;
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+.rank-main { display: flex; flex-direction: column; min-width: 0; margin-right: auto; }
+.rank-main a, .rank-main strong { overflow-wrap: anywhere; }
+.rank-main a { display: inline-flex; align-items: center; min-height: var(--control-height); font-weight: 600; }
+.rank-main .muted { font-size: .9rem; }
+.rank-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rank-list .badge { margin: 0; white-space: nowrap; }
 
 /* ---------- Message pages: 401, 403, 404, 429, 5xx (SCRUM-39) ---------- */
 

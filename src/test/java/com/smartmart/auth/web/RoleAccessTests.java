@@ -94,4 +94,14 @@ class RoleAccessTests {
     void anonymousApiRequestGets401() throws Exception {
         mvc.perform(get("/api/v1/products")).andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void onlyManagersOpenTheDashboardAndOnlyCashiersRegisterMembers() throws Exception {
+        allowed(as("MANAGER", get("/dashboard")));
+        refused(as("CASHIER", get("/dashboard")));
+        refused(as("INVENTORY_STAFF", get("/dashboard")));
+        refused(as("ADMIN", get("/dashboard")));
+        allowed(as("CASHIER", get("/pos/members")));
+        refused(as("MANAGER", get("/pos/members")));
+    }
 }
