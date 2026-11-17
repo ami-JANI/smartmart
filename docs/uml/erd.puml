@@ -1,5 +1,5 @@
 @startuml erd
-title SmartMart: entity relationship diagram v1 (auth, inventory and suppliers)
+title SmartMart: entity relationship diagram v1 (auth, inventory, point of sale and suppliers)
 skinparam shadowing false
 skinparam linetype ortho
 hide circle
@@ -80,6 +80,67 @@ package "Inventory" {
   }
 }
 
+package "Point of sale" {
+
+  entity discounts {
+    * id : bigint <<PK>>
+    --
+    * name : varchar(80) <<UQ>>
+    * type : varchar(20)
+    * value : numeric(12,2)
+    * starts_on : date
+    * ends_on : date
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    ..
+    CHECK (type IN ('PERCENTAGE', 'FLAT'))
+    CHECK (value > 0, and <= 100 for PERCENTAGE)
+    CHECK (ends_on >= starts_on)
+  }
+
+  entity sales {
+    * id : bigint <<PK>>
+    --
+    * cashier_id : bigint <<FK>>
+    discount_id : bigint <<FK>>
+    * sold_at : timestamptz
+    * subtotal : numeric(12,2)
+    * discount_amount : numeric(12,2)
+    * total : numeric(12,2)
+    * vat_included : numeric(12,2)
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    ..
+    CHECK (total = subtotal - discount_amount)
+  }
+
+  entity sale_lines {
+    * id : bigint <<PK>>
+    --
+    * sale_id : bigint <<FK>>
+    * product_id : bigint <<FK>>
+    * quantity : numeric(12,3)
+    * unit_price : numeric(12,2)
+    * line_total : numeric(12,2)
+    * created_at : timestamptz
+    * updated_at : timestamptz
+  }
+
+  entity payments {
+    * id : bigint <<PK>>
+    --
+    * sale_id : bigint <<FK, UQ>>
+    * method : varchar(20)
+    * amount : numeric(12,2)
+    * cash_received : numeric(12,2)
+    * change_due : numeric(12,2)
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    ..
+    CHECK (cash_received >= amount)
+  }
+}
+
 package "Purchasing" {
 
   entity suppliers {
@@ -101,11 +162,22 @@ roles ||--o{ user_roles
 categories |o--o{ categories : parent
 categories ||--o{ products
 products ||--o{ stock_batches
+users ||--o{ sales : cashier
+discounts |o--o{ sales
+sales ||--|{ sale_lines
+products ||--o{ sale_lines
+sales ||--|| payments
 
 note bottom of user_roles
   Deleting a user deletes its rows here.
   The roles table holds the four roles
   ADMIN, MANAGER, CASHIER, INVENTORY_STAFF.
+end note
+
+note bottom of sales
+  A sale is also its invoice; the invoice
+  number is formed from the id (INV-000042).
+  Deleting a sale deletes its lines and payment.
 end note
 
 @enduml

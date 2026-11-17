@@ -9,8 +9,9 @@ hide empty members
 ' also has createdAt and updatedAt (Instant), left out here to keep the
 ' diagram readable. The design patterns of GUIDELINES.md section 5 that are
 ' in use are shown as notes: Player-Role, General Hierarchy and
-' Abstraction-Occurrence (5.11), Singleton (5.4), Strategy (5.1) and
-' Memento (5.9).
+' Abstraction-Occurrence (5.11), Singleton (5.4), Strategy (5.1),
+' Memento (5.9) and Facade (5.5). The pos.service package shows only the
+' checkout classes that play a pattern role.
 
 package "auth.domain" {
 
@@ -114,9 +115,11 @@ package "pos.domain" {
 
   class Cart <<Originator>> {
     - lines : Map<Long, CartLine>
+    - discountId : Long
     + add(line) : void
     + changeQuantity(productId, quantity) : void
     + remove(productId) : void
+    + applyDiscount(discountId) : void
     + clear() : void
     + subtotal() : BigDecimal
     + snapshot() : CartSnapshot
@@ -135,6 +138,7 @@ package "pos.domain" {
 
   class CartSnapshot <<Record>> <<Memento>> {
     + lines : List<CartLine>
+    + discountId : Long
   }
 
   class CartHistory <<Caretaker>> {
@@ -157,12 +161,57 @@ package "pos.domain" {
     + amount : BigDecimal
   }
 
+  class Discount <<Entity>> {
+    - id : Long
+    - name : String
+    - value : BigDecimal
+    - startsOn : LocalDate
+    - endsOn : LocalDate
+    + strategy() : DiscountStrategy
+  }
+
+  enum DiscountType {
+    PERCENTAGE
+    FLAT
+    + strategyFor(value) : DiscountStrategy
+  }
+
+  class Sale <<Entity>> {
+    - id : Long
+    - cashierId : Long
+    - discountId : Long
+    - soldAt : Instant
+    - subtotal : BigDecimal
+    - discountAmount : BigDecimal
+    - total : BigDecimal
+    - vatIncluded : BigDecimal
+    + invoiceNumber() : String
+  }
+
+  class SaleLine <<Entity>> {
+    - productId : Long
+    - quantity : BigDecimal
+    - unitPrice : BigDecimal
+    - lineTotal : BigDecimal
+  }
+
+  class Payment <<Entity>> {
+    - method : String
+    - amount : BigDecimal
+    - cashReceived : BigDecimal
+    - changeDue : BigDecimal
+  }
+
   Cart "1" *--> "0..*" CartLine : lines >
   Cart ..> CartSnapshot : creates and restores from >
   CartSnapshot "1" *--> "0..*" CartLine
   CartHistory "1" o--> "0..20" CartSnapshot : keeps >
   PercentageDiscount ..|> DiscountStrategy
   FlatAmountDiscount ..|> DiscountStrategy
+  Discount --> "1" DiscountType : type >
+  DiscountType ..> DiscountStrategy : builds >
+  Sale "1" *--> "1..*" SaleLine : lines >
+  Sale "1" *--> "1" Payment : payment >
 
   note "Memento\nCart (originator) saves its lines in an immutable\nCartSnapshot (memento) before each change.\nCartHistory (caretaker) keeps the last 20, so the\ncashier can undo one change at a time (FR-POS-4)." as N_MM
   N_MM .. Cart
@@ -174,6 +223,30 @@ package "pos.domain" {
 }
 
 CartLine --> "1" SaleUnit
+
+package "pos.service" {
+
+  interface CheckoutFacade <<Facade>> {
+    + completeSale(cashierId, payment) : Long
+  }
+
+  interface PaymentMethod <<Strategy>> {
+    + pay(amount, details) : PaymentResult
+  }
+
+  class CashPayment
+
+  CashPayment ..|> PaymentMethod
+
+  note "Facade\nThe payment page calls only completeSale. In one\ntransaction it reads the cart and discount, takes the\npayment, deducts stock first-expiry-first-out and saves\nthe sale (FR-POS-10). The cart is cleared after the commit." as N_FC
+  N_FC .. CheckoutFacade
+
+  note "Strategy\nCheckout pays through PaymentMethod without knowing\nthe method; cash is the only one in v1 (FR-POS-9)." as N_PM
+  N_PM .. PaymentMethod
+}
+
+CheckoutFacade ..> PaymentMethod : pays with >
+CheckoutFacade ..> Sale : saves >
 
 package "common.config" {
 
