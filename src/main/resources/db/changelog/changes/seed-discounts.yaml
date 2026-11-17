@@ -1,0 +1,29 @@
+# Until a story covers manager screens for discounts (SRS Q1), managers ask
+# for a discount and it is added here as a new changeset. Never edit a
+# changeset that has already run; end a discount with a new one that
+# updates its ends_on.
+databaseChangeLog:
+  - changeSet:
+      id: seed-discounts
+      author: smartmart
+      changes:
+        - insert:
+            tableName: discounts
+            columns:
+              - column: { name: name, value: Staff }
+              - column: { name: type, value: PERCENTAGE }
+              - column: { name: value, valueNumeric: 10.00 }
+              - column: { name: starts_on, valueDate: "2026-11-01" }
+              - column: { name: ends_on, valueDate: "2027-06-30" }
+              - column: { name: created_at, valueComputed: now() }
+              - column: { name: updated_at, valueComputed: now() }
+        - insert:
+            tableName: discounts
+            columns:
+              - column: { name: name, value: Opening week }
+              - column: { name: type, value: FLAT }
+              - column: { name: value, valueNumeric: 50.00 }
+              - column: { name: starts_on, valueDate: "2026-11-15" }
+              - column: { name: ends_on, valueDate: "2026-12-31" }
+              - column: { name: created_at, valueComputed: now() }
+              - column: { name: updated_at, valueComputed: now() }
