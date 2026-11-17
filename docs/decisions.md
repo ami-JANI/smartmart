@@ -2,6 +2,19 @@
 
 Design decisions about the SmartMart system, newest first. Each entry gives the date, the decision, and why (GUIDELINES.md section 10).
 
+## 2026-11-17: First discounts and cash sale without promotions or manager screens
+
+**Decision.**
+
+- SCRUM-30 and SCRUM-31 are built in Sprint 3 for percentage and flat discounts and cash payment only. Buy-X-get-Y promotions (FR-POS-7) stay on hold, so promotion savings are 0 and the picked discount applies to the whole subtotal.
+- Until a story covers manager screens for discounts (SRS Q1), discounts are added as Liquibase changesets (`seed-discounts.yaml`). A discount is valid from its start date to its end date, both included.
+- A completed sale is stored as `sales`, `sale_lines` and `payments`. The sale row is also the invoice; its number is formed from the id (`INV-000042`). Lines keep the price the product was sold at.
+- `CheckoutFacade.completeSale` runs the sale in one read-write transaction and clears the cart only after the commit, so a failed sale leaves the cart as it was (FR-POS-10).
+
+**Why.** The Sprint 3 goal is a cash sale end to end. Percentage and flat discounts were already built as strategies, and the SRS suggested a Liquibase data file for v1 managers. Promotions need the manager screens and would raise SCRUM-30 to about 5 points (SRS Q3), so they wait.
+
+**Alternatives considered.** A separate `invoices` table: rejected for v1 because it would copy every figure the sale already holds. Clearing the cart inside the transaction: rejected because a failed commit would lose the cart.
+
 ## 2026-11-09: Near-expiry alerts default to 7 days before batch expiry
 
 **Decision.** Batches that expire within a configurable window (store setting `near-expiry-days-default`, default 7 days) trigger a `NEAR_EXPIRY` alert. Already-expired batches are excluded from sales (FR-POS-11) and flagged on the batch list, but near-expiry alerts warn inventory staff and managers before batches expire so goods can be discounted, promoted or returned.
