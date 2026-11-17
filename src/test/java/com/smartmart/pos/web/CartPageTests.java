@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -33,6 +34,10 @@ import com.smartmart.inventory.repository.ProductRepository;
 import com.smartmart.inventory.service.CategoryService;
 import com.smartmart.inventory.service.ProductData;
 import com.smartmart.inventory.service.ProductService;
+import com.smartmart.pos.domain.Discount;
+import com.smartmart.pos.domain.DiscountType;
+import com.smartmart.pos.repository.DiscountRepository;
+import com.smartmart.pos.service.DiscountService;
 import com.smartmart.pos.service.WeightPrompt;
 
 /**
@@ -50,13 +55,17 @@ class CartPageTests {
     private final ProductService products;
     private final ProductRepository productRepository;
     private final CategoryService categories;
+    private final DiscountRepository discountRepository;
+    private final DiscountService discounts;
     private final MockHttpSession session = new MockHttpSession();
     private Long categoryId;
 
     @Autowired
     CartPageTests(MockMvc mvc, ProductService products, ProductRepository productRepository, CategoryService categories,
-                  TransactionTemplate writes) {
+                  TransactionTemplate writes, DiscountRepository discountRepository, DiscountService discounts) {
         this.mvc = mvc;
+        this.discountRepository = discountRepository;
+        this.discounts = discounts;
         this.products = products;
         this.productRepository = productRepository;
         this.categories = categories;
@@ -238,5 +247,40 @@ class CartPageTests {
 
         mvc.perform(get("/pos").session(new MockHttpSession()))
                 .andExpect(content().string(containsString("The cart is empty")));
+    }
+
+    @Test
+    void pickedDiscountShowsInTheTotalsAndCanBeRemoved() throws Exception {
+        String barcode = barcode();
+        product("Rice", barcode, SaleUnit.PIECE, "500.00", true);
+        String name = "Test-" + UUID.randomUUID().toString().substring(0, 8);
+        Long discountId = discountRepository.save(new Discount(name, DiscountType.PERCENTAGE, new BigDecimal("10.00"),
+                LocalDate.now().minusDays(1), LocalDate.now().plusDays(1))).getId();
+        try {
+            awaitAdded(barcode);
+            await().pollInSameThread().atMost(Duration.ofSeconds(5))
+                    .until(() -> discounts.findActive(discountId).isPresent());
+            cartPage().andExpect(content().string(containsString(name + " (10% off)")));
+
+            mvc.perform(post("/pos/cart/discount").session(session).with(csrf()).param("discountId", discountId.toString()))
+                    .andExpect(redirectedUrl("/pos"))
+                    .andExpect(flash().attribute("message", "Discount applied"));
+            cartPage()
+                    .andExpect(content().string(containsString("Discount (" + name + ")")))
+                    .andExpect(content().string(containsString("450.00")));
+
+            mvc.perform(post("/pos/cart/discount").session(session).with(csrf()).param("discountId", ""))
+                    .andExpect(flash().attribute("message", "Discount removed"));
+            cartPage().andExpect(content().string(not(containsString("Discount (" + name + ")"))));
+        } finally {
+            discountRepository.deleteById(discountId);
+        }
+    }
+
+    @Test
+    void unknownDiscountShowsAnError() throws Exception {
+        mvc.perform(post("/pos/cart/discount").session(session).with(csrf()).param("discountId", "-1"))
+                .andExpect(redirectedUrl("/pos"))
+                .andExpect(flash().attribute("error", "That discount is not available"));
     }
 }

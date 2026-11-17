@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
- * The current cashier's cart (FR-POS-1 to FR-POS-3 and FR-POS-5). Change methods
+ * The current cashier's cart (FR-POS-1 to FR-POS-5 and FR-POS-8). Change methods
  * throw {@link com.smartmart.pos.domain.CartRuleException} when a change is refused,
  * leaving the cart as it was.
  */
@@ -25,6 +25,15 @@ public interface CartService {
 
     /** Removes a line. {@code lineId} comes from {@link CartLineView#id()}. */
     void remove(Long lineId);
+
+    /**
+     * Picks the sale's one discount, replacing any earlier one (FR-POS-8). It is
+     * an undo step like any other change.
+     *
+     * @param discountId an id from {@link DiscountService#activeDiscounts()}, or null to remove the discount
+     * @throws com.smartmart.pos.domain.CartRuleException if that discount is not valid today
+     */
+    void applyDiscount(Long discountId);
 
     /** Reverses the last change, one step at a time. Refused when there is nothing to undo. */
     void undo();

@@ -16,12 +16,20 @@ import com.smartmart.inventory.service.ProductSummary;
 import com.smartmart.pos.domain.Cart;
 import com.smartmart.pos.domain.CartHistory;
 import com.smartmart.pos.domain.CartRuleException;
+import com.smartmart.pos.domain.DiscountStrategy;
+import com.smartmart.pos.domain.FlatAmountDiscount;
+import com.smartmart.pos.domain.PercentageDiscount;
 
 class CartServiceImplTest {
 
     private final ProductService products = mock(ProductService.class);
+    private final DiscountService discounts = mock(DiscountService.class);
     private final CartServiceImpl service = new CartServiceImpl(new Cart(), new CartHistory(), products,
-            new StoreSettings(new BigDecimal("10"), new BigDecimal("15"), 7));
+            new StoreSettings(new BigDecimal("10"), new BigDecimal("15"), 7), discounts);
+
+    private void discount(long id, String name, DiscountStrategy strategy) {
+        when(discounts.findActive(id)).thenReturn(Optional.of(new ActiveDiscount(id, name, strategy)));
+    }
 
     private void product(long id, String barcode, String unit, String price) {
         when(products.findActiveByBarcode(barcode)).thenReturn(Optional.of(new ProductSummary(id, "Item " + id, barcode,
@@ -200,5 +208,94 @@ class CartServiceImplTest {
 
         service.remove(lineId);
         assertThat(service.view().lines()).isEmpty();
+    }
+
+    @Test
+    void discountComesOffTheSubtotalAndVatIsOnTheNewTotal() {
+        product(1, "1111", "PIECE", "500.00");
+        service.scan("1111", null);
+        discount(7, "Staff", new PercentageDiscount(new BigDecimal("10")));
+
+        service.applyDiscount(7L);
+
+        CartView cart = service.view();
+        assertThat(cart.discountId()).isEqualTo(7L);
+        assertThat(cart.discountName()).isEqualTo("Staff");
+        assertThat(cart.discountAmount()).isEqualByComparingTo("50.00");
+        assertThat(cart.total()).isEqualByComparingTo("450.00");
+        assertThat(cart.vatIncluded()).isEqualByComparingTo("58.70");
+    }
+
+    @Test
+    void flatDiscountIsCappedAtTheSubtotal() {
+        product(1, "1111", "PIECE", "60.00");
+        service.scan("1111", null);
+        discount(8, "Flat 100", new FlatAmountDiscount(new BigDecimal("100")));
+
+        service.applyDiscount(8L);
+
+        assertThat(service.view().discountAmount()).isEqualByComparingTo("60.00");
+        assertThat(service.view().total()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    void anotherDiscountReplacesTheFirstAndNullRemovesIt() {
+        product(1, "1111", "PIECE", "200.00");
+        service.scan("1111", null);
+        discount(7, "Staff", new PercentageDiscount(new BigDecimal("10")));
+        discount(8, "Flat 50", new FlatAmountDiscount(new BigDecimal("50")));
+
+        service.applyDiscount(7L);
+        service.applyDiscount(8L);
+        assertThat(service.view().discountAmount()).isEqualByComparingTo("50.00");
+
+        service.applyDiscount(null);
+        assertThat(service.view().discountId()).isNull();
+        assertThat(service.view().total()).isEqualByComparingTo("200.00");
+    }
+
+    @Test
+    void unknownOrEndedDiscountIsRefusedAndChangesNothing() {
+        when(discounts.findActive(9L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.applyDiscount(9L))
+                .isInstanceOf(CartRuleException.class).hasMessage("That discount is not available");
+        assertThat(service.view().canUndo()).isFalse();
+    }
+
+    @Test
+    void discountThatEndedAfterItWasPickedNoLongerCounts() {
+        product(1, "1111", "PIECE", "100.00");
+        service.scan("1111", null);
+        discount(7, "Staff", new PercentageDiscount(new BigDecimal("10")));
+        service.applyDiscount(7L);
+
+        when(discounts.findActive(7L)).thenReturn(Optional.empty());
+
+        assertThat(service.view().discountAmount()).isEqualByComparingTo("0");
+        assertThat(service.view().total()).isEqualByComparingTo("100.00");
+    }
+
+    @Test
+    void undoReversesAnAppliedDiscount() {
+        product(1, "1111", "PIECE", "100.00");
+        service.scan("1111", null);
+        discount(7, "Staff", new PercentageDiscount(new BigDecimal("10")));
+        service.applyDiscount(7L);
+
+        service.undo();
+
+        assertThat(service.view().discountId()).isNull();
+        assertThat(service.view().lines()).hasSize(1);
+    }
+
+    @Test
+    void clearRemovesTheDiscount() {
+        discount(7, "Staff", new PercentageDiscount(new BigDecimal("10")));
+        service.applyDiscount(7L);
+
+        service.clear();
+
+        assertThat(service.view().discountId()).isNull();
     }
 }

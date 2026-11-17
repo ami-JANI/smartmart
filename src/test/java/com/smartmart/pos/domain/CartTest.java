@@ -120,7 +120,7 @@ class CartTest {
         assertThat(history.pop()).isEmpty();
 
         for (int i = 1; i <= 21; i++) {
-            history.push(new CartSnapshot(List.of(piece(i, "1", "1"))));
+            history.push(new CartSnapshot(List.of(piece(i, "1", "1")), null));
         }
 
         assertThat(history.pop().orElseThrow().lines().get(0).productId()).isEqualTo(21L);

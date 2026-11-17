@@ -1,7 +1,6 @@
 package com.smartmart.pos.web;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,11 +16,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.smartmart.pos.domain.CartRuleException;
 import com.smartmart.pos.service.CartService;
+import com.smartmart.pos.service.DiscountService;
 import com.smartmart.pos.service.WeightRejectedException;
 
 import lombok.RequiredArgsConstructor;
 
-/** The cart screen, pos/cart.html (SCRUM-28, SCRUM-29). */
+/** The cart screen, pos/cart.html (SCRUM-28, SCRUM-29, SCRUM-30). */
 @Controller
 @RequestMapping("/pos")
 @RequiredArgsConstructor
@@ -30,12 +30,12 @@ class CartController {
     private static final String BACK_TO_CART = "redirect:/pos";
 
     private final CartService cartService;
+    private final DiscountService discountService;
 
-    // The list of discounts arrives with SCRUM-30.
     @GetMapping
     String show(Model model) {
         model.addAttribute("cart", cartService.view());
-        model.addAttribute("discounts", List.of());
+        model.addAttribute("discounts", discountService.activeDiscounts());
         model.addAttribute("activeNav", "pos");
         return "pos/cart";
     }
@@ -57,6 +57,13 @@ class CartController {
     @PostMapping("/cart/items/{lineId}/remove")
     String remove(@PathVariable Long lineId) {
         cartService.remove(lineId);
+        return BACK_TO_CART;
+    }
+
+    @PostMapping("/cart/discount")
+    String applyDiscount(@RequestParam(required = false) Long discountId, RedirectAttributes redirect) {
+        cartService.applyDiscount(discountId);
+        redirect.addFlashAttribute("message", discountId == null ? "Discount removed" : "Discount applied");
         return BACK_TO_CART;
     }
 

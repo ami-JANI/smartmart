@@ -8,12 +8,14 @@ import java.util.Map;
 
 /**
  * The items a cashier is selling, one line per product, in the order they were
- * first scanned. The originator in the Memento pattern: it creates snapshots of
- * itself and restores itself from them, for undo (FR-POS-4).
+ * first scanned, and the one discount picked for the sale, if any (FR-POS-8).
+ * The originator in the Memento pattern: it creates snapshots of itself and
+ * restores itself from them, for undo (FR-POS-4).
  */
 public class Cart implements Serializable {
 
     private final Map<Long, CartLine> lines = new LinkedHashMap<>();
+    private Long discountId;
 
     /** Adds a line, or increases the quantity if the product is already in the cart. */
     public void add(CartLine line) {
@@ -32,17 +34,29 @@ public class Cart implements Serializable {
         lines.remove(productId);
     }
 
+    /** Picks the sale's discount, replacing any earlier one; null removes it. */
+    public void applyDiscount(Long discountId) {
+        this.discountId = discountId;
+    }
+
+    /** The picked discount's id, or null when the sale has none. */
+    public Long discountId() {
+        return discountId;
+    }
+
     public void clear() {
         lines.clear();
+        discountId = null;
     }
 
     public CartSnapshot snapshot() {
-        return new CartSnapshot(lines());
+        return new CartSnapshot(lines(), discountId);
     }
 
     public void restore(CartSnapshot snapshot) {
         lines.clear();
         snapshot.lines().forEach(line -> lines.put(line.productId(), line));
+        discountId = snapshot.discountId();
     }
 
     public List<CartLine> lines() {

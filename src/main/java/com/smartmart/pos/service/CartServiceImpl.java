@@ -24,19 +24,32 @@ import lombok.RequiredArgsConstructor;
 class CartServiceImpl implements CartService {
 
     private static final BigDecimal HUNDRED = new BigDecimal("100");
+    private static final BigDecimal ZERO = new BigDecimal("0.00");
 
     private final Cart cart;
     private final CartHistory history;
     private final ProductService products;
     private final StoreSettings settings;
+    private final DiscountService discounts;
 
-    // Promotions and discounts arrive with SCRUM-30.
+    // Buy-X-get-Y promotions are not built yet, so promotion savings are 0 and
+    // the discount applies to the whole subtotal (FR-POS-8).
     @Override
     public CartView view() {
         BigDecimal subtotal = cart.subtotal();
         List<CartLineView> lines = cart.lines().stream().map(this::viewOf).toList();
-        return new CartView(lines, subtotal, BigDecimal.ZERO, null, null, BigDecimal.ZERO,
-                subtotal, vatIncludedIn(subtotal), !history.isEmpty());
+        Optional<ActiveDiscount> discount = pickedDiscount();
+        BigDecimal discountAmount = discount.map(d -> d.strategy().discountOn(subtotal)).orElse(ZERO);
+        BigDecimal total = subtotal.subtract(discountAmount);
+        return new CartView(lines, subtotal, ZERO, discount.map(ActiveDiscount::id).orElse(null),
+                discount.map(ActiveDiscount::name).orElse(null), discountAmount,
+                total, vatIncludedIn(total), !history.isEmpty());
+    }
+
+    // A discount that has ended since it was picked no longer counts.
+    private Optional<ActiveDiscount> pickedDiscount() {
+        Long id = cart.discountId();
+        return id == null ? Optional.empty() : discounts.findActive(id);
     }
 
     @Override
@@ -73,6 +86,14 @@ class CartServiceImpl implements CartService {
     @Override
     public void remove(Long lineId) {
         recordingForUndo(() -> cart.remove(lineId));
+    }
+
+    @Override
+    public void applyDiscount(Long discountId) {
+        if (discountId != null && discounts.findActive(discountId).isEmpty()) {
+            throw new CartRuleException("That discount is not available");
+        }
+        recordingForUndo(() -> cart.applyDiscount(discountId));
     }
 
     @Override
