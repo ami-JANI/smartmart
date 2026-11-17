@@ -7,6 +7,9 @@ spring:
     import: optional:file:.env[.properties]
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    # "demo" also loads the sample shop data (seed-demo-data.yaml). The default
+    # "none" matches no context, so only the changesets without one run.
+    contexts: ${LIQUIBASE_CONTEXTS:none}
   # Liquibase owns the schema; Hibernate only checks that the entities match.
   jpa:
     hibernate:

@@ -59,6 +59,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      # "demo" loads the sample shop data; without it, only the real schema.
+      LIQUIBASE_CONTEXTS: ${LIQUIBASE_CONTEXTS:-none}
       # Inside Compose the servers are reached by service name, so these
       # replace the localhost URLs in .env, which are for running the
       # application on the host.

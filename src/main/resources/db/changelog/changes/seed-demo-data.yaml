@@ -1,0 +1,97 @@
+# Sample shop data for trying SmartMart on a fresh database: one login per role,
+# a small catalogue, stock batches (some low or close to expiry, so alerts show)
+# and two suppliers.
+#
+# Runs only when the "demo" Liquibase context is on (LIQUIBASE_CONTEXTS=demo in
+# .env). The tests and CI leave it off. Expiry dates are relative to the day the
+# data is loaded. Demo logins: manager, cashier and stock, all with the password
+# "smartmart-demo" (README, "Demo data"). Never turn this on for a real shop.
+databaseChangeLog:
+  - changeSet:
+      id: seed-demo-data
+      author: smartmart
+      context: demo
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              -- Logins, one per role. BCrypt strength 12 of "smartmart-demo".
+              INSERT INTO users (username, full_name, password_hash, active, created_at, updated_at) VALUES
+                ('manager', 'Karim Hasan',  '$2a$12$5VGMFG5Dy.V28qqRvsHB/eEjHhywDpgmBuLv2D.2VIhAYgYUwuYAi', true, now(), now()),
+                ('cashier', 'Rahim Uddin',  '$2a$12$5VGMFG5Dy.V28qqRvsHB/eEjHhywDpgmBuLv2D.2VIhAYgYUwuYAi', true, now(), now()),
+                ('stock',   'Nusrat Jahan', '$2a$12$5VGMFG5Dy.V28qqRvsHB/eEjHhywDpgmBuLv2D.2VIhAYgYUwuYAi', true, now(), now());
+              INSERT INTO user_roles (user_id, role_id)
+                SELECT u.id, r.id FROM users u JOIN roles r ON
+                  (u.username = 'manager' AND r.name = 'MANAGER') OR
+                  (u.username = 'cashier' AND r.name = 'CASHIER') OR
+                  (u.username = 'stock'   AND r.name = 'INVENTORY_STAFF');
+
+              -- Category tree.
+              INSERT INTO categories (name, parent_id, created_at, updated_at) VALUES
+                ('Grocery', NULL, now(), now()),
+                ('Dairy and eggs', NULL, now(), now()),
+                ('Beverages', NULL, now(), now()),
+                ('Personal care', NULL, now(), now());
+              INSERT INTO categories (name, parent_id, created_at, updated_at)
+                SELECT c.name, p.id, now(), now()
+                FROM (VALUES ('Rice'), ('Pulses'), ('Snacks')) AS c(name), categories p
+                WHERE p.name = 'Grocery' AND p.parent_id IS NULL;
+
+              -- Products. Barcodes have 13 digits; the tests use 12, so they never clash.
+              INSERT INTO products (name, barcode, category_id, sale_unit, price, low_stock_threshold, active, created_at, updated_at)
+                SELECT v.name, v.barcode, c.id, v.unit, v.price, v.threshold, true, now(), now()
+                FROM (VALUES
+                  ('Miniket rice',            '2000000000011', 'Rice',           'KG',     78.00, 20.000),
+                  ('Chinigura rice',          '2000000000028', 'Rice',           'KG',    140.00, NULL),
+                  ('Red lentils (masoor dal)','2000000000035', 'Pulses',         'KG',    120.00, 15.000),
+                  ('Spicy chanachur 150 g',   '2000000000042', 'Snacks',         'PIECE',  35.00, NULL),
+                  ('Potato crackers 50 g',    '2000000000059', 'Snacks',         'PIECE',  20.00, NULL),
+                  ('Fresh milk 1 L',          '2000000000066', 'Dairy and eggs', 'PIECE',  95.00, 12.000),
+                  ('Eggs, dozen',             '2000000000073', 'Dairy and eggs', 'PIECE', 150.00, NULL),
+                  ('Drinking water 1.5 L',    '2000000000080', 'Beverages',      'PIECE',  30.00, NULL),
+                  ('Cola 500 ml',             '2000000000097', 'Beverages',      'PIECE',  40.00, NULL),
+                  ('Bath soap 100 g',         '2000000000103', 'Personal care',  'PIECE',  55.00, 10.000),
+                  ('Toothpaste 100 g',        '2000000000110', 'Personal care',  'PIECE',  95.00, NULL),
+                  ('Hand wash 200 ml',        '2000000000127', 'Personal care',  'PIECE', 120.00, NULL)
+                ) AS v(name, barcode, category, unit, price, threshold)
+                JOIN categories c ON c.name = v.category;
+
+              -- Stock batches. Bath soap and red lentils end up at or below their
+              -- threshold; milk and eggs expire within the 7-day alert window.
+              INSERT INTO stock_batches (product_id, batch_number, quantity, cost, expiry_date, created_at, updated_at)
+                SELECT p.id, v.batch, v.quantity, v.cost, CASE WHEN v.days IS NULL THEN NULL ELSE CURRENT_DATE + v.days END, now(), now()
+                FROM (VALUES
+                  ('2000000000011', 'MR-01', 40.000,  62.00, 120),
+                  ('2000000000011', 'MR-02', 25.500,  64.00, 200),
+                  ('2000000000028', 'CR-01', 18.000, 118.00, 180),
+                  ('2000000000035', 'RL-01',  8.000,  98.00, 150),
+                  ('2000000000042', 'CH-01', 60.000,  26.00,  90),
+                  ('2000000000059', 'PC-01', 80.000,  14.00,  60),
+                  ('2000000000066', 'FM-01', 10.000,  80.00,   3),
+                  ('2000000000066', 'FM-02', 24.000,  80.00,  12),
+                  ('2000000000073', 'EG-01', 15.000, 128.00,   5),
+                  ('2000000000080', 'DW-01', 96.000,  20.00, 365),
+                  ('2000000000097', 'CL-01', 72.000,  30.00, 240),
+                  ('2000000000103', 'BS-01',  6.000,  42.00, NULL),
+                  ('2000000000110', 'TP-01', 30.000,  75.00, 400),
+                  ('2000000000127', 'HW-01', 20.000,  95.00, NULL)
+                ) AS v(barcode, batch, quantity, cost, days)
+                JOIN products p ON p.barcode = v.barcode;
+
+              -- Open alerts for that stock. The alert listeners raise these only when
+              -- stock changes, which loading rows directly does not do.
+              INSERT INTO stock_alerts (alert_type, product_id, total_stock, threshold, status, raised_at, created_at, updated_at)
+                SELECT 'LOW_STOCK', p.id, v.total, p.low_stock_threshold, 'OPEN', now() - v.age, now(), now()
+                FROM (VALUES ('2000000000103', 6.000, interval '2 hours'),
+                             ('2000000000035', 8.000, interval '1 hour')) AS v(barcode, total, age)
+                JOIN products p ON p.barcode = v.barcode;
+              INSERT INTO stock_alerts (alert_type, product_id, batch_number, quantity, expiry_date, status, raised_at, created_at, updated_at)
+                SELECT 'NEAR_EXPIRY', b.product_id, b.batch_number, b.quantity, b.expiry_date, 'OPEN', now() - v.age, now(), now()
+                FROM (VALUES ('FM-01', interval '30 minutes'), ('EG-01', interval '10 minutes')) AS v(batch, age)
+                JOIN stock_batches b ON b.batch_number = v.batch;
+
+              -- Suppliers.
+              INSERT INTO suppliers (name, contact_person, phone, email, address, active, created_at, updated_at) VALUES
+                ('Khulna Rice Traders', 'Selim Reza', '+880 1711-200300', 'orders@khulnarice.example', 'Boro Bazar, Khulna', true, now(), now()),
+                ('Fresh Dairy Ltd',     'Ayesha Khan', '+880 1819-445566', NULL, 'Sonadanga, Khulna', true, now(), now());

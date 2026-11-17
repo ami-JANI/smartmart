@@ -28,3 +28,7 @@ databaseChangeLog:
   - include:
       file: changes/create-sales.yaml
       relativeToChangelogFile: true
+  # Sample data, loaded only with LIQUIBASE_CONTEXTS=demo (.env.example). Keep it last.
+  - include:
+      file: changes/seed-demo-data.yaml
+      relativeToChangelogFile: true
