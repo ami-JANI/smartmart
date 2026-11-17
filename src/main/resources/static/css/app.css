@@ -8,6 +8,9 @@
  * Every text colour keeps a 4.5:1 contrast on its background, controls are at
  * least 44px tall, focus is always visible, and motion stops when the device
  * asks for reduced motion. No web fonts or libraries.
+ *
+ * Breakpoints (mobile first): 30rem small phone, 48rem tablet, 64rem laptop,
+ * 80rem desktop. Below 64rem, tables marked .table-stack become one card per row.
  */
 
 :root {
@@ -68,6 +71,7 @@ html { font-size: 100%; }
 body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     font-family: var(--font);
@@ -98,6 +102,8 @@ a:hover { color: var(--color-primary-dark); }
 
 main.container {
     flex: 1 0 auto;
+    /* Keeps the skip-link target clear of the sticky header. */
+    scroll-margin-top: 5rem;
     padding-top: 1.75rem;
     padding-bottom: 2.5rem;
 }
@@ -129,6 +135,8 @@ main.container {
     color: var(--color-header-text);
     box-shadow: 0 6px 20px -12px rgba(6, 78, 59, .7);
 }
+/* On a phone held sideways the screen is short, so the header scrolls away instead of covering it. */
+@media (max-height: 30rem) { .site-header { position: static; } }
 
 .header-bar {
     display: flex;
@@ -221,7 +229,14 @@ main.container {
     background: #a7f3d0;
 }
 
-@media (max-width: 40rem) {
+/* Laptop widths: the name is read out but shown only as the avatar, so the menu stays on one line. */
+@media (min-width: 64rem) and (max-width: 80rem) {
+    .site-nav a { padding-left: .6rem; padding-right: .6rem; }
+    .nav-username { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+}
+
+/* Phones and tablets: the menu folds behind the Menu button. */
+@media (max-width: 63.99rem) {
     .nav-toggle { display: inline-block; }
     .site-nav { display: none; width: 100%; flex-direction: column; align-items: stretch; padding-bottom: .75rem; }
     .nav-toggle-input:checked ~ .site-nav { display: flex; }
@@ -563,14 +578,15 @@ main > h1::before, .page-header h1::before {
 .table .actions { white-space: nowrap; text-align: right; }
 .table .actions form { display: inline; }
 .table-empty { padding: 2rem 1rem; text-align: center; color: var(--color-muted); }
-.table td a { font-weight: 600; }
+/* Row links (product, supplier names) are full-size tap targets. */
+.table td a:not(.btn) { display: inline-flex; align-items: center; min-height: var(--control-height); font-weight: 600; }
 
 .badge {
     display: inline-flex;
     align-items: center;
     padding: .15rem .6rem;
     margin: 0 .25rem .25rem 0;
-    font-size: .8rem;
+    font-size: .85rem;
     font-weight: 700;
     border-radius: 999px;
     background: var(--color-border);
@@ -613,7 +629,7 @@ main > h1::before, .page-header h1::before {
 .toolbar .toolbar-check input { width: 1.25rem; height: 1.25rem; accent-color: var(--color-primary); }
 .toolbar input[type="search"], .toolbar-field select { flex: 1 1 auto; min-width: 0; }
 
-.sort-link { color: inherit; text-decoration: none; }
+.sort-link { display: inline-flex; align-items: center; min-height: var(--control-height); color: inherit; text-decoration: none; }
 .sort-link::after { content: " \2195"; color: var(--color-muted); font-size: .85em; }
 th[aria-sort="ascending"] .sort-link::after { content: " \2191"; color: var(--color-text); }
 th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--color-text); }
@@ -626,7 +642,7 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 
 .details { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); margin: 0; }
 .details > div { padding: .85rem 1rem; border-radius: var(--radius); background: var(--color-subtle); }
-.details dt { color: var(--color-muted); font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.details dt { color: var(--color-muted); font-size: .85rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .details dd { margin: .2rem 0 0; font-size: 1.15rem; font-weight: 600; }
 
 .section-title { margin-top: 1.75rem; }
@@ -731,12 +747,79 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
     border-radius: var(--radius);
     background: var(--color-subtle);
 }
-.invoice-meta dt { color: var(--color-muted); font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.invoice-meta dt { color: var(--color-muted); font-size: .85rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .invoice-meta dd { margin: 0; font-weight: 700; }
 .invoice-table { margin-bottom: 1rem; }
 .invoice-table th, .invoice-table td { padding-left: .25rem; padding-right: .25rem; }
 .invoice-totals { margin-bottom: 0; }
 .invoice-thanks { margin: 1.25rem 0 0; text-align: center; color: var(--color-muted); font-weight: 600; }
+
+/* ---------- Small phones (under 30rem, for example 320 to 414px) ---------- */
+
+@media (max-width: 29.99rem) {
+    main.container { padding-top: 1.25rem; }
+    h1 { font-size: 1.5rem; }
+    .card { padding: 1.1rem; }
+    .home-hero { padding: 1.3rem 1.2rem; }
+    .home-hero h1 { font-size: 1.6rem; }
+    .tree ul { margin-left: .35rem; padding-left: .6rem; }
+    .inline-form > * { flex: 1 1 100%; }
+    .invoice-table th, .invoice-table td { font-size: .9rem; }
+    .amount-due { font-size: 2.1rem; }
+    .scan-form .btn, .page-header .btn { flex: 1 1 auto; }
+}
+
+/* ---------- Tables become one card per row on phones and tablets ---------- */
+
+@media (max-width: 63.99rem) {
+    .table-stack, .table-stack tbody, .table-stack tr, .table-stack td { display: block; width: 100%; }
+    .table-stack caption { display: block; }
+    /* Sortable column titles stay as tap-able chips; plain titles are replaced by the cell labels. */
+    .table-stack thead { display: block; }
+    .table-stack thead:not(:has(.sort-link)) { display: none; }
+    .table-stack thead tr { display: flex; flex-wrap: wrap; gap: .4rem; padding: .5rem 1rem .75rem; background: var(--accent-soft); }
+    .table-stack thead th { display: none; padding: 0; background: none; }
+    .table-stack thead th:has(.sort-link) { display: block; }
+    .table-stack thead .sort-link {
+        padding: 0 .85rem;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        text-transform: none;
+        letter-spacing: 0;
+    }
+    .table-stack thead th[aria-sort="ascending"] .sort-link,
+    .table-stack thead th[aria-sort="descending"] .sort-link { border-color: var(--accent); font-weight: 800; }
+    .table-stack tbody tr { padding: .85rem 1rem; border-bottom: 1px solid var(--color-border); }
+    .table-stack tbody tr:last-child { border-bottom: 0; }
+    .table-stack tbody tr:hover td { background: none; }
+    .table-stack td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .25rem 1rem;
+        padding: .3rem 0;
+        border: 0;
+        text-align: right;
+    }
+    .table-stack td::before {
+        content: attr(data-label);
+        color: var(--color-muted);
+        font-size: .85rem;
+        font-weight: 700;
+        text-align: left;
+    }
+    .table-stack td[data-label=""]::before, .table-stack td.table-empty::before { content: none; }
+    /* The first cell is the row's title. */
+    .table-stack td:first-child { font-size: 1.05rem; font-weight: 700; text-align: left; }
+    .table-stack td:first-child::before { content: none; }
+    .table-stack td.actions { justify-content: flex-end; padding-top: .6rem; }
+    .table-stack td.table-empty { justify-content: center; text-align: center; }
+    .table-stack .qty-form { justify-content: flex-end; }
+    .table-stack tr.line-free { background: var(--color-success-bg); }
+    .table-stack tr.line-free td { background: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
