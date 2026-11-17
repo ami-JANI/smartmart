@@ -19,3 +19,6 @@ databaseChangeLog:
   - include:
       file: changes/create-stock-alerts.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/create-discounts.yaml
+      relativeToChangelogFile: true

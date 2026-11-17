@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-discounts
+      author: smartmart
+      changes:
+        - createTable:
+            tableName: discounts
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_discounts
+              - column:
+                  name: name
+                  type: varchar(80)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_discounts_name
+              - column:
+                  name: type
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: value
+                  type: numeric(12,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: starts_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ends_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        # FR-POS-6: a percentage is above 0 and at most 100, a flat amount is
+        # above 0, and a discount cannot end before it starts.
+        - sql:
+            sql: >
+              ALTER TABLE discounts
+                ADD CONSTRAINT ck_discounts_type CHECK (type IN ('PERCENTAGE', 'FLAT')),
+                ADD CONSTRAINT ck_discounts_value CHECK (value > 0 AND (type <> 'PERCENTAGE' OR value <= 100)),
+                ADD CONSTRAINT ck_discounts_dates CHECK (ends_on >= starts_on)
