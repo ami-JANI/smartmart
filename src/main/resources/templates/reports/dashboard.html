@@ -77,7 +77,7 @@
                 <h2 id="chart-title">Sales, last 30 days</h2>
                 <span class="muted" th:text="'Best day ৳ ' + ${#numbers.formatDecimal(chart.max, 1, 'COMMA', 2, 'POINT')}">Best day ৳ 0.00</span>
             </div>
-            <svg class="chart" viewBox="0 -10 600 240" preserveAspectRatio="none" role="img"
+            <svg class="chart" viewBox="0 -10 600 215" preserveAspectRatio="none" role="img"
                  th:attr="aria-label='Daily sales for the last 30 days; best day ৳ ' + ${#numbers.formatDecimal(chart.max, 1, 'COMMA', 2, 'POINT')}">
                 <defs>
                     <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
@@ -89,13 +89,16 @@
                 <line class="chart-grid" x1="0" y1="100" x2="600" y2="100"/>
                 <path class="chart-area" th:attr="d=${chart.area}" d=""/>
                 <polyline class="chart-line" th:attr="points=${chart.line}" points=""/>
-                <!--/* Each dot's hover text is written with th:utext, because the layout takes every
+                <!--/* Each dot is a zero-length line with round caps, so it stays round when the chart
+                       stretches. Its hover text is written with th:utext, because the layout takes every
                        literal <title> element on the page as the page title. */-->
-                <circle class="chart-dot" r="4" th:each="p : ${chart.points}" th:attr="cx=${p.x},cy=${p.y}"><th:block
-                        th:utext="'&lt;title&gt;' + ${#strings.escapeXml(p.title)} + '&lt;/title&gt;'"></th:block></circle>
-                <text class="chart-label" th:each="l : ${chart.labels}" th:attr="x=${l.x}" y="228"
-                      th:text="${l.text}">1 Nov</text>
+                <line class="chart-dot" th:each="p : ${chart.points}" th:attr="x1=${p.x},y1=${p.y},x2=${p.x},y2=${p.y}"><th:block
+                        th:utext="'&lt;title&gt;' + ${#strings.escapeXml(p.title)} + '&lt;/title&gt;'"></th:block></line>
             </svg>
+            <!--/* Axis labels sit outside the SVG so stretching it does not squash the text. */-->
+            <div class="chart-axis" aria-hidden="true">
+                <span th:each="l : ${chart.labels}" th:style="'left:' + ${l.x / 6} + '%'" th:text="${l.text}">1 Nov</span>
+            </div>
         </section>
 
         <!--/* Best sellers this month */-->
