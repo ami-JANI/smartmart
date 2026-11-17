@@ -61,6 +61,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       # "demo" loads the sample shop data; without it, only the real schema.
       LIQUIBASE_CONTEXTS: ${LIQUIBASE_CONTEXTS:-none}
+      # The store's local time, so sale and alert times are not shown in UTC.
+      TZ: Asia/Dhaka
       # Inside Compose the servers are reached by service name, so these
       # replace the localhost URLs in .env, which are for running the
       # application on the host.
