@@ -137,7 +137,10 @@ main.container {
     color: var(--color-header-text);
     text-decoration: none;
 }
-.site-nav a:hover, .site-nav a[aria-current="page"] { text-decoration: underline; }
+.site-nav a { border-radius: var(--radius); padding-left: .6rem; padding-right: .6rem; transition: background-color var(--transition); }
+.site-nav a:hover { background: rgba(255, 255, 255, .1); }
+/* The current page: a filled pill, plus a bold label so it does not rely on colour alone. */
+.site-nav a[aria-current="page"] { background: rgba(255, 255, 255, .18); font-weight: 700; }
 /* Open alert count on the Alerts menu item (SCRUM-53). */
 .site-nav .nav-badge { margin: 0 0 0 .4rem; font-weight: 700; text-decoration: none; }
 
