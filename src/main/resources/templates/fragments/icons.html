@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--/*
+  Small line icons drawn as inline SVG, so no icon library is needed.
+  Use: <svg th:replace="~{fragments/icons :: icon('cart')}"></svg>
+  Names: home, cart, box, tag, truck, bell, users, basket, logout.
+  Icons are decorative (aria-hidden); the text next to them is the label.
+*/-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<svg th:fragment="icon(name)" class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+     focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+     stroke-linejoin="round">
+    <th:block th:switch="${name}">
+        <th:block th:case="'home'"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></th:block>
+        <th:block th:case="'cart'"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"/></th:block>
+        <th:block th:case="'box'"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></th:block>
+        <th:block th:case="'tag'"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></th:block>
+        <th:block th:case="'truck'"><rect x="1" y="6" width="13" height="10" rx="1"/><path d="M14 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></th:block>
+        <th:block th:case="'bell'"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></th:block>
+        <th:block th:case="'users'"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/><path d="M21 21v-2a4 4 0 0 0-3-3.9"/></th:block>
+        <th:block th:case="'basket'"><path d="M3 10h18l-1.8 9.2a1 1 0 0 1-1 .8H5.8a1 1 0 0 1-1-.8z"/><path d="m8 10 4-6 4 6"/><path d="M9 14v3M15 14v3"/></th:block>
+        <th:block th:case="'logout'"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></th:block>
+    </th:block>
+</svg>
+</body>
+</html>
