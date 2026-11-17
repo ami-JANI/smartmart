@@ -51,7 +51,7 @@ Product Owner and Scrum Master rotate each sprint. The full split is in [docs/pl
   5. Reporting: sales, purchase, inventory and profit summaries, dashboard
 - **Stretch goals** (only after all five modules work): loyalty points, customer returns, audit logs, scanner hardware, multiple payment methods, backup and recovery, forecasting.
 - **Out of scope:** multi-branch and enterprise features, microservices, payment gateways, automatic database failover. These appear only as future work in the report.
-- **On hold for future work** (team decision, Nov 2026): SCRUM-30 discounts at checkout and SCRUM-31 cash sale, with their discount and checkout tables; SCRUM-36 purchase orders and SCRUM-37 daily sales report, whose acceptance criteria are still "to be refined" and are outside SRS v1. Ask before starting any of these.
+- **On hold for future work** (team decision, Nov 2026): buy-X-get-Y promotions and the manager screens for discounts (SRS Q1, Q3); SCRUM-36 purchase orders and SCRUM-37 daily sales report, whose acceptance criteria are still "to be refined" and are outside SRS v1. Ask before starting any of these. SCRUM-30 (percentage and flat discounts) and SCRUM-31 (cash sale) were taken off hold on 17 Nov 2026 and built without promotions ([docs/decisions.md](docs/decisions.md)).
 
 Requirements and acceptance criteria: [docs/srs/srs-v1.md](docs/srs/srs-v1.md).
 
@@ -94,23 +94,23 @@ Full text in [CLAUDE.md](CLAUDE.md) section 0 and [COMMIT.md](COMMIT.md).
 | --- | --- | --- |
 | SM Sprint 1 | 1 to 7 Nov 2026 | Skeleton on two databases, admin login, requirements agreed |
 | SM Sprint 2 | 8 to 14 Nov 2026 | Access by role; product catalogue and stock |
-| SM Sprint 3 | 15 to 21 Nov 2026 | First cash sale end to end (discount and checkout parts on hold, see Scope) |
+| SM Sprint 3 | 15 to 21 Nov 2026 | First cash sale end to end: barcode, cart, discount, payment, invoice, and stock goes down |
 
 Definition of Ready, Definition of Done and the full backlog: [docs/plan/jira-scrum-plan.md](docs/plan/jira-scrum-plan.md).
 
 ## Current status
 
-Snapshot as of **14 Nov 2026** (end of Sprint 2). For anything newer, read the [Change log](#change-log) below and the Jira board.
+Snapshot as of **17 Nov 2026** (Sprint 3). For anything newer, read the [Change log](#change-log) below and the Jira board.
 
 | Module | Built |
 | --- | --- |
 | User management | Login, default-deny access by role, user administration, lockout after repeated failed logins (with the wait time shown) |
 | Inventory | Category tree, products with unique barcodes, stock batches with expiry, first-expiry-first-out deduction, low-stock and near-expiry alerts (`stock_alerts` table, 7-day default) |
-| Point of sale | Barcode and weighed-item cart with undo; percentage and flat discount strategies exist in code. Checkout, payment and invoice not built. |
+| Point of sale | Barcode and weighed-item cart with undo; the cashier picks one percentage or flat discount (seeded through Liquibase); cash checkout through `CheckoutFacade` saves the sale, its lines and payment and deducts stock in one transaction. The invoice page (`/pos/invoices/{saleId}`, SCRUM-32) is not built yet. No buy-X-get-Y promotions. |
 | Purchasing | Supplier management. Purchase orders, receiving and returns not built. |
 | Reporting | Not started. |
 
-Jira on 14 Nov 2026: SCRUM-21, 22, 51 and 52 (Jani) are In Review; SCRUM-30, 31 and 32 are To Do; the other Sprint 2 stories are Done.
+Jira on 17 Nov 2026: SCRUM-30 and 31 (Jani) are In Review; SCRUM-32 (invoice page, Prottoy) is To Do; SCRUM-28, 29 and 33 are Done.
 
 ## Course deliverables
 
