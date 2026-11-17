@@ -1,0 +1,64 @@
+# Members: customers registered at the till by phone number, so a sale can
+# record who bought it and the dashboard can show the best customers.
+# sales.customer_id is optional: most sales have no member.
+databaseChangeLog:
+  - changeSet:
+      id: create-customers
+      author: smartmart
+      changes:
+        - createTable:
+            tableName: customers
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_customers_phone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: sales
+            columns:
+              - column:
+                  name: customer_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_sales_customer
+                    references: customers(id)
+        - createIndex:
+            tableName: sales
+            indexName: ix_sales_customer
+            columns:
+              - column:
+                  name: customer_id
+        - createIndex:
+            tableName: sales
+            indexName: ix_sales_sold_at
+            columns:
+              - column:
+                  name: sold_at
