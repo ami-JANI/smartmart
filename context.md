@@ -177,3 +177,7 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `ecc153d` feat(ui): add a home page with a card for each role's work (ShahariarEmon112), SCRUM-38
 - `80bb1e2` fix(ui): highlight the current menu item (ShahariarEmon112), SCRUM-39
 - `ae2c18f` docs(repo): explain the demo data and the first login (ShahariarEmon112)
+
+### 2026-11-17, pushed by ShahariarEmon112
+
+- `1ff6682` feat(ui): tell visitors how to get an account (ShahariarEmon112), SCRUM-38
