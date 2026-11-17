@@ -96,6 +96,22 @@ docker compose up -d --build
 
 This starts both databases and the application. Open <http://localhost:8080> and log in with `ADMIN_USERNAME` and `ADMIN_PASSWORD`. As administrator you can then create accounts for the other roles.
 
+### Demo data
+
+To see every part of the app working straight away, `.env.example` turns on a small sample shop with `LIQUIBASE_CONTEXTS=demo`: 12 products in a category tree, stock batches (some low or close to expiry, so alerts show), two suppliers, and one login per role:
+
+| Username | Role | Lands on |
+| --- | --- | --- |
+| `cashier` | Cashier | Point of sale: scan `2000000000103` (bath soap) or `2000000000011` (rice, by weight), pay cash, see the invoice |
+| `stock` | Inventory staff | Products, categories, suppliers, stock alerts |
+| `manager` | Manager | Stock and alerts, read only |
+
+All three use the password `smartmart-demo`. The administrator is still `ADMIN_USERNAME`.
+
+- If your `.env` is older, add the line `LIQUIBASE_CONTEXTS=demo` from `.env.example` and restart; the data is loaded once.
+- Remove that line before using SmartMart for a real shop. The tests and CI never load the demo data.
+- To start again from an empty database, run `docker compose down -v` (this deletes all data), then `docker compose up -d --build`.
+
 ### Run the application on your machine
 
 Useful while developing, because a code change needs only a restart:

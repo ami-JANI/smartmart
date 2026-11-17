@@ -106,7 +106,7 @@ Snapshot as of **17 Nov 2026** (Sprint 3). For anything newer, read the [Change 
 | --- | --- |
 | User management | Login, default-deny access by role, user administration, lockout after repeated failed logins (with the wait time shown) |
 | Inventory | Category tree, products with unique barcodes, stock batches with expiry, first-expiry-first-out deduction, low-stock and near-expiry alerts (`stock_alerts` table, 7-day default) |
-| Point of sale | Barcode and weighed-item cart with undo; the cashier picks one percentage or flat discount (seeded through Liquibase); cash checkout through `CheckoutFacade` saves the sale, its lines and payment and deducts stock in one transaction. The invoice page (`/pos/invoices/{saleId}`, SCRUM-32) is not built yet. No buy-X-get-Y promotions. |
+| Point of sale | Barcode and weighed-item cart with undo; the cashier picks one percentage or flat discount (seeded through Liquibase); cash checkout through `CheckoutFacade` saves the sale, its lines and payment and deducts stock in one transaction. The invoice page (`/pos/invoices/{saleId}`, SCRUM-32) shows the sale straight after payment. No buy-X-get-Y promotions. |
 | Purchasing | Supplier management. Purchase orders, receiving and returns not built. |
 | Reporting | Not started. |
 
@@ -132,6 +132,7 @@ Setup steps are in the [README](README.md#getting-started). Things that trip peo
 - On Jani's Windows machine an Oracle listener holds port 8080. Run the app with `--server.port=8090`, or map `"8090:8080"` in `compose.yaml` locally without committing it.
 - Without Docker (for example in a cloud sandbox), one local PostgreSQL 16 can serve both URLs. Everything passes except `DataSourceRoutingTests.readOnlyTransactionRunsOnReplica`, which needs a real replica.
 - `.env` holds the database passwords and the first admin login. Copy it from `.env.example`; never commit it.
+- **Nothing to see after logging in?** A fresh database has only the administrator, who may open only the Users page. `LIQUIBASE_CONTEXTS=demo` (in `.env.example`) loads a sample shop and logins `cashier`, `stock` and `manager` (password `smartmart-demo`); see the README section "Demo data". After login every user reaches a home page with a card for each part their roles may open.
 - CI (`.github/workflows/build.yml`) runs `./mvnw verify` with both databases on every push to `main`. `commit-messages.yml` checks every pushed commit message.
 
 ## Change log
