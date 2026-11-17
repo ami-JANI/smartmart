@@ -192,3 +192,12 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 
 - `34a042a` feat(ui): label table cells so rows can become cards on phones (ShahariarEmon112), SCRUM-38
 - `12eecb0` feat(ui): make every page responsive from 320px to desktop (ShahariarEmon112), SCRUM-38
+
+### 2026-11-17, pushed by ShahariarEmon112
+
+- `b9fc7e1` feat(db): add members and record the member on a sale (ShahariarEmon112)
+- `a36b477` feat(pos): register members by phone and add them to a sale (ShahariarEmon112)
+- `4f3bf71` feat(reports): add the manager dashboard (ShahariarEmon112)
+- `0fe4aa3` feat(ui): add dashboard and members to the menu and home page (ShahariarEmon112)
+- `52419ff` feat(db): add two months of demo sales and members (ShahariarEmon112)
+- `84ebdda` docs(repo): record the members and dashboard decision (ShahariarEmon112)
