@@ -26,7 +26,7 @@
     <p class="alert alert-error" role="alert" th:if="${error}" th:text="${error}">Could not save.</p>
 
     <div class="table-wrap">
-        <table class="table">
+        <table class="table table-stack">
             <thead>
             <tr>
                 <th scope="col">Username</th>
@@ -38,18 +38,18 @@
             </thead>
             <tbody>
             <tr th:each="user : ${users}">
-                <td th:text="${user.username}">cashier1</td>
-                <td th:text="${user.fullName}">Full Name</td>
-                <td>
+                <td data-label="Username" th:text="${user.username}">cashier1</td>
+                <td data-label="Full name" th:text="${user.fullName}">Full Name</td>
+                <td data-label="Roles">
                     <span class="badge" th:each="role : ${user.roles}"
                           th:text="${#strings.replace(#strings.capitalize(#strings.toLowerCase(role)), '_', ' ')}">Role</span>
                     <span class="muted" th:if="${#lists.isEmpty(user.roles)}">None</span>
                 </td>
-                <td>
+                <td data-label="Status">
                     <span class="badge badge-ok" th:if="${user.active}">Active</span>
                     <span class="badge badge-off" th:unless="${user.active}">Deactivated</span>
                 </td>
-                <td class="actions">
+                <td data-label="" class="actions">
                     <a class="btn btn-secondary btn-small" th:href="@{/users/{id}/edit(id=${user.id})}"
                        href="#">Edit<span class="visually-hidden"> <span th:text="${user.username}"></span></span></a>
                     <form th:if="${user.active}" th:action="@{/users/{id}/deactivate(id=${user.id})}" method="post"

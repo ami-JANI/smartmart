@@ -22,7 +22,7 @@
     </div>
 
     <div class="table-wrap">
-        <table class="table">
+        <table class="table table-stack">
             <caption th:with="count=${alerts == null ? 0 : alerts.size()}"
                      th:text="${count} + (${count == 1} ? ' open alert' : ' open alerts')">0 open alerts</caption>
             <thead>
@@ -35,14 +35,14 @@
             </thead>
             <tbody>
             <tr th:each="alert : ${alerts}" th:with="lowStock=${alert.type.name() == 'LOW_STOCK'}">
-                <td>
+                <td data-label="Type">
                     <span class="badge badge-warn" th:if="${lowStock}">Low stock</span>
                     <span class="badge badge-bad" th:unless="${lowStock}">Near expiry</span>
                 </td>
-                <td>
+                <td data-label="Product">
                     <a th:href="@{/products/{id}(id=${alert.productId})}" href="#" th:text="${alert.productName}">Product</a>
                 </td>
-                <td>
+                <td data-label="Details">
                     <span th:if="${lowStock}">
                         In stock <strong th:text="${alert.totalStock.stripTrailingZeros().toPlainString()}">3</strong>,
                         threshold <span th:text="${alert.threshold.stripTrailingZeros().toPlainString()}">10</span>
@@ -53,7 +53,7 @@
                         expires <strong th:text="${#temporals.format(alert.expiryDate, 'dd MMM yyyy')}">15 Nov 2026</strong>
                     </span>
                 </td>
-                <td th:text="${#temporals.format(alert.raisedAt, 'dd MMM yyyy, HH:mm')}">10 Nov 2026, 12:00</td>
+                <td data-label="Raised" th:text="${#temporals.format(alert.raisedAt, 'dd MMM yyyy, HH:mm')}">10 Nov 2026, 12:00</td>
             </tr>
             <tr th:if="${alerts == null or alerts.isEmpty()}">
                 <td colspan="4" class="table-empty">No open alerts. Stock levels and expiry dates are fine.</td>

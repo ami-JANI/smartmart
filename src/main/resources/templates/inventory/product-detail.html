@@ -57,7 +57,7 @@
 
     <h2 class="section-title">Stock batches</h2>
     <div class="table-wrap">
-        <table class="table">
+        <table class="table table-stack">
             <thead>
             <tr>
                 <th scope="col">Batch number</th>
@@ -68,10 +68,10 @@
             </thead>
             <tbody>
             <tr th:each="b : ${batches}">
-                <td th:text="${b.batchNumber}">B-001</td>
-                <td class="num" th:text="${#numbers.formatDecimal(b.quantity, 1, 'COMMA', isKg ? 3 : 0, 'POINT')}">0</td>
-                <td class="num" th:text="'৳ ' + ${#numbers.formatDecimal(b.cost, 1, 'COMMA', 2, 'POINT')}">৳ 0.00</td>
-                <td>
+                <td data-label="Batch number" th:text="${b.batchNumber}">B-001</td>
+                <td data-label="Quantity" class="num" th:text="${#numbers.formatDecimal(b.quantity, 1, 'COMMA', isKg ? 3 : 0, 'POINT')}">0</td>
+                <td data-label="Cost (per unit)" class="num" th:text="'৳ ' + ${#numbers.formatDecimal(b.cost, 1, 'COMMA', 2, 'POINT')}">৳ 0.00</td>
+                <td data-label="Expiry date">
                     <span th:if="${b.expiryDate != null}" th:text="${#temporals.format(b.expiryDate, 'dd MMM yyyy')}">01 Jan 2027</span>
                     <span class="muted" th:if="${b.expiryDate == null}">No expiry date</span>
                     <span class="badge badge-bad" th:if="${b.expired}">Expired</span>
@@ -127,7 +127,7 @@
         </form>
     </section>
 
-    <p><a th:href="@{/products}" href="/products">&larr; Back to products</a></p>
+    <p class="section-gap"><a class="btn btn-secondary" th:href="@{/products}" href="/products">&larr; Back to products</a></p>
 </main>
 </body>
 </html>

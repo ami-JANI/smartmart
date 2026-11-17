@@ -54,7 +54,7 @@
     <div class="pos-grid">
         <section aria-label="Cart">
             <div class="table-wrap">
-                <table class="table cart-table">
+                <table class="table table-stack cart-table">
                     <caption class="visually-hidden">Items in the cart</caption>
                     <thead>
                     <tr>
@@ -67,16 +67,16 @@
                     </thead>
                     <tbody>
                     <tr th:each="line : ${cart.lines}" th:classappend="${line.free} ? 'line-free'">
-                        <td>
+                        <td data-label="Item">
                             <span th:text="${line.productName}">Product</span>
                             <span class="badge badge-ok" th:if="${line.free}">Free</span>
                             <br><span class="muted" th:text="${line.barcode}">0000000000000</span>
                         </td>
-                        <td class="num">
+                        <td data-label="Price" class="num">
                             <span th:replace="~{fragments/money :: amount(${line.unitPrice})}">৳ 0.00</span>
                             <span class="muted" th:text="${line.saleUnit == 'KG'} ? '/ kg' : ''"></span>
                         </td>
-                        <td class="num">
+                        <td data-label="Quantity" class="num">
                             <span th:if="${line.free}" th:text="${line.quantity}">1</span>
                             <form th:unless="${line.free}" th:action="@{/pos/cart/items/{id}/quantity(id=${line.id})}"
                                   method="post" class="qty-form">
@@ -87,8 +87,8 @@
                                 <button type="submit" class="btn btn-secondary btn-small">Set</button>
                             </form>
                         </td>
-                        <td class="num"><span th:replace="~{fragments/money :: amount(${line.lineTotal})}">৳ 0.00</span></td>
-                        <td class="actions">
+                        <td data-label="Total" class="num"><span th:replace="~{fragments/money :: amount(${line.lineTotal})}">৳ 0.00</span></td>
+                        <td data-label="" class="actions">
                             <form th:unless="${line.free}" th:action="@{/pos/cart/items/{id}/remove(id=${line.id})}" method="post">
                                 <button type="submit" class="btn btn-secondary btn-small">Remove<span class="visually-hidden"> <span th:text="${line.productName}"></span></span></button>
                             </form>
