@@ -204,6 +204,26 @@ class CheckoutPageTests {
     }
 
     @Test
+    void invoiceShowsTheSaleStraightAfterPayment() throws Exception {
+        stockOf(2);
+        scanTimes(2);
+
+        String invoicePage = pay("50").andReturn().getResponse().getRedirectedUrl();
+
+        mvc.perform(asCashier(get(invoicePage)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("INV-")))
+                .andExpect(content().string(containsString("Test soap")))
+                .andExpect(content().string(containsString("Test Cashier")))
+                .andExpect(content().string(containsString("30.00")));
+    }
+
+    @Test
+    void unknownInvoiceIsNotFound() throws Exception {
+        mvc.perform(asCashier(get("/pos/invoices/999999999"))).andExpect(status().isNotFound());
+    }
+
+    @Test
     void cashBelowTheTotalIsRefusedAndNothingIsSaved() throws Exception {
         stockOf(5);
         scanTimes(2);
