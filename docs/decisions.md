@@ -2,6 +2,18 @@
 
 Design decisions about the SmartMart system, newest first. Each entry gives the date, the decision, and why (GUIDELINES.md section 10).
 
+## 2026-11-17: Members by phone and a manager dashboard
+
+**Decision.**
+
+- Customers can be registered as **members** by name and phone number (`customers` table, phone unique, stored as digits). The cashier can add a member to a sale by phone; the sale records `customer_id`, which is optional. Adding a member is not an undo step.
+- Managers get a **dashboard** (`/dashboard`): today's sales, this month so far against the same days of last month, a 30-day chart, the five best sellers, the five best members, the products selling less than in the same days of last month, and the live stock status of every product.
+- The dashboard reads the replica. The reports module uses only the pos `SalesStatistics` service and the inventory `ProductService` and `AlertService`, never their repositories (GUIDELINES.md section 3.4). The chart is drawn as inline SVG, with no chart library.
+
+**Why.** The team asked for a dashboard that shows monthly sales, best products, best customers, sales drops and stock in one place. "Best customers" needs sales to know their customer, so a minimal membership by phone was taken in early, although the README lists loyalty as a stretch goal. Comparing month-to-date with the same days of last month keeps a half-finished month from looking like a drop.
+
+**Not included.** Loyalty points, member discounts and editing or removing members are not built.
+
 ## 2026-11-17: First discounts and cash sale without promotions or manager screens
 
 **Decision.**

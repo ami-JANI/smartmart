@@ -106,9 +106,9 @@ Snapshot as of **17 Nov 2026** (Sprint 3). For anything newer, read the [Change 
 | --- | --- |
 | User management | Login, default-deny access by role, user administration, lockout after repeated failed logins (with the wait time shown) |
 | Inventory | Category tree, products with unique barcodes, stock batches with expiry, first-expiry-first-out deduction, low-stock and near-expiry alerts (`stock_alerts` table, 7-day default) |
-| Point of sale | Barcode and weighed-item cart with undo; the cashier picks one percentage or flat discount (seeded through Liquibase); cash checkout through `CheckoutFacade` saves the sale, its lines and payment and deducts stock in one transaction. The invoice page (`/pos/invoices/{saleId}`, SCRUM-32) shows the sale straight after payment. No buy-X-get-Y promotions. |
+| Point of sale | Barcode and weighed-item cart with undo; the cashier picks one percentage or flat discount (seeded through Liquibase); cash checkout through `CheckoutFacade` saves the sale, its lines and payment and deducts stock in one transaction. The invoice page (`/pos/invoices/{saleId}`, SCRUM-32) shows the sale straight after payment. Members are registered by phone (`/pos/members`, `customers` table) and can be added to a sale, which records `sales.customer_id`. No buy-X-get-Y promotions. |
 | Purchasing | Supplier management. Purchase orders, receiving and returns not built. |
-| Reporting | Not started. |
+| Reporting | Manager dashboard (`/dashboard`): today and month-to-date sales against the same days last month, a 30-day chart, best sellers, top members, products selling less than last month, and live stock for every product. Reads the replica. Daily sales report (SCRUM-37) is still on hold. |
 
 Jira on 17 Nov 2026: SCRUM-30 and 31 (Jani) are In Review; SCRUM-32 (invoice page, Prottoy) is To Do; SCRUM-28, 29 and 33 are Done.
 
