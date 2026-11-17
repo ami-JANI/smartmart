@@ -12,6 +12,13 @@
 <body>
 <main id="main-content" class="container">
     <section class="card auth-card">
+        <div class="auth-banner">
+            <span class="brand-mark"><svg th:replace="~{fragments/icons :: icon('basket')}"></svg></span>
+            <div>
+                <strong>SmartMart</strong>
+                <p>Super shop management</p>
+            </div>
+        </div>
         <h1>Log in</h1>
 
         <p class="alert alert-error" role="alert" th:if="${param.error}">

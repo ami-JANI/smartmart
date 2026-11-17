@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <!--/*
-  Home page every user reaches after logging in (FR-AUTH-1). One card for each part of
-  SmartMart the user's roles may open, in the order a shift usually needs them.
+  Home page every user reaches after logging in (FR-AUTH-1). A welcome banner, then one
+  card for each part of SmartMart the user's roles may open, in the order a shift usually
+  needs them. Each card takes its colour from data-section, like the pages it opens.
 
   Model attributes (all global, see layout/base.html)
     username        the logged-in user
@@ -21,51 +22,58 @@
       th:with="cashier=${roles != null and roles.contains('CASHIER')},
                staff=${roles != null and roles.contains('INVENTORY_STAFF')},
                manager=${roles != null and roles.contains('MANAGER')},
-               admin=${roles != null and roles.contains('ADMIN')}">
-    <div class="page-header home-header">
-        <div>
-            <h1 th:text="'Welcome, ' + ${username}">Welcome, user</h1>
-            <p class="muted">Choose where to start.</p>
+               admin=${roles != null and roles.contains('ADMIN')},
+               alerts=${openAlertCount != null ? openAlertCount : 0}">
+    <section class="home-hero">
+        <h1 th:text="'Welcome, ' + ${username}">Welcome, user</h1>
+        <p th:text="${#temporals.format(#temporals.createNow(), 'EEEE, d MMMM yyyy')} + ' · Choose where to start.'">Monday, 17 November 2026 · Choose where to start.</p>
+        <div class="home-roles" aria-label="Your roles">
+            <span class="badge" th:each="role : ${roles}"
+                  th:text="${#strings.replace(#strings.capitalize(#strings.toLowerCase(role)), '_', ' ')}">Cashier</span>
         </div>
-    </div>
+    </section>
 
     <ul class="home-grid">
-        <li class="home-card home-card-primary" th:if="${cashier}">
+        <li class="home-card home-card-primary" data-section="pos" th:if="${cashier}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('cart')}"></svg></span>
             <h2>Point of sale</h2>
             <p>Scan items, apply a discount, take cash and show the invoice.</p>
             <a class="btn btn-primary btn-large" th:href="@{/pos}" href="/pos" autofocus>Start a sale</a>
         </li>
 
-        <li class="home-card" th:if="${staff or manager}">
+        <li class="home-card" data-section="products" th:if="${staff or manager}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('box')}"></svg></span>
             <h2>Products and stock</h2>
             <p th:if="${staff}">Add products, record deliveries and check stock.</p>
             <p th:unless="${staff}">Check stock levels and batch expiry dates.</p>
             <a class="btn btn-secondary" th:href="@{/products}" href="/products">Open products</a>
         </li>
 
-        <li class="home-card" th:if="${staff or manager}">
-            <h2>Stock alerts
-                <span class="badge badge-warn" th:if="${openAlertCount != null and openAlertCount > 0}"
-                      th:text="${openAlertCount} + ' open'">2 open</span>
-            </h2>
-            <p th:if="${openAlertCount != null and openAlertCount > 0}">Products low on stock and batches close to expiry.</p>
-            <p th:unless="${openAlertCount != null and openAlertCount > 0}">No open alerts. Stock and expiry dates are fine.</p>
+        <li class="home-card" data-section="alerts" th:if="${staff or manager}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('bell')}"></svg></span>
+            <h2>Stock alerts</h2>
+            <p th:if="${alerts > 0}"><span class="home-count" th:text="${alerts}">4</span>
+                <span th:text="${alerts == 1} ? ' open alert: low stock or close to expiry.' : ' open alerts: low stock and batches close to expiry.'">open alerts</span></p>
+            <p th:unless="${alerts > 0}">No open alerts. Stock and expiry dates are fine.</p>
             <a class="btn btn-secondary" th:href="@{/alerts}" href="/alerts">See alerts</a>
         </li>
 
-        <li class="home-card" th:if="${staff}">
+        <li class="home-card" data-section="categories" th:if="${staff}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('tag')}"></svg></span>
             <h2>Categories</h2>
             <p>Arrange the category tree products belong to.</p>
             <a class="btn btn-secondary" th:href="@{/categories}" href="/categories">Open categories</a>
         </li>
 
-        <li class="home-card" th:if="${staff}">
+        <li class="home-card" data-section="suppliers" th:if="${staff}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('truck')}"></svg></span>
             <h2>Suppliers</h2>
             <p>Keep supplier contacts up to date.</p>
             <a class="btn btn-secondary" th:href="@{/suppliers}" href="/suppliers">Open suppliers</a>
         </li>
 
-        <li class="home-card" th:if="${admin}">
+        <li class="home-card" data-section="users" th:if="${admin}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('users')}"></svg></span>
             <h2>Users</h2>
             <p>Create accounts, give them roles and deactivate users who leave.</p>
             <a class="btn btn-secondary" th:href="@{/users}" href="/users">Manage users</a>
