@@ -63,6 +63,7 @@
 [data-section="categories"] { --accent: var(--categories); --accent-soft: var(--categories-soft); }
 [data-section="suppliers"]  { --accent: var(--suppliers);  --accent-soft: var(--suppliers-soft); }
 [data-section="users"]      { --accent: var(--users);      --accent-soft: var(--users-soft); }
+[data-section="members"]    { --accent: var(--users);      --accent-soft: var(--users-soft); }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -282,7 +283,7 @@ main.container {
 .form input[type="tel"],
 .form input[type="email"],
 .form select,
-.inline-form input[type="text"], .inline-form input[type="number"], .inline-form select,
+.inline-form input[type="text"], .inline-form input[type="number"], .inline-form input[type="tel"], .inline-form select,
 .toolbar select, .toolbar input[type="search"],
 .qty-form input[type="number"],
 .discount-form select {
@@ -544,7 +545,7 @@ main > h1::before, .page-header h1::before {
 .tree-action[open] { flex-basis: 100%; }
 
 .inline-form { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .25rem 0 .5rem; }
-.inline-form input[type="text"], .inline-form input[type="number"], .inline-form select { flex: 1 1 12rem; min-width: 0; }
+.inline-form input[type="text"], .inline-form input[type="number"], .inline-form input[type="tel"], .inline-form select { flex: 1 1 12rem; min-width: 0; }
 
 /* ---------- Tables, badges, checkbox groups (SCRUM-40) ---------- */
 
@@ -707,6 +708,12 @@ th[aria-sort="descending"] .sort-link::after { content: " \2193"; color: var(--c
 .discount-form label { display: block; margin-bottom: .35rem; font-weight: 700; }
 .discount-form .inline-form { padding: 0; }
 .discount-form select { flex: 1 1 10rem; }
+
+/* ---------- Member on the sale ---------- */
+
+.member-box { margin-bottom: 1rem; padding: .85rem; border-radius: var(--radius); background: var(--pos-soft); }
+.member-name { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: 0 0 .6rem; }
+.member-name .badge { margin: 0; }
 
 /* ---------- Cash payment step (SCRUM-46) ---------- */
 

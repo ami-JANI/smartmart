@@ -35,6 +35,19 @@ public interface CartService {
      */
     void applyDiscount(Long discountId);
 
+    /**
+     * Records which member is buying, found by phone number. It is not an undo step.
+     *
+     * @throws com.smartmart.pos.domain.CartRuleException if no member has that phone number
+     */
+    void addMember(String phone);
+
+    /** Removes the member from the sale. */
+    void removeMember();
+
+    /** The member buying, if one was added. */
+    Optional<CustomerSummary> member();
+
     /** Reverses the last change, one step at a time. Refused when there is nothing to undo. */
     void undo();
 

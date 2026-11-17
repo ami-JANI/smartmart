@@ -50,6 +50,7 @@ import com.smartmart.inventory.service.ProductService;
 import com.smartmart.inventory.service.StockBatchData;
 import com.smartmart.inventory.service.StockBatchService;
 import com.smartmart.pos.domain.Sale;
+import com.smartmart.pos.repository.CustomerRepository;
 import com.smartmart.pos.repository.SaleRepository;
 
 /**
@@ -73,6 +74,8 @@ class CheckoutPageTests {
     private final UserRepository userRepository;
     private final AccountDetailsService accounts;
     private final SaleRepository saleRepository;
+    private final CustomerRepository customerRepository;
+    private String memberPhone;
     private final MockHttpSession session = new MockHttpSession();
     private Long categoryId;
     private Long productId;
@@ -83,7 +86,8 @@ class CheckoutPageTests {
     CheckoutPageTests(MockMvc mvc, TransactionTemplate writes, ProductService products,
                       ProductRepository productRepository, StockBatchService stock,
                       StockBatchRepository batchRepository, CategoryService categories, UserService userService,
-                      UserRepository userRepository, AccountDetailsService accounts, SaleRepository saleRepository) {
+                      UserRepository userRepository, AccountDetailsService accounts, SaleRepository saleRepository,
+                      CustomerRepository customerRepository) {
         this.mvc = mvc;
         this.writes = writes;
         this.products = products;
@@ -95,6 +99,7 @@ class CheckoutPageTests {
         this.userRepository = userRepository;
         this.accounts = accounts;
         this.saleRepository = saleRepository;
+        this.customerRepository = customerRepository;
     }
 
     @BeforeEach
@@ -113,6 +118,9 @@ class CheckoutPageTests {
     void removeTestData() {
         writes.executeWithoutResult(status -> {
             saleRepository.deleteAll(salesOfCashier());
+            if (memberPhone != null) {
+                customerRepository.findByPhone(memberPhone).ifPresent(customerRepository::delete);
+            }
             batchRepository.deleteAll(batchRepository.findForProduct(productId));
             productRepository.deleteById(productId);
             categories.delete(categoryId);
@@ -258,5 +266,31 @@ class CheckoutPageTests {
         assertThat(savedSales()).isEmpty();
         assertThat(stockLeft()).isEqualByComparingTo("1");
         mvc.perform(asCashier(get("/pos"))).andExpect(content().string(containsString("Test soap")));
+    }
+
+    @Test
+    void aMemberRegisteredAtTheTillIsRecordedOnTheSale() throws Exception {
+        stockOf(1);
+        scanTimes(1);
+        memberPhone = "0199" + ThreadLocalRandom.current().nextInt(1_000_000, 9_999_999);
+
+        mvc.perform(asCashier(post("/pos/members")).param("name", "Test Member").param("phone", memberPhone)
+                        .param("addToSale", "true"))
+                .andExpect(redirectedUrl("/pos"));
+        mvc.perform(asCashier(get("/pos"))).andExpect(content().string(containsString("Test Member")));
+        mvc.perform(asCashier(post("/pos/members")).param("name", "Again").param("phone", memberPhone))
+                .andExpect(content().string(containsString("This phone number is already a member")));
+
+        pay("20").andExpect(redirectedUrlPattern("/pos/invoices/*"));
+
+        Long memberId = writes.execute(status -> customerRepository.findByPhone(memberPhone).orElseThrow().getId());
+        assertThat(savedSales()).singleElement().satisfies(sale -> assertThat(sale.getCustomerId()).isEqualTo(memberId));
+    }
+
+    @Test
+    void unknownMemberPhoneIsRefusedOnTheCart() throws Exception {
+        mvc.perform(asCashier(post("/pos/cart/member")).param("phone", "0100000000"))
+                .andExpect(redirectedUrl("/pos"))
+                .andExpect(flash().attribute("error", "No member with that phone number"));
     }
 }

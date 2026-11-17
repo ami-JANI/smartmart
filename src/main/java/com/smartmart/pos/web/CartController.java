@@ -36,6 +36,7 @@ class CartController {
     String show(Model model) {
         model.addAttribute("cart", cartService.view());
         model.addAttribute("discounts", discountService.activeDiscounts());
+        model.addAttribute("member", cartService.member().orElse(null));
         model.addAttribute("activeNav", "pos");
         return "pos/cart";
     }
@@ -64,6 +65,20 @@ class CartController {
     String applyDiscount(@RequestParam(required = false) Long discountId, RedirectAttributes redirect) {
         cartService.applyDiscount(discountId);
         redirect.addFlashAttribute("message", discountId == null ? "Discount removed" : "Discount applied");
+        return BACK_TO_CART;
+    }
+
+    @PostMapping("/cart/member")
+    String addMember(@RequestParam String phone, RedirectAttributes redirect) {
+        cartService.addMember(phone);
+        redirect.addFlashAttribute("message", "Member added to the sale");
+        return BACK_TO_CART;
+    }
+
+    @PostMapping("/cart/member/remove")
+    String removeMember(RedirectAttributes redirect) {
+        cartService.removeMember();
+        redirect.addFlashAttribute("message", "Member removed from the sale");
         return BACK_TO_CART;
     }
 

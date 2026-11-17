@@ -31,6 +31,7 @@ class CartServiceImpl implements CartService {
     private final ProductService products;
     private final StoreSettings settings;
     private final DiscountService discounts;
+    private final CustomerService customers;
 
     // Buy-X-get-Y promotions are not built yet, so promotion savings are 0 and
     // the discount applies to the whole subtotal (FR-POS-8).
@@ -94,6 +95,23 @@ class CartServiceImpl implements CartService {
             throw new CartRuleException("That discount is not available");
         }
         recordingForUndo(() -> cart.applyDiscount(discountId));
+    }
+
+    @Override
+    public void addMember(String phone) {
+        CustomerSummary member = customers.findByPhone(phone)
+                .orElseThrow(() -> new CartRuleException("No member with that phone number"));
+        cart.setMember(member.id());
+    }
+
+    @Override
+    public void removeMember() {
+        cart.setMember(null);
+    }
+
+    @Override
+    public Optional<CustomerSummary> member() {
+        return customers.find(cart.memberId());
     }
 
     @Override

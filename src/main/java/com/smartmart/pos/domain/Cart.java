@@ -16,6 +16,8 @@ public class Cart implements Serializable {
 
     private final Map<Long, CartLine> lines = new LinkedHashMap<>();
     private Long discountId;
+    // The member buying, if the cashier added one. Not part of undo snapshots.
+    private Long memberId;
 
     /** Adds a line, or increases the quantity if the product is already in the cart. */
     public void add(CartLine line) {
@@ -44,9 +46,20 @@ public class Cart implements Serializable {
         return discountId;
     }
 
+    /** Records which member is buying; null removes the member. */
+    public void setMember(Long memberId) {
+        this.memberId = memberId;
+    }
+
+    /** The member's customer id, or null when the sale has no member. */
+    public Long memberId() {
+        return memberId;
+    }
+
     public void clear() {
         lines.clear();
         discountId = null;
+        memberId = null;
     }
 
     public CartSnapshot snapshot() {

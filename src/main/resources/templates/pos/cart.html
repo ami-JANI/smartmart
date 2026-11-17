@@ -8,6 +8,7 @@
                 Each line: id, productName, barcode, saleUnit (PIECE or KG), unitPrice,
                 quantity, lineTotal, free (true for a free promotion unit line).
     discounts   active discounts the manager defined: id, name, description (for example "10% off")
+    member      the member buying (id, name, phone, memberSince), or null
     weightPrompt  null, or the scanned weighed product (barcode, productName) that needs a weight
     error       optional text, for example "Product not found"; nothing was added
     message     optional success text
@@ -18,6 +19,8 @@
     /pos/cart/items/{lineId}/remove
     /pos/cart/discount               discountId (empty removes the discount)
     /pos/cart/undo
+    /pos/cart/member                 phone   add the member with this phone number
+    /pos/cart/member/remove
   The cashier only picks a discount from the list; amounts are set by managers (docs/decisions.md).
   The scan field has data-autofocus; static/js/pos.js keeps the focus there.
 */-->
@@ -104,6 +107,24 @@
 
         <aside class="card summary" aria-label="Sale summary">
             <h2>Summary</h2>
+
+            <!--/* Member: optional; the sale counts toward this customer on the dashboard. */-->
+            <div class="member-box" th:if="${member != null}">
+                <p class="member-name"><span class="badge badge-ok">Member</span>
+                    <strong th:text="${member.name}">Farhana Akter</strong>
+                    <span class="muted" th:text="${member.phone}">01711000101</span></p>
+                <form th:action="@{/pos/cart/member/remove}" method="post">
+                    <button type="submit" class="btn btn-secondary btn-small">Remove member</button>
+                </form>
+            </div>
+            <form th:unless="${member != null}" th:action="@{/pos/cart/member}" method="post" class="discount-form">
+                <label for="memberPhone">Member phone</label>
+                <div class="inline-form">
+                    <input type="tel" id="memberPhone" name="phone" inputmode="tel" autocomplete="off" maxlength="20" required>
+                    <button type="submit" class="btn btn-secondary btn-small">Add</button>
+                </div>
+                <p class="hint">Optional. <a th:href="@{/pos/members}" href="/pos/members">Register a new member</a></p>
+            </form>
 
             <form th:action="@{/pos/cart/discount}" method="post" class="discount-form">
                 <label for="discountId">Discount</label>

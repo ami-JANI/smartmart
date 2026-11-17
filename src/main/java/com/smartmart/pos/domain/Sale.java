@@ -44,6 +44,10 @@ public class Sale {
     @Column(name = "discount_id")
     private Long discountId;
 
+    // The member who bought, if the cashier added one; kept as an id like the cashier.
+    @Column(name = "customer_id")
+    private Long customerId;
+
     @Column(name = "sold_at", nullable = false)
     private Instant soldAt;
 
@@ -87,6 +91,11 @@ public class Sale {
 
     public void addLine(Long productId, BigDecimal quantity, BigDecimal unitPrice, BigDecimal lineTotal) {
         lines.add(new SaleLine(this, productId, quantity, unitPrice, lineTotal));
+    }
+
+    /** Records the member who bought; null for a sale without a member. */
+    public void recordCustomer(Long customerId) {
+        this.customerId = customerId;
     }
 
     public void recordPayment(String method, BigDecimal amount, BigDecimal cashReceived, BigDecimal changeDue) {

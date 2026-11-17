@@ -24,8 +24,9 @@ class CartServiceImplTest {
 
     private final ProductService products = mock(ProductService.class);
     private final DiscountService discounts = mock(DiscountService.class);
+    private final CustomerService customers = mock(CustomerService.class);
     private final CartServiceImpl service = new CartServiceImpl(new Cart(), new CartHistory(), products,
-            new StoreSettings(new BigDecimal("10"), new BigDecimal("15"), 7), discounts);
+            new StoreSettings(new BigDecimal("10"), new BigDecimal("15"), 7), discounts, customers);
 
     private void discount(long id, String name, DiscountStrategy strategy) {
         when(discounts.findActive(id)).thenReturn(Optional.of(new ActiveDiscount(id, name, strategy)));
@@ -297,5 +298,37 @@ class CartServiceImplTest {
         service.clear();
 
         assertThat(service.view().discountId()).isNull();
+    }
+
+    @Test
+    void memberIsFoundByPhoneAndClearedWithTheCart() {
+        CustomerSummary farhana = new CustomerSummary(5L, "Farhana Akter", "01711000101", java.time.Instant.EPOCH);
+        when(customers.findByPhone("01711-000101")).thenReturn(Optional.of(farhana));
+        when(customers.find(5L)).thenReturn(Optional.of(farhana));
+
+        service.addMember("01711-000101");
+        assertThat(service.member()).contains(farhana);
+
+        service.clear();
+        assertThat(service.member()).isEmpty();
+    }
+
+    @Test
+    void unknownMemberPhoneIsRefused() {
+        when(customers.findByPhone("0100")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.addMember("0100"))
+                .isInstanceOf(CartRuleException.class)
+                .hasMessage("No member with that phone number");
+    }
+
+    @Test
+    void addingAMemberIsNotAnUndoStep() {
+        CustomerSummary member = new CustomerSummary(5L, "Farhana Akter", "01711000101", java.time.Instant.EPOCH);
+        when(customers.findByPhone("01711000101")).thenReturn(Optional.of(member));
+
+        service.addMember("01711000101");
+
+        assertThat(service.view().canUndo()).isFalse();
     }
 }

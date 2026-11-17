@@ -64,6 +64,7 @@ class CheckoutFacadeImpl implements CheckoutFacade {
                 cart.discountAmount(), cart.total(), cart.vatIncluded());
         cart.lines().forEach(line -> sale.addLine(line.id(), line.quantity(), line.unitPrice(), line.lineTotal()));
         sale.recordPayment(paid.method(), paid.amount(), paid.cashReceived(), paid.changeDue());
+        sale.recordCustomer(carts.member().map(CustomerSummary::id).orElse(null));
         return sales.save(sale).getId();
     }
 }

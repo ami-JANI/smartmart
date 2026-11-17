@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--/*
+  Members: customers registered by phone at the till. Cashier.
+
+  Model attributes
+    members     list: id, name, phone, memberSince (Instant), newest first; the latest 50, or the search result
+    q           the name or phone searched for, or null
+    name, phone the values typed, when registering failed
+    nameError, phoneError  the message for that field, when registering failed
+    addToSale   true to add the new member to the current sale
+    message     optional success text
+    activeNav   "members"
+  Requests
+    GET  /pos/members?q=0171
+    POST /pos/members   name, phone [, addToSale=true]
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Members - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <div class="page-header">
+        <h1>Members</h1>
+        <a class="btn btn-secondary" th:href="@{/pos}" href="/pos">&larr; Back to the sale</a>
+    </div>
+
+    <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Member registered</p>
+
+    <div class="two-column">
+        <section>
+            <form th:action="@{/pos/members}" method="get" class="toolbar">
+                <span class="toolbar-field">
+                    <label for="q">Search</label>
+                    <input type="search" id="q" name="q" th:value="${q}" maxlength="100" autocomplete="off"
+                           placeholder="Name or phone">
+                </span>
+                <button type="submit" class="btn btn-secondary btn-small">Search</button>
+            </form>
+
+            <div class="table-wrap">
+                <table class="table table-stack">
+                    <caption th:text="${#lists.size(members)} + (${#lists.size(members) == 1} ? ' member' : ' members')">0 members</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Member since</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="m : ${members}">
+                        <td data-label="Name" th:text="${m.name}">Farhana Akter</td>
+                        <td data-label="Phone" th:text="${m.phone}">01711000101</td>
+                        <td data-label="Member since" th:text="${#temporals.format(m.memberSince, 'dd MMM yyyy')}">01 Nov 2026</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(members)}">
+                        <td colspan="3" class="table-empty">No members found.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Register a member</h2>
+            <form th:action="@{/pos/members}" method="post" class="form" novalidate>
+                <div class="field" th:classappend="${nameError} ? 'has-error'">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" th:value="${name}" maxlength="100" required autocomplete="off"
+                           th:attrappend="aria-describedby=${nameError} ? 'name-error'">
+                    <p class="field-error" id="name-error" th:if="${nameError}" th:text="${nameError}">Name is required</p>
+                </div>
+                <div class="field" th:classappend="${phoneError} ? 'has-error'">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" name="phone" th:value="${phone}" maxlength="20" inputmode="tel" required
+                           autocomplete="off" th:attrappend="aria-describedby=${phoneError} ? 'phone-error'">
+                    <p class="hint">The member gives this number at the till.</p>
+                    <p class="field-error" id="phone-error" th:if="${phoneError}" th:text="${phoneError}">Phone must be 6 to 15 digits</p>
+                </div>
+                <ul class="check-list">
+                    <li>
+                        <label>
+                            <input type="checkbox" name="addToSale" value="true" th:checked="${addToSale}">
+                            <span>Add to the current sale</span>
+                        </label>
+                    </li>
+                </ul>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Register member</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>
