@@ -75,7 +75,8 @@ class LoginPageTests {
     void loginPageShowsTheForm() throws Exception {
         mvc.perform(get("/login"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("name=\"username\"")));
+                .andExpect(content().string(containsString("name=\"username\"")))
+                .andExpect(content().string(containsString("Ask your store administrator")));
     }
 
     @Test

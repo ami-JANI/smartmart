@@ -177,6 +177,7 @@ main.container {
 }
 
 .auth-card { max-width: 26rem; margin: 2rem auto 0; }
+.login-help { margin-top: 1rem; text-align: center; }
 
 .form .field { margin-bottom: 1rem; }
 
