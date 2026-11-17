@@ -13,7 +13,7 @@
               ADMIN, MANAGER, CASHIER, INVENTORY_STAFF. A menu item shows only when
               the user holds a role allowed to open it (GUIDELINES.md section 7).
               The menu only hides links; the server still denies the pages (SCRUM-20).
-    activeNav name of the current menu item (users, categories, products, suppliers, alerts, pos), optional
+    activeNav name of the current menu item (home, users, categories, products, suppliers, alerts, pos), optional
     storeName store name for the header and footer; defaults to "SmartMart"
     openAlertCount  number of open stock alerts for INVENTORY_STAFF and MANAGER, shown as a badge
               on the Alerts menu item when above 0; null for other roles (AlertModelAdvice, SCRUM-53)
@@ -39,7 +39,7 @@
 
         <nav class="site-nav" aria-label="Main" th:if="${username != null}">
             <ul>
-                <li><a th:href="@{/}" href="/">Home</a></li>
+                <li><a th:href="@{/}" href="/" th:attr="aria-current=${activeNav == 'home'} ? 'page'">Home</a></li>
                 <li th:if="${roles != null and roles.contains('ADMIN')}">
                     <a th:href="@{/users}" href="/users" th:attr="aria-current=${activeNav == 'users'} ? 'page'">Users</a>
                 </li>

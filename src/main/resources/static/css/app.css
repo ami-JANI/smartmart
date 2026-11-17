@@ -241,6 +241,36 @@ main.container {
     * { transition: none !important; animation: none !important; }
 }
 
+/* ---------- Home page: one card per part of the shop the user may open ---------- */
+
+.home-header p { margin: .25rem 0 0; }
+.home-grid {
+    display: grid;
+    gap: var(--space);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.home-card {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-top: 4px solid var(--color-header);
+    border-radius: var(--radius);
+    transition: border-color var(--transition);
+}
+.home-card:hover { border-color: var(--color-input-border); border-top-color: var(--color-header); }
+.home-card h2 { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; font-size: 1.15rem; }
+.home-card h2 .badge { margin: 0; }
+.home-card p { margin: 0 0 .5rem; color: var(--color-muted); }
+.home-card .btn { margin-top: auto; align-self: flex-start; }
+.home-card-primary { border-top-color: var(--color-primary); }
+.home-card-primary:hover { border-top-color: var(--color-primary); }
+
 /* ---------- Message pages: 401, 403, 404, 5xx (SCRUM-39) ---------- */
 
 .message-card { max-width: 34rem; margin: 2rem auto 0; text-align: center; }

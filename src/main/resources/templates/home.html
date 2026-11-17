@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--/*
+  Home page every user reaches after logging in (FR-AUTH-1). One card for each part of
+  SmartMart the user's roles may open, in the order a shift usually needs them.
+
+  Model attributes (all global, see layout/base.html)
+    username        the logged-in user
+    roles           role names; decide which cards show
+    openAlertCount  open stock alerts, for INVENTORY_STAFF and MANAGER
+    activeNav       "home"
+  Request
+    GET /
+  A cashier's "Start a sale" button has the focus, so Enter opens the till (NFR-6).
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container"
+      th:with="cashier=${roles != null and roles.contains('CASHIER')},
+               staff=${roles != null and roles.contains('INVENTORY_STAFF')},
+               manager=${roles != null and roles.contains('MANAGER')},
+               admin=${roles != null and roles.contains('ADMIN')}">
+    <div class="page-header home-header">
+        <div>
+            <h1 th:text="'Welcome, ' + ${username}">Welcome, user</h1>
+            <p class="muted">Choose where to start.</p>
+        </div>
+    </div>
+
+    <ul class="home-grid">
+        <li class="home-card home-card-primary" th:if="${cashier}">
+            <h2>Point of sale</h2>
+            <p>Scan items, apply a discount, take cash and show the invoice.</p>
+            <a class="btn btn-primary btn-large" th:href="@{/pos}" href="/pos" autofocus>Start a sale</a>
+        </li>
+
+        <li class="home-card" th:if="${staff or manager}">
+            <h2>Products and stock</h2>
+            <p th:if="${staff}">Add products, record deliveries and check stock.</p>
+            <p th:unless="${staff}">Check stock levels and batch expiry dates.</p>
+            <a class="btn btn-secondary" th:href="@{/products}" href="/products">Open products</a>
+        </li>
+
+        <li class="home-card" th:if="${staff or manager}">
+            <h2>Stock alerts
+                <span class="badge badge-warn" th:if="${openAlertCount != null and openAlertCount > 0}"
+                      th:text="${openAlertCount} + ' open'">2 open</span>
+            </h2>
+            <p th:if="${openAlertCount != null and openAlertCount > 0}">Products low on stock and batches close to expiry.</p>
+            <p th:unless="${openAlertCount != null and openAlertCount > 0}">No open alerts. Stock and expiry dates are fine.</p>
+            <a class="btn btn-secondary" th:href="@{/alerts}" href="/alerts">See alerts</a>
+        </li>
+
+        <li class="home-card" th:if="${staff}">
+            <h2>Categories</h2>
+            <p>Arrange the category tree products belong to.</p>
+            <a class="btn btn-secondary" th:href="@{/categories}" href="/categories">Open categories</a>
+        </li>
+
+        <li class="home-card" th:if="${staff}">
+            <h2>Suppliers</h2>
+            <p>Keep supplier contacts up to date.</p>
+            <a class="btn btn-secondary" th:href="@{/suppliers}" href="/suppliers">Open suppliers</a>
+        </li>
+
+        <li class="home-card" th:if="${admin}">
+            <h2>Users</h2>
+            <p>Create accounts, give them roles and deactivate users who leave.</p>
+            <a class="btn btn-secondary" th:href="@{/users}" href="/users">Manage users</a>
+        </li>
+    </ul>
+</main>
+</body>
+</html>

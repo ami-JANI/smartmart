@@ -2,6 +2,7 @@ package com.smartmart.auth.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.logout;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -154,11 +155,21 @@ class LoginPageTests {
     }
 
     @Test
-    void homeSendsEachRoleToItsStartPage() throws Exception {
-        mvc.perform(get("/").with(user("c").roles("CASHIER"))).andExpect(redirectedUrl("/pos"));
-        mvc.perform(get("/").with(user("i").roles("INVENTORY_STAFF"))).andExpect(redirectedUrl("/products"));
-        mvc.perform(get("/").with(user("m").roles("MANAGER"))).andExpect(redirectedUrl("/products"));
-        mvc.perform(get("/").with(user("a").roles("ADMIN", "CASHIER"))).andExpect(redirectedUrl("/users"));
+    void homeShowsACardForEachPartTheRolesMayOpen() throws Exception {
+        mvc.perform(get("/").with(user("c").roles("CASHIER")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/pos\"")))
+                .andExpect(content().string(not(containsString("href=\"/products\""))));
+        mvc.perform(get("/").with(user("i").roles("INVENTORY_STAFF")))
+                .andExpect(content().string(containsString("href=\"/categories\"")))
+                .andExpect(content().string(containsString("href=\"/suppliers\"")))
+                .andExpect(content().string(not(containsString("href=\"/pos\""))));
+        mvc.perform(get("/").with(user("m").roles("MANAGER")))
+                .andExpect(content().string(containsString("href=\"/alerts\"")))
+                .andExpect(content().string(not(containsString("href=\"/categories\""))));
+        mvc.perform(get("/").with(user("a").roles("ADMIN", "CASHIER")))
+                .andExpect(content().string(containsString("href=\"/users\"")))
+                .andExpect(content().string(containsString("href=\"/pos\"")));
     }
 
     @Test
