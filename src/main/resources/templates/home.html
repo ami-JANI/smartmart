@@ -55,6 +55,13 @@
             <a class="btn btn-primary btn-large" th:href="@{/dashboard}" href="/dashboard">Open the dashboard</a>
         </li>
 
+        <li class="home-card" data-section="reports" th:if="${manager}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('report')}"></svg></span>
+            <h2>Daily sales report</h2>
+            <p>Totals and products sold on any day, ready to print.</p>
+            <a class="btn btn-secondary" th:href="@{/reports/daily}" href="/reports/daily">Open the report</a>
+        </li>
+
         <li class="home-card" data-section="products" th:if="${staff or manager}">
             <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('box')}"></svg></span>
             <h2>Products and stock</h2>
