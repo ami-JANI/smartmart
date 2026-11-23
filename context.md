@@ -51,7 +51,7 @@ Product Owner and Scrum Master rotate each sprint. The full split is in [docs/pl
   5. Reporting: sales, purchase, inventory and profit summaries, dashboard
 - **Stretch goals** (only after all five modules work): loyalty points, customer returns, audit logs, scanner hardware, multiple payment methods, backup and recovery, forecasting.
 - **Out of scope:** multi-branch and enterprise features, microservices, payment gateways, automatic database failover. These appear only as future work in the report.
-- **On hold for future work** (team decision, Nov 2026): buy-X-get-Y promotions and the manager screens for discounts (SRS Q1, Q3); SCRUM-36 purchase orders and SCRUM-37 daily sales report, whose acceptance criteria are still "to be refined" and are outside SRS v1. Ask before starting any of these. SCRUM-30 (percentage and flat discounts) and SCRUM-31 (cash sale) were taken off hold on 17 Nov 2026 and built without promotions ([docs/decisions.md](docs/decisions.md)).
+- **On hold for future work** (team decision, Nov 2026): buy-X-get-Y promotions and the manager screens for discounts (SRS Q1, Q3); SCRUM-36 purchase orders, whose acceptance criteria are still "to be refined" and are outside SRS v1. Ask before starting any of these. The daily sales report (SCRUM-37, SCRUM-55) was taken off hold on 23 Nov 2026 and built ([docs/decisions.md](docs/decisions.md)). SCRUM-30 (percentage and flat discounts) and SCRUM-31 (cash sale) were taken off hold on 17 Nov 2026 and built without promotions ([docs/decisions.md](docs/decisions.md)).
 
 Requirements and acceptance criteria: [docs/srs/srs-v1.md](docs/srs/srs-v1.md).
 
@@ -108,7 +108,7 @@ Snapshot as of **17 Nov 2026** (Sprint 3). For anything newer, read the [Change 
 | Inventory | Category tree, products with unique barcodes, stock batches with expiry, first-expiry-first-out deduction, low-stock and near-expiry alerts (`stock_alerts` table, 7-day default) |
 | Point of sale | Barcode and weighed-item cart with undo; the cashier picks one percentage or flat discount (seeded through Liquibase); cash checkout through `CheckoutFacade` saves the sale, its lines and payment and deducts stock in one transaction. The invoice page (`/pos/invoices/{saleId}`, SCRUM-32) shows the sale straight after payment. Members are registered by phone (`/pos/members`, `customers` table) and can be added to a sale, which records `sales.customer_id`. No buy-X-get-Y promotions. |
 | Purchasing | Supplier management. Purchase orders, receiving and returns not built. |
-| Reporting | Manager dashboard (`/dashboard`): today and month-to-date sales against the same days last month, a 30-day chart, best sellers, top members, products selling less than last month, and live stock for every product. Reads the replica. Daily sales report (SCRUM-37) is still on hold. |
+| Reporting | Manager dashboard (`/dashboard`): today and month-to-date sales against the same days last month, a 30-day chart, best sellers, top members, products selling less than last month, and live stock for every product. Daily sales report (`/reports/daily`, SCRUM-55): totals and products sold on a chosen day, print-friendly. Both read the replica. |
 
 Jira on 17 Nov 2026: SCRUM-30 and 31 (Jani) are In Review; SCRUM-32 (invoice page, Prottoy) is To Do; SCRUM-28, 29 and 33 are Done.
 

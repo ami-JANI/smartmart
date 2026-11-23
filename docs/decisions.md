@@ -2,6 +2,19 @@
 
 Design decisions about the SmartMart system, newest first. Each entry gives the date, the decision, and why (GUIDELINES.md section 10).
 
+## 2026-11-23: Daily sales report
+
+**Decision.**
+
+- Managers get a daily report at `/reports/daily` (SCRUM-37, SCRUM-55). A day runs midnight to midnight in the store's time zone. It reads the replica and shows when it was generated.
+- **Gross** is the sum of sale subtotals. **Net** is what customers paid: gross less discounts and promotion savings. Prices include VAT, so net includes the VAT, which is shown on its own line. Promotion savings are 0 until promotions are built.
+- The per-product amounts are line totals before the sale-wide discount, so they add up to gross. A sale discount is not split across products.
+- `ReportFactory` (GUIDELINES.md section 5.3) is not added yet, because there is only one report and nothing to choose between. It comes with the second report type.
+
+**Why.** Emon's page (SCRUM-55) had clear acceptance criteria and all the data was already recorded, so the small service behind it was built with the page.
+
+**Alternatives considered.** Net excluding VAT: rejected because shelf prices and the invoice total include VAT, so the manager can compare net with the cash taken.
+
 ## 2026-11-17: Members by phone and a manager dashboard
 
 **Decision.**

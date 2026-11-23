@@ -104,7 +104,7 @@ To see every part of the app working straight away, `.env.example` turns on a sm
 | --- | --- | --- |
 | `cashier` | Cashier | Point of sale: scan `2000000000103` (bath soap) or `2000000000011` (rice, by weight), add member `01711000101`, pay cash, see the invoice; register members under Members |
 | `stock` | Inventory staff | Products, categories, suppliers, stock alerts |
-| `manager` | Manager | Dashboard: sales this month against last month, a 30-day chart, best sellers, top members, sales drops and live stock; stock and alerts, read only |
+| `manager` | Manager | Dashboard: sales this month against last month, a 30-day chart, best sellers, top members, sales drops and live stock; a printable daily sales report; stock and alerts, read only |
 
 All three use the password `smartmart-demo`. The administrator is still `ADMIN_USERNAME`.
 
