@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--/*
+  Daily sales report (SCRUM-55). Manager only.
+
+  Model attributes
+    report     com.smartmart.reports.service.DailySalesReport: day, generatedAt, saleCount, gross, discounts,
+               promotionSavings, net, vatIncluded, lines (productId, name, saleUnit, quantity, amount)
+    today      the latest day that can be picked
+    dateError  optional message when a future date was asked for
+    activeNav  "reports"
+  Request
+    GET /reports/daily?date=2026-11-17
+  Sales come from the replica and can be a second behind, so the page shows when it was built.
+  Printing: the header, footer and date form are hidden by the print rules in app.css.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Daily sales report - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container" th:with="r=${report}">
+    <div class="page-header">
+        <h1 th:text="'Daily sales report: ' + ${#temporals.format(r.day, 'd MMMM yyyy')}">Daily sales report: 17 November 2026</h1>
+        <button type="button" class="btn btn-secondary no-print" data-print hidden>Print</button>
+    </div>
+    <p class="muted report-generated"
+       th:text="'Generated ' + ${#temporals.format(r.generatedAt, 'd MMM yyyy, HH:mm:ss')} + '. A sale from the last second may not be included.'">
+        Generated 17 Nov 2026, 15:40:02.</p>
+
+    <p class="alert alert-error" role="alert" th:if="${dateError}" th:text="${dateError}">The report date cannot be in the future</p>
+
+    <form th:action="@{/reports/daily}" method="get" class="toolbar no-print">
+        <span class="toolbar-field">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" required th:value="${r.day}" th:max="${today}">
+        </span>
+        <button type="submit" class="btn btn-secondary btn-small">Show report</button>
+    </form>
+
+    <div class="report-grid">
+        <section class="card report-summary" aria-labelledby="summary-title">
+            <h2 id="summary-title">Totals</h2>
+            <dl class="totals">
+                <div><dt>Number of sales</dt><dd th:text="${r.saleCount}">0</dd></div>
+                <div><dt>Gross sales</dt><dd><span th:replace="~{fragments/money :: amount(${r.gross})}">৳ 0.00</span></dd></div>
+                <div><dt>Discounts</dt><dd>&minus; <span th:replace="~{fragments/money :: amount(${r.discounts})}">৳ 0.00</span></dd></div>
+                <div><dt>Promotion savings</dt><dd>&minus; <span th:replace="~{fragments/money :: amount(${r.promotionSavings})}">৳ 0.00</span></dd></div>
+                <div class="totals-total"><dt>Net sales</dt><dd><span th:replace="~{fragments/money :: amount(${r.net})}">৳ 0.00</span></dd></div>
+                <div class="totals-note"><dt>VAT included in net</dt><dd><span th:replace="~{fragments/money :: amount(${r.vatIncluded})}">৳ 0.00</span></dd></div>
+            </dl>
+        </section>
+
+        <section aria-labelledby="products-title">
+            <h2 id="products-title">Products sold</h2>
+            <div class="table-wrap">
+                <table class="table table-stack">
+                    <caption th:text="${#lists.size(r.lines)} + ' products sold, before sale discounts'">0 products sold</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col" class="num">Quantity</th>
+                        <th scope="col" class="num">Sales amount</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l : ${r.lines}">
+                        <td data-label="Product" th:text="${l.name}">Bath soap</td>
+                        <td data-label="Quantity" class="num"
+                            th:text="${#numbers.formatDecimal(l.quantity, 1, 'COMMA', l.saleUnit == 'KG' ? 3 : 0, 'POINT')} + (${l.saleUnit == 'KG'} ? ' kg' : '')">2</td>
+                        <td data-label="Sales amount" class="num"><span th:replace="~{fragments/money :: amount(${l.amount})}">৳ 0.00</span></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(r.lines)}">
+                        <td colspan="3" class="table-empty">No sales on this day.</td>
+                    </tr>
+                    </tbody>
+                    <tfoot th:unless="${#lists.isEmpty(r.lines)}">
+                    <tr>
+                        <th scope="row" colspan="2">Gross sales</th>
+                        <td class="num"><span th:replace="~{fragments/money :: amount(${r.gross})}">৳ 0.00</span></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+    </div>
+    <script th:src="@{/js/pos.js}" src="/js/pos.js" defer></script>
+</main>
+</body>
+</html>

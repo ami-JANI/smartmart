@@ -104,4 +104,12 @@ class RoleAccessTests {
         allowed(as("CASHIER", get("/pos/members")));
         refused(as("MANAGER", get("/pos/members")));
     }
+
+    @Test
+    void onlyManagersOpenTheDailyReport() throws Exception {
+        allowed(as("MANAGER", get("/reports/daily")));
+        refused(as("CASHIER", get("/reports/daily")));
+        refused(as("INVENTORY_STAFF", get("/reports/daily")));
+        refused(as("ADMIN", get("/reports/daily")));
+    }
 }

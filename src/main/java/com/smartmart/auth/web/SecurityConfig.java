@@ -74,7 +74,7 @@ class SecurityConfig {
                         .requestMatchers("/products/**").hasRole(INVENTORY_STAFF)
                         .requestMatchers("/suppliers/**").hasRole(INVENTORY_STAFF)
                         .requestMatchers("/alerts/**").hasAnyRole(INVENTORY_STAFF, MANAGER)
-                        .requestMatchers("/dashboard/**").hasRole(MANAGER)
+                        .requestMatchers("/dashboard/**", "/reports/**").hasRole(MANAGER)
                         .anyRequest().denyAll())
                 .addFilterBefore(new FreshRolesFilter(accounts), AnonymousAuthenticationFilter.class)
                 .addFilterBefore(new LoginLimitFilter(limiter), UsernamePasswordAuthenticationFilter.class)
