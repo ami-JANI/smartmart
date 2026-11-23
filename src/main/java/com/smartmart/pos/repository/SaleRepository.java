@@ -16,6 +16,13 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
             nativeQuery = true)
     Totals totals(Instant from, Instant to);
 
+    /** Number of sales and their money columns added up, for [from, to). */
+    @Query(value = """
+            select count(*) as count, coalesce(sum(subtotal), 0) as gross, coalesce(sum(discount_amount), 0) as discounts,
+                   coalesce(sum(total), 0) as net, coalesce(sum(vat_included), 0) as vat
+            from sales where sold_at >= :from and sold_at < :to""", nativeQuery = true)
+    Breakdown breakdown(Instant from, Instant to);
+
     /** One row per day in [from, to) that had sales; {@code day} is yyyy-MM-dd in {@code zone}. */
     @Query(value = """
             select to_char(sold_at at time zone :zone, 'YYYY-MM-DD') as day, count(*) as count, sum(total) as amount
@@ -44,6 +51,18 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
         long getCount();
 
         BigDecimal getAmount();
+    }
+
+    interface Breakdown {
+        long getCount();
+
+        BigDecimal getGross();
+
+        BigDecimal getDiscounts();
+
+        BigDecimal getNet();
+
+        BigDecimal getVat();
     }
 
     interface DayTotals {

@@ -7,13 +7,16 @@ import java.time.ZoneId;
 import java.util.List;
 
 /**
- * Totals of completed sales, for the manager dashboard (reports module). Reads
+ * Totals of completed sales, for the dashboard and reports (reports module). Reads
  * the replica, so a sale made in the last second may be missing (GUIDELINES 8.2).
  * Every period is [from, to).
  */
 public interface SalesStatistics {
 
     Total total(Instant from, Instant to);
+
+    /** Gross, discounts, net and VAT of the sales in the period. */
+    Breakdown breakdown(Instant from, Instant to);
 
     /** One entry per day that had sales, oldest first. */
     List<Day> byDay(Instant from, Instant to, ZoneId zone);
@@ -27,6 +30,9 @@ public interface SalesStatistics {
     long memberCount();
 
     record Total(long count, BigDecimal amount) {
+    }
+
+    record Breakdown(long count, BigDecimal gross, BigDecimal discounts, BigDecimal net, BigDecimal vat) {
     }
 
     record Day(LocalDate day, long count, BigDecimal amount) {

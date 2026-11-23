@@ -29,6 +29,12 @@ class SalesStatisticsImpl implements SalesStatistics {
     }
 
     @Override
+    public Breakdown breakdown(Instant from, Instant to) {
+        SaleRepository.Breakdown row = sales.breakdown(from, to);
+        return new Breakdown(row.getCount(), row.getGross(), row.getDiscounts(), row.getNet(), row.getVat());
+    }
+
+    @Override
     public List<Day> byDay(Instant from, Instant to, ZoneId zone) {
         return sales.totalsByDay(from, to, zone.getId()).stream()
                 .map(row -> new Day(LocalDate.parse(row.getDay()), row.getCount(), row.getAmount()))
