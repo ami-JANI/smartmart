@@ -96,11 +96,11 @@ class RoleAccessTests {
     }
 
     @Test
-    void onlyManagersOpenTheDashboardAndOnlyCashiersRegisterMembers() throws Exception {
+    void everyRoleOpensTheDashboardAndOnlyCashiersRegisterMembers() throws Exception {
         allowed(as("MANAGER", get("/dashboard")));
-        refused(as("CASHIER", get("/dashboard")));
-        refused(as("INVENTORY_STAFF", get("/dashboard")));
-        refused(as("ADMIN", get("/dashboard")));
+        allowed(as("CASHIER", get("/dashboard")));
+        allowed(as("INVENTORY_STAFF", get("/dashboard")));
+        allowed(as("ADMIN", get("/dashboard")));
         allowed(as("CASHIER", get("/pos/members")));
         refused(as("MANAGER", get("/pos/members")));
     }
