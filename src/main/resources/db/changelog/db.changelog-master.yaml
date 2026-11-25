@@ -31,6 +31,9 @@ databaseChangeLog:
   - include:
       file: changes/create-customers.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/create-purchase-orders.yaml
+      relativeToChangelogFile: true
   # Sample data, loaded only with LIQUIBASE_CONTEXTS=demo (.env.example). Keep these last.
   - include:
       file: changes/seed-demo-data.yaml
