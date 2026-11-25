@@ -73,6 +73,12 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").hasAnyRole(INVENTORY_STAFF, MANAGER)
                         .requestMatchers("/products/**").hasRole(INVENTORY_STAFF)
                         .requestMatchers("/suppliers/**").hasRole(INVENTORY_STAFF)
+                        // Purchase orders (SCRUM-54): staff raise and receive, managers approve, cancel and close.
+                        .requestMatchers(HttpMethod.POST, "/purchase-orders/*/submit", "/purchase-orders/*/cancel",
+                                "/purchase-orders/*/close").hasRole(MANAGER)
+                        .requestMatchers("/purchase-orders/new", "/purchase-orders/*/receive").hasRole(INVENTORY_STAFF)
+                        .requestMatchers(HttpMethod.POST, "/purchase-orders").hasRole(INVENTORY_STAFF)
+                        .requestMatchers(HttpMethod.GET, "/purchase-orders", "/purchase-orders/*").hasAnyRole(INVENTORY_STAFF, MANAGER)
                         .requestMatchers("/alerts/**").hasAnyRole(INVENTORY_STAFF, MANAGER)
                         .requestMatchers("/dashboard/**").hasAnyRole(ADMIN, MANAGER, CASHIER, INVENTORY_STAFF)
                         .requestMatchers("/reports/**").hasRole(MANAGER)

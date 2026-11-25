@@ -127,3 +127,66 @@ Tests are in `src/test/java/com/smartmart/pos/service/CheckoutFacadeImplTest.jav
 | 3 | 1, 2, 4, 5, 6, 5, 6, 5, 7, 8 | Two lines, one weighed (1.250 kg) | Each line deducted and saved at its price | `everyLineIsDeductedAndSavedAtItsPrice` |
 
 A non-empty cart always enters the loop, so the path 1, 2, 4, 5, 7, 8 (no lines) cannot happen. The exceptions thrown inside nodes 4 and 6 have their own tests: `cashBelowTheTotalIsRefusedBeforeStockIsTouched` and `notEnoughStockRefusesTheSaleAndKeepsTheCart`. `CheckoutPageTests` runs real sales on the database and checks that a refused sale saves nothing and leaves stock and the cart as they were.
+
+## Purchase order receiving: `PurchaseOrderServiceImpl.receive(orderId, delivery)`
+
+Records goods arriving against a purchase order and turns each received line into a stock batch (FR-PUR-6). The order's state decides whether it may receive goods and what it becomes next (State pattern, GUIDELINES.md section 5.6).
+
+```java
+PurchaseOrder order = lock(orderId);                                       // 1, 2
+Map<Long, DeliveryLineData> arrived = new LinkedHashMap<>();               // 3
+for (DeliveryLineData line : delivery) {                                   // 4
+    if (!hasArrived(line)) {                                               // 5
+        continue;
+    }
+    if (!hasBatchNumber(line)) {                                           // 6
+        throw new PurchaseOrderRuleException(...);                         // 7
+    }
+    if (arrived.put(line.lineId(), line) != null) {                        // 8
+        throw new PurchaseOrderRuleException(...);                         // 9
+    }
+}
+order.receive(quantitiesOf(arrived));                                      // 10
+for (DeliveryLineData line : arrived.values()) {                           // 11
+    addBatch(order.line(line.lineId()), line);                             // 12
+}
+                                                                           // 13 (exit)
+```
+
+### Control-flow graph
+
+| Node | Statement |
+| --- | --- |
+| 1 | Lock the order |
+| 2 | Order not found: throw `PurchaseOrderNotFoundException` |
+| 3 | Start an empty map of the lines that arrived |
+| 4 | Decision: another delivery line in the loop? |
+| 5 | Decision: did anything arrive for this line? |
+| 6 | Decision: does it have a batch number? |
+| 7 | Throw "Enter a batch number for every line received" |
+| 8 | Decision: is the line already in the map? |
+| 9 | Throw "A line is listed twice in this delivery" |
+| 10 | Hand the quantities to the order's state: it checks them, records them and moves to Partially received or Received |
+| 11 | Decision: another arrived line in the loop? |
+| 12 | Add a stock batch for the line at its unit cost |
+| 13 | Exit |
+
+Edges: 1→2, 1→3, 2→13, 3→4, 4→5, 4→10, 5→4 (continue), 5→6, 6→7, 6→8, 7→13, 8→4, 8→9, 9→13, 10→11, 11→12, 11→13, 12→11.
+
+E = 18, N = 13, P = 1, so **V(G) = 18 − 13 + 2 = 7**. This matches the 6 decisions (nodes 1, 4, 5, 6, 8, 11) plus 1. The conditions are single predicates because `hasArrived` and `hasBatchNumber` are separate methods.
+
+### Independent paths and tests
+
+Tests are in `src/test/java/com/smartmart/purchasing/service/PurchaseOrderReceivingTest.java`. The order in every test is Submitted, for 10 kg rice at 60.00 and 4 bottles of oil at 185.50.
+
+| Path | Nodes | Input | Expected | Test |
+| --- | --- | --- | --- | --- |
+| 1 | 1, 2, 13 | Unknown order | `PurchaseOrderNotFoundException`; no batch | `path1UnknownOrderIsNotFound` |
+| 2 | 1, 3, 4, 10, 11, 13 | Empty delivery | Node 10 refuses: "Enter the quantity received for at least one line"; no batch, still Submitted | `path2EmptyDeliveryIsRefused` |
+| 3 | 1, 3, 4, 5, 4, 10, 11, 13 | Rice 0, oil blank | Both lines left out, so node 10 refuses as in path 2 | `path3LinesWithNothingReceivedAreLeftOut` |
+| 4 | 1, 3, 4, 5, 6, 7, 13 | Rice 2 with a blank batch number | "Enter a batch number for every line received"; no batch | `path4ReceivedLineWithoutBatchNumberIsRefused` |
+| 5 | 1, 3, 4, 5, 6, 8, 4, 5, 6, 8, 9, 13 | Rice 2, then rice 3 again | "A line is listed twice in this delivery"; no batch | `path5LineListedTwiceIsRefused` |
+| 6 | 1, 3, 4, 5, 6, 8, 4, 5, 4, 10, 11, 12, 11, 13 | Rice 10 (batch " R-1 "), oil 0 | One batch R-1 of 10 kg at 60.00; Partially received | `path6OneLineReceivedAddsOneBatchAtTheOrderedCost` |
+| 7 | 1, 3, 4, 5, 6, 8, 4, 5, 6, 8, 4, 10, 11, 12, 11, 12, 11, 13 | Rice 10, oil 4 | Two batches at their unit costs; Received | `path7EveryLineReceivedAddsABatchEachAndReceivesTheOrder` |
+
+The refusals inside node 10 have their own tests: one more than is outstanding, a negative quantity, a line from another order, and an order that is not waiting for goods. Boundary values for the quantity on a line with 4 outstanding: 0 (left out), 4 (accepted), 5 (refused). `PurchaseOrderTests` runs the whole life of an order on the databases and checks that a refused delivery saves nothing.

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<!--/*
+  A purchase order status as a badge (SCRUM-54).
+  Use: <span th:replace="~{fragments/po-status :: badge(${order.status})}">Draft</span>
+*/-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<span th:fragment="badge(st)"
+      th:class="'badge ' + (${st.name() == 'CANCELLED'} ? 'badge-off' : (${st.name() == 'RECEIVED' or st.name() == 'CLOSED'} ? 'badge-ok' : 'badge-warn'))"
+      th:text="${st.label}">Draft</span>
+</body>
+</html>

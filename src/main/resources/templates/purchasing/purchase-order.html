@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--/*
+  One purchase order with its lines and the actions its state allows (SCRUM-54, FR-PUR-5 to FR-PUR-7).
+
+  Model attributes
+    order      PurchaseOrderDetail: id, supplierName, status, note, createdAt, total, lines (productName,
+               barcode, quantity, unitCost, lineTotal, receivedQuantity, outstanding)
+    message    optional success text; error  optional refusal text
+    roles      role names (global): managers submit, cancel and close; inventory staff receive
+    activeNav  "purchase-orders"
+  Requests
+    POST /purchase-orders/{id}/submit | cancel | close   (manager)
+    GET  /purchase-orders/{id}/receive                    (inventory staff)
+  Read from the primary, so the status is always the latest. Buttons follow the states table in the SRS.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Purchase order - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container"
+      th:with="o=${order}, s=${order.status.name()},
+               manager=${roles != null and roles.contains('MANAGER')},
+               staff=${roles != null and roles.contains('INVENTORY_STAFF')}">
+    <div class="page-header">
+        <h1 th:text="'Purchase order ' + ${'PO-%06d'.formatted(o.id)}">Purchase order PO-000001</h1>
+        <a class="btn btn-secondary" th:href="@{/purchase-orders}" href="/purchase-orders">&larr; All purchase orders</a>
+    </div>
+
+    <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
+    <p class="alert alert-error" role="alert" th:if="${error}" th:text="${error}">Refused.</p>
+
+    <dl class="po-meta">
+        <div><dt>Supplier</dt><dd th:text="${o.supplierName}">Khulna Rice Traders</dd></div>
+        <div><dt>Status</dt><dd><span th:replace="~{fragments/po-status :: badge(${o.status})}">Draft</span></dd></div>
+        <div><dt>Raised</dt><dd th:text="${#temporals.format(o.createdAt, 'd MMM yyyy, HH:mm')}">25 Nov 2026</dd></div>
+        <div><dt>Total</dt><dd><span th:replace="~{fragments/money :: amount(${o.total})}">৳ 0.00</span></dd></div>
+        <div th:unless="${#strings.isEmpty(o.note)}"><dt>Note</dt><dd th:text="${o.note}">Note</dd></div>
+    </dl>
+
+    <div class="table-wrap">
+        <table class="table table-stack">
+            <caption th:text="${#lists.size(o.lines)} + (${#lists.size(o.lines) == 1} ? ' line' : ' lines')">2 lines</caption>
+            <thead>
+            <tr>
+                <th scope="col">Product</th>
+                <th scope="col" class="num">Ordered</th>
+                <th scope="col" class="num">Unit cost</th>
+                <th scope="col" class="num">Line total</th>
+                <th scope="col" class="num">Received</th>
+                <th scope="col" class="num">Outstanding</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="l : ${o.lines}">
+                <td data-label="Product"><a th:href="@{/products/{id}(id=${l.productId})}" href="#" th:text="${l.productName}">Miniket rice</a>
+                    <span class="muted" th:text="' · ' + ${l.barcode}"> · 2000000000011</span></td>
+                <td data-label="Ordered" class="num" th:text="${l.quantity.stripTrailingZeros().toPlainString()}">50</td>
+                <td data-label="Unit cost" class="num"><span th:replace="~{fragments/money :: amount(${l.unitCost})}">৳ 0.00</span></td>
+                <td data-label="Line total" class="num"><span th:replace="~{fragments/money :: amount(${l.lineTotal})}">৳ 0.00</span></td>
+                <td data-label="Received" class="num" th:text="${l.receivedQuantity.stripTrailingZeros().toPlainString()}">0</td>
+                <td data-label="Outstanding" class="num" th:text="${l.outstanding.stripTrailingZeros().toPlainString()}">50</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="po-actions">
+        <a class="btn btn-primary" th:if="${staff and (s == 'SUBMITTED' or s == 'PARTIALLY_RECEIVED')}"
+           th:href="@{/purchase-orders/{id}/receive(id=${o.id})}" href="#">Receive a delivery</a>
+        <form th:if="${manager and s == 'DRAFT'}" th:action="@{/purchase-orders/{id}/submit(id=${o.id})}" method="post">
+            <button type="submit" class="btn btn-primary">Submit (approve)</button>
+        </form>
+        <form th:if="${manager and (s == 'RECEIVED' or s == 'PARTIALLY_RECEIVED')}" th:action="@{/purchase-orders/{id}/close(id=${o.id})}" method="post">
+            <button type="submit" class="btn btn-primary"
+                    th:text="${s == 'PARTIALLY_RECEIVED'} ? 'Close without the rest' : 'Close order'">Close order</button>
+        </form>
+        <form th:if="${manager and (s == 'DRAFT' or s == 'SUBMITTED')}" th:action="@{/purchase-orders/{id}/cancel(id=${o.id})}" method="post">
+            <button type="submit" class="btn btn-secondary">Cancel order</button>
+        </form>
+    </div>
+    <p class="hint" th:if="${s == 'DRAFT' and !manager}">A manager submits this draft before goods can be received.</p>
+    <p class="hint" th:if="${(s == 'SUBMITTED' or s == 'PARTIALLY_RECEIVED') and !staff}">Inventory staff receive the goods when they arrive.</p>
+</main>
+</body>
+</html>

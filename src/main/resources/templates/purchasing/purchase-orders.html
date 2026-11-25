@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--/*
+  Purchase order list (SCRUM-54, FR-PUR-8). Inventory staff and managers.
+
+  Model attributes
+    page       one page of orders, newest first: content (id, supplierName, status, createdAt,
+               lineCount, total), number (0-based), size, totalPages, totalElements, first, last
+    status     the status filtered on, or null for all
+    statuses   every PurchaseOrderStatus, for the filter
+    message    optional success text
+    roles      role names (global); only inventory staff see "New purchase order"
+    activeNav  "purchase-orders"
+  Request
+    GET /purchase-orders?status=SUBMITTED&page=0&size=20
+  The list reads the replica, so an order saved a moment ago may take a second to appear.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Purchase orders - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container" th:with="statusParam=${status != null} ? ${status.name()} : ''">
+    <div class="page-header">
+        <h1>Purchase orders</h1>
+        <a class="btn btn-primary" th:if="${roles != null and roles.contains('INVENTORY_STAFF')}"
+           th:href="@{/purchase-orders/new}" href="/purchase-orders/new">New purchase order</a>
+    </div>
+
+    <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
+
+    <form th:action="@{/purchase-orders}" method="get" class="toolbar">
+        <span class="toolbar-field">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All</option>
+                <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
+                        th:selected="${s == status}">Draft</option>
+            </select>
+        </span>
+        <input type="hidden" name="size" th:value="${page.size}">
+        <button type="submit" class="btn btn-secondary btn-small">Show</button>
+    </form>
+
+    <div class="table-wrap">
+        <table class="table table-stack">
+            <caption th:text="${page.totalElements} + (${page.totalElements == 1} ? ' purchase order' : ' purchase orders')">0 purchase orders</caption>
+            <thead>
+            <tr>
+                <th scope="col">Order</th>
+                <th scope="col">Supplier</th>
+                <th scope="col">Status</th>
+                <th scope="col">Raised</th>
+                <th scope="col" class="num">Lines</th>
+                <th scope="col" class="num">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="o : ${page.content}">
+                <td data-label="Order"><a th:href="@{/purchase-orders/{id}(id=${o.id})}" href="#"
+                                          th:text="${'PO-%06d'.formatted(o.id)}">PO-000001</a></td>
+                <td data-label="Supplier" th:text="${o.supplierName}">Supplier</td>
+                <td data-label="Status"><span th:replace="~{fragments/po-status :: badge(${o.status})}">Draft</span></td>
+                <td data-label="Raised" th:text="${#temporals.format(o.createdAt, 'd MMM yyyy, HH:mm')}">25 Nov 2026</td>
+                <td data-label="Lines" class="num" th:text="${o.lineCount}">2</td>
+                <td data-label="Total" class="num"><span th:replace="~{fragments/money :: amount(${o.total})}">৳ 0.00</span></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(page.content)}">
+                <td colspan="6" class="table-empty">No purchase orders found.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pager" aria-label="Pages" th:if="${page.totalPages > 1}">
+        <a class="btn btn-secondary btn-small" th:unless="${page.first}"
+           th:href="@{/purchase-orders(status=${statusParam}, size=${page.size}, page=${page.number - 1})}">Previous</a>
+        <span class="pager-status" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}">Page 1 of 3</span>
+        <a class="btn btn-secondary btn-small" th:unless="${page.last}"
+           th:href="@{/purchase-orders(status=${statusParam}, size=${page.size}, page=${page.number + 1})}">Next</a>
+    </nav>
+</main>
+</body>
+</html>

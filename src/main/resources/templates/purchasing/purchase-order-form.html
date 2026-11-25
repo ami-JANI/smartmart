@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!--/*
+  New purchase order, raised as a draft (SCRUM-54, FR-PUR-4). Inventory staff.
+
+  Model attributes
+    purchaseOrderForm  supplierId, note, lines (productId, quantity, unitCost), bound with BindingResult;
+                       rows without a product are ignored
+    suppliers          active suppliers by name: id, name
+    products           active products by name: id, name, saleUnit, barcode
+    activeNav          "purchase-orders"
+  Requests
+    POST /purchase-orders            save the draft
+    POST /purchase-orders?addRows    show five more empty rows (nothing is saved)
+  The service checks every rule; its refusal shows next to the supplier or note, or above the lines.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>New purchase order - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container">
+    <div class="page-header">
+        <h1>New purchase order</h1>
+        <a class="btn btn-secondary" th:href="@{/purchase-orders}" href="/purchase-orders">Cancel</a>
+    </div>
+
+    <form th:action="@{/purchase-orders}" th:object="${purchaseOrderForm}" action="/purchase-orders" method="post"
+          class="form card" novalidate>
+        <p class="alert alert-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+            <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</span>
+        </p>
+
+        <div class="field" th:classappend="${#fields.hasErrors('supplierId')} ? 'has-error'">
+            <label for="supplierId">Supplier</label>
+            <select id="supplierId" th:field="*{supplierId}" required
+                    th:attrappend="aria-describedby=${#fields.hasErrors('supplierId')} ? 'supplierId-error'">
+                <option value="">Choose a supplier</option>
+                <option th:each="sup : ${suppliers}" th:value="${sup.id}" th:text="${sup.name}">Supplier</option>
+            </select>
+            <p class="hint" th:if="${#lists.isEmpty(suppliers)}">No active suppliers. Add one under Suppliers first.</p>
+            <p class="field-error" id="supplierId-error" th:if="${#fields.hasErrors('supplierId')}" th:errors="*{supplierId}">Error</p>
+        </div>
+
+        <div class="field" th:classappend="${#fields.hasErrors('note')} ? 'has-error'">
+            <label for="note">Note</label>
+            <input type="text" id="note" th:field="*{note}" maxlength="255"
+                   th:attrappend="aria-describedby=${#fields.hasErrors('note')} ? 'note-error'">
+            <p class="hint">Optional, for example the delivery day agreed.</p>
+            <p class="field-error" id="note-error" th:if="${#fields.hasErrors('note')}" th:errors="*{note}">Error</p>
+        </div>
+
+        <div class="table-wrap">
+            <table class="table table-stack po-lines">
+                <caption>Products to order. Leave unused rows empty.</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Unit cost (৳)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="line, i : *{lines}">
+                    <td data-label="Product">
+                        <select th:field="*{lines[__${i.index}__].productId}" th:attr="aria-label='Product, row ' + ${i.count}">
+                            <option value="">None</option>
+                            <option th:each="p : ${products}" th:value="${p.id}"
+                                    th:text="${p.name} + (${p.saleUnit == 'KG'} ? ' (kg)' : '')">Product</option>
+                        </select>
+                        <p class="field-error" th:if="${#fields.hasErrors('lines[__${i.index}__].productId')}" th:errors="*{lines[__${i.index}__].productId}">Error</p>
+                    </td>
+                    <td data-label="Quantity">
+                        <input type="text" inputmode="decimal" th:field="*{lines[__${i.index}__].quantity}" th:attr="aria-label='Quantity, row ' + ${i.count}">
+                        <p class="field-error" th:if="${#fields.hasErrors('lines[__${i.index}__].quantity')}" th:errors="*{lines[__${i.index}__].quantity}">Error</p>
+                    </td>
+                    <td data-label="Unit cost (৳)">
+                        <input type="text" inputmode="decimal" th:field="*{lines[__${i.index}__].unitCost}" th:attr="aria-label='Unit cost, row ' + ${i.count}">
+                        <p class="field-error" th:if="${#fields.hasErrors('lines[__${i.index}__].unitCost')}" th:errors="*{lines[__${i.index}__].unitCost}">Error</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="hint">Whole numbers for products sold by piece; up to 3 decimals for products sold by kg.</p>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Raise draft</button>
+            <button type="submit" name="addRows" value="true" class="btn btn-secondary" formnovalidate>Add more rows</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

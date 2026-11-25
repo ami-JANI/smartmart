@@ -106,6 +106,19 @@ class RoleAccessTests {
     }
 
     @Test
+    void staffRaiseAndReceiveOrdersWhileManagersApproveAndClose() throws Exception {
+        allowed(as("INVENTORY_STAFF", get("/purchase-orders")));
+        allowed(as("MANAGER", get("/purchase-orders")));
+        refused(as("CASHIER", get("/purchase-orders")));
+        refused(as("ADMIN", get("/purchase-orders")));
+        allowed(as("INVENTORY_STAFF", get("/purchase-orders/new")));
+        refused(as("MANAGER", get("/purchase-orders/new")));
+        refused(as("MANAGER", get("/purchase-orders/1/receive")));
+        refused(as("INVENTORY_STAFF", post("/purchase-orders/1/submit").with(csrf())));
+        refused(as("INVENTORY_STAFF", post("/purchase-orders/1/close").with(csrf())));
+    }
+
+    @Test
     void onlyManagersOpenTheDailyReport() throws Exception {
         allowed(as("MANAGER", get("/reports/daily")));
         refused(as("CASHIER", get("/reports/daily")));
