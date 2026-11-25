@@ -2,6 +2,23 @@
 
 Design decisions about the SmartMart system, newest first. Each entry gives the date, the decision, and why (GUIDELINES.md section 10).
 
+## 2026-11-25: Purchase orders
+
+**Decision.**
+
+- SCRUM-36 was taken off hold on 25 Nov 2026 and built. Its acceptance criteria are now FR-PUR-4 to FR-PUR-8 in the SRS.
+- Purchase orders use the State pattern of GUIDELINES.md section 5.6. Each status is a class; `PurchaseOrderState`'s default methods refuse every action, and each state overrides only the ones it allows. An illegal action is a 409 with "A <status> purchase order cannot be <action>".
+- A **Partially received** order can also be **closed**, not only a Received one. Otherwise an order whose supplier never sends the rest could never be finished, because it cannot be cancelled once goods have arrived.
+- Receiving adds one stock batch per line received, through `StockBatchService.add`, at the line's unit cost. The batch number and expiry date are entered at receiving, because they are only known when the goods arrive.
+- Every action locks the order row on the primary (`SELECT ... FOR UPDATE`) before asking its state, so two people receiving the same order at once take turns and cannot over-receive.
+- A line keeps only the product id, as `sale_lines` does, because the product belongs to the inventory module. Names are looked up through `ProductService` when an order is shown.
+- Only a Draft takes new lines. Editing or removing lines of a draft is not built; a wrong draft is cancelled and raised again.
+- The pages (list, form, receiving) are SCRUM-54. Intended access: inventory staff raise drafts and receive goods; managers submit (approve), cancel and close (GUIDELINES.md section 7).
+
+**Why.** The team needs the Purchasing module for the course, and GUIDELINES.md already fixed the state machine; the open points were only the ones above.
+
+**Alternatives considered.** Closing only from Received, as GUIDELINES.md lists the states: rejected for the reason above. Recording deliveries as their own table (`goods_receipts`): not needed yet, because each delivery's batches already record what arrived and when.
+
 ## 2026-11-23: Daily sales report
 
 **Decision.**
