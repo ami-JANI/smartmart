@@ -212,3 +212,11 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `00b352c` feat(reports): add the printable daily sales report page (ShahariarEmon112), SCRUM-55
 - `40a6b9b` feat(ui): add the daily report to the menu and home page (ShahariarEmon112), SCRUM-55
 - `f669497` docs(repo): record the daily sales report decision (ShahariarEmon112), SCRUM-37, SCRUM-55
+
+### 2026-11-25, pushed by ShahariarEmon112
+
+- `a4192cc` feat(db): add a demo login with every role (ShahariarEmon112)
+- `9d82722` feat(reports): show each role its own part of the dashboard (ShahariarEmon112)
+- `ce5780d` feat(ui): link the dashboard for every role (ShahariarEmon112)
+- `16d70ce` feat(ui): make the dashboard fill every row at any width (ShahariarEmon112)
+- `4f1bb3f` docs(repo): record the per-role dashboard and the demo login (ShahariarEmon112)
