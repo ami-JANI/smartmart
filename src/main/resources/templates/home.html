@@ -77,6 +77,14 @@
             <a class="btn btn-secondary" th:href="@{/products}" href="/products">Open products</a>
         </li>
 
+        <li class="home-card" data-section="purchase-orders" th:if="${staff or manager}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('clipboard')}"></svg></span>
+            <h2>Purchase orders</h2>
+            <p th:if="${staff}">Raise orders to suppliers and receive deliveries into stock.</p>
+            <p th:unless="${staff}">Approve, cancel and close orders to suppliers.</p>
+            <a class="btn btn-secondary" th:href="@{/purchase-orders}" href="/purchase-orders">Open purchase orders</a>
+        </li>
+
         <li class="home-card" data-section="alerts" th:if="${staff or manager}">
             <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('bell')}"></svg></span>
             <h2>Stock alerts</h2>
