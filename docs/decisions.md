@@ -2,6 +2,17 @@
 
 Design decisions about the SmartMart system, newest first. Each entry gives the date, the decision, and why (GUIDELINES.md section 10).
 
+## 2026-11-25: A dashboard for every role, and a demo login with every role
+
+**Decision.**
+
+- Every role opens `/dashboard`, but it shows only what that role's work covers. Cashiers see today's sales, the member count and this month's best sellers by quantity, without amounts. Inventory staff see stock alerts and the inventory status. Administrators see the number of user accounts. Managers see everything, as before. A user with several roles sees every part those roles cover.
+- The demo data adds a `demo` login that holds all four roles, so the team can click through every page without logging out. It exists only with `LIQUIBASE_CONTEXTS=demo`.
+
+**Why.** The team wanted the dashboard for everyone, but shop-wide revenue and member spending are manager information (GUIDELINES.md section 7), so each role gets its own view of the same page.
+
+**Alternatives considered.** The full dashboard for every role: rejected because cashiers and stock staff would see revenue and member spending.
+
 ## 2026-11-25: Purchase orders
 
 **Decision.**

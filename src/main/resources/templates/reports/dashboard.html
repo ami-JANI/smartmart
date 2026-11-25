@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <!--/*
-  Manager dashboard. Manager only.
+  Dashboard. Every role may open it; each part shows only for the roles it concerns:
+    manager    everything
+    cashier    today's sales, members, best sellers (quantities only)
+    stock      stock alerts and the inventory status
+    admin      user accounts
+  A user with several roles sees every part those roles cover.
 
   Model attributes
     dashboard  com.smartmart.reports.service.Dashboard: generatedAt, monthStart, today, todaySales,
@@ -8,6 +13,8 @@
                openAlerts, productCount, lowStockCount, outOfStockCount, topProducts, topCustomers,
                droppedProducts, inventory (productId, name, categoryName, saleUnit, totalStock, status OUT/LOW/OK)
     chart      SalesChart for the last 30 days: line, area, max, labels (x, text), points (x, y, title)
+    userCount, activeUserCount  number of accounts, only for ADMIN
+    roles      role names (global, see layout/base.html)
     activeNav  "dashboard"
   Request
     GET /dashboard
@@ -18,20 +25,28 @@
     <title>Dashboard - SmartMart</title>
 </head>
 <body>
-<main id="main-content" class="container dashboard" th:with="d=${dashboard}">
+<main id="main-content" class="container dashboard"
+      th:with="d=${dashboard},
+               manager=${roles != null and roles.contains('MANAGER')},
+               cashier=${roles != null and roles.contains('CASHIER')},
+               staff=${roles != null and roles.contains('INVENTORY_STAFF')},
+               admin=${roles != null and roles.contains('ADMIN')}">
     <div class="page-header">
         <div>
             <h1 th:text="'Welcome, ' + ${username}">Welcome, manager</h1>
-            <p class="muted dash-sub"
+            <p class="muted dash-sub" th:if="${manager}"
                th:text="${#temporals.format(d.monthStart, 'd MMM')} + ' to ' + ${#temporals.format(d.today, 'd MMM yyyy')} + ' · updated ' + ${#temporals.format(d.generatedAt, 'HH:mm')}">
                 1 Nov to 17 Nov 2026 · updated 15:40</p>
+            <p class="muted dash-sub" th:unless="${manager}"
+               th:text="${#temporals.format(d.today, 'EEEE, d MMMM yyyy')} + ' · updated ' + ${#temporals.format(d.generatedAt, 'HH:mm')}">
+                Tuesday, 17 November 2026 · updated 15:40</p>
         </div>
         <a class="btn btn-secondary" th:href="@{/dashboard}" href="/dashboard">Refresh</a>
     </div>
 
     <!--/* Stat tiles */-->
     <ul class="stat-grid">
-        <li class="stat-tile" data-section="pos">
+        <li class="stat-tile" data-section="pos" th:if="${manager or cashier}">
             <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('coins')}"></svg></span>
             <div>
                 <p class="stat-label">Today's sales</p>
@@ -39,7 +54,7 @@
                 <p class="stat-note" th:text="${d.todaySales.count} + (${d.todaySales.count == 1} ? ' sale' : ' sales')">0 sales</p>
             </div>
         </li>
-        <li class="stat-tile" data-section="products">
+        <li class="stat-tile" data-section="products" th:if="${manager}">
             <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('chart')}"></svg></span>
             <div>
                 <p class="stat-label">This month</p>
@@ -52,7 +67,7 @@
                 </p>
             </div>
         </li>
-        <li class="stat-tile" data-section="users">
+        <li class="stat-tile" data-section="users" th:if="${manager or cashier}">
             <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('id')}"></svg></span>
             <div>
                 <p class="stat-label">Members</p>
@@ -60,7 +75,7 @@
                 <p class="stat-note">Registered by phone at the till</p>
             </div>
         </li>
-        <li class="stat-tile" data-section="alerts">
+        <li class="stat-tile" data-section="alerts" th:if="${manager or staff}">
             <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('bell')}"></svg></span>
             <div>
                 <p class="stat-label">Stock alerts</p>
@@ -68,11 +83,19 @@
                 <p class="stat-note" th:text="${d.lowStockCount} + ' low · ' + ${d.outOfStockCount} + ' out of ' + ${d.productCount} + ' products'">0 low · 0 out</p>
             </div>
         </li>
+        <li class="stat-tile" data-section="users" th:if="${admin}">
+            <span class="stat-icon"><svg th:replace="~{fragments/icons :: icon('users')}"></svg></span>
+            <div>
+                <p class="stat-label">User accounts</p>
+                <p class="stat-value" th:text="${userCount}">0</p>
+                <p class="stat-note"><span th:text="${activeUserCount} + ' active · '">0 active · </span><a th:href="@{/users}" href="/users">Manage users</a></p>
+            </div>
+        </li>
     </ul>
 
-    <div class="dash-grid">
+    <div class="dash-grid" th:if="${manager or cashier}">
         <!--/* 30-day sales chart */-->
-        <section class="card dash-chart" data-section="pos" aria-labelledby="chart-title">
+        <section class="card dash-chart" data-section="pos" aria-labelledby="chart-title" th:if="${manager}">
             <div class="card-head">
                 <h2 id="chart-title">Sales, last 30 days</h2>
                 <span class="muted" th:text="'Best day ৳ ' + ${#numbers.formatDecimal(chart.max, 1, 'COMMA', 2, 'POINT')}">Best day ৳ 0.00</span>
@@ -110,17 +133,18 @@
                 <li th:each="p, i : ${d.topProducts}">
                     <span class="rank" th:text="${i.count}">1</span>
                     <span class="rank-main">
-                        <a th:href="@{/products/{id}(id=${p.productId})}" href="#" th:text="${p.name}">Miniket rice</a>
+                        <a th:if="${manager}" th:href="@{/products/{id}(id=${p.productId})}" href="#" th:text="${p.name}">Miniket rice</a>
+                        <strong th:unless="${manager}" th:text="${p.name}">Miniket rice</strong>
                         <span class="muted" th:text="${p.quantity.stripTrailingZeros().toPlainString()} + (${p.saleUnit == 'KG'} ? ' kg sold' : ' sold')">12 sold</span>
                     </span>
-                    <strong class="rank-value"><span th:replace="~{fragments/money :: amount(${p.amount})}">৳ 0.00</span></strong>
+                    <strong class="rank-value" th:if="${manager}"><span th:replace="~{fragments/money :: amount(${p.amount})}">৳ 0.00</span></strong>
                 </li>
             </ol>
             <p class="muted" th:if="${#lists.isEmpty(d.topProducts)}">No sales yet this month.</p>
         </section>
 
         <!--/* Best customers this month */-->
-        <section class="card" data-section="users" aria-labelledby="top-customers">
+        <section class="card" data-section="users" aria-labelledby="top-customers" th:if="${manager}">
             <div class="card-head">
                 <h2 id="top-customers"><svg th:replace="~{fragments/icons :: icon('users')}"></svg> Top members this month</h2>
             </div>
@@ -138,7 +162,7 @@
         </section>
 
         <!--/* Products selling less than last month */-->
-        <section class="card" data-section="alerts" aria-labelledby="dropped">
+        <section class="card" data-section="alerts" aria-labelledby="dropped" th:if="${manager}">
             <div class="card-head">
                 <h2 id="dropped"><svg th:replace="~{fragments/icons :: icon('trend-down')}"></svg> Sales dropped</h2>
                 <span class="muted">vs same days last month</span>
@@ -157,7 +181,7 @@
     </div>
 
     <!--/* Live stock of every product */-->
-    <section class="section-gap" data-section="products" aria-labelledby="inventory-title">
+    <section class="section-gap" data-section="products" aria-labelledby="inventory-title" th:if="${manager or staff}">
         <div class="page-header">
             <h2 id="inventory-title">Inventory status</h2>
             <a class="btn btn-secondary btn-small" th:href="@{/alerts}" href="/alerts">See alerts</a>

@@ -47,7 +47,7 @@
             <ul>
                 <li><a th:href="@{/}" href="/" th:attr="aria-current=${activeNav == 'home'} ? 'page'"><svg
                         th:replace="~{fragments/icons :: icon('home')}"></svg>Home</a></li>
-                <li th:if="${roles != null and roles.contains('MANAGER')}">
+                <li>
                     <a th:href="@{/dashboard}" href="/dashboard" th:attr="aria-current=${activeNav == 'dashboard'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('chart')}"></svg>Dashboard</a>
                 </li>
