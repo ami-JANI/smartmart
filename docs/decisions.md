@@ -24,7 +24,7 @@ Design decisions about the SmartMart system, newest first. Each entry gives the 
 - Every action locks the order row on the primary (`SELECT ... FOR UPDATE`) before asking its state, so two people receiving the same order at once take turns and cannot over-receive.
 - A line keeps only the product id, as `sale_lines` does, because the product belongs to the inventory module. Names are looked up through `ProductService` when an order is shown.
 - Only a Draft takes new lines. Editing or removing lines of a draft is not built; a wrong draft is cancelled and raised again.
-- The pages (list, form, receiving) are SCRUM-54. Intended access: inventory staff raise drafts and receive goods; managers submit (approve), cancel and close (GUIDELINES.md section 7).
+- The pages (list, form, receiving) are SCRUM-54, at `/purchase-orders`. Inventory staff raise drafts and receive goods; managers submit (approve), cancel and close (GUIDELINES.md section 7). Both may view orders. The new-order form shows five empty rows and an "Add more rows" button, so it works without JavaScript.
 
 **Why.** The team needs the Purchasing module for the course, and GUIDELINES.md already fixed the state machine; the open points were only the ones above.
 
