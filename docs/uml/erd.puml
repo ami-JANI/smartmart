@@ -1,5 +1,5 @@
 @startuml erd
-title SmartMart: entity relationship diagram v1 (auth, inventory, point of sale and suppliers)
+title SmartMart: entity relationship diagram v1 (auth, inventory, point of sale and purchasing)
 skinparam shadowing false
 skinparam linetype ortho
 hide circle
@@ -155,6 +155,35 @@ package "Purchasing" {
     * created_at : timestamptz
     * updated_at : timestamptz
   }
+
+  entity purchase_orders {
+    * id : bigint <<PK>>
+    --
+    * supplier_id : bigint <<FK>>
+    * status : varchar(20)
+    note : varchar(255)
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    ..
+    CHECK (status IN (DRAFT, SUBMITTED,
+      PARTIALLY_RECEIVED, RECEIVED, CLOSED, CANCELLED))
+  }
+
+  entity purchase_order_lines {
+    * id : bigint <<PK>>
+    --
+    * purchase_order_id : bigint <<FK>>
+    * product_id : bigint <<FK>>
+    * quantity : numeric(12,3)
+    * unit_cost : numeric(12,2)
+    * received_quantity : numeric(12,3)
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    ..
+    UNIQUE (purchase_order_id, product_id)
+    CHECK (quantity > 0 AND unit_cost >= 0
+      AND 0 <= received_quantity <= quantity)
+  }
 }
 
 users ||--o{ user_roles
@@ -167,6 +196,9 @@ discounts |o--o{ sales
 sales ||--|{ sale_lines
 products ||--o{ sale_lines
 sales ||--|| payments
+suppliers ||--o{ purchase_orders
+purchase_orders ||--|{ purchase_order_lines
+products ||--o{ purchase_order_lines
 
 note bottom of user_roles
   Deleting a user deletes its rows here.
