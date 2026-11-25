@@ -1,5 +1,7 @@
 package com.smartmart.purchasing.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -55,6 +57,23 @@ public interface PurchaseOrderService {
      * @throws IllegalStateTransitionException in any other status
      */
     void cancel(Long id);
+
+    /**
+     * Records a delivery against a submitted or partially received order
+     * (FR-PUR-6). Each line that received something becomes a stock batch at
+     * the line's unit cost. The order, its lines and the batches are saved
+     * together, or nothing is saved.
+     *
+     * @param delivery one entry per line; lines with a null or zero quantity are left out
+     * @throws PurchaseOrderNotFoundException  if the order does not exist
+     * @throws IllegalStateTransitionException if the order is not waiting for goods
+     * @throws PurchaseOrderRuleException      if nothing arrived, a received line has no batch
+     *                                         number, a line is listed twice or is not on the
+     *                                         order, or a quantity is more than is outstanding
+     * @throws com.smartmart.inventory.service.ProductRuleException if a quantity does not fit
+     *                                         the product's sale unit
+     */
+    void receive(Long orderId, List<DeliveryLineData> delivery);
 
     /**
      * Closes a received or partially received order.

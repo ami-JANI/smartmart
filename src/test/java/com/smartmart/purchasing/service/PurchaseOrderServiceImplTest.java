@@ -20,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.smartmart.inventory.service.ProductService;
 import com.smartmart.inventory.service.ProductSummary;
+import com.smartmart.inventory.service.StockBatchService;
 import com.smartmart.purchasing.domain.IllegalStateTransitionException;
 import com.smartmart.purchasing.domain.PurchaseOrder;
 import com.smartmart.purchasing.domain.PurchaseOrderRuleException;
@@ -37,7 +38,8 @@ class PurchaseOrderServiceImplTest {
     private final PurchaseOrderRepository orders = mock(PurchaseOrderRepository.class);
     private final SupplierRepository suppliers = mock(SupplierRepository.class);
     private final ProductService products = mock(ProductService.class);
-    private final PurchaseOrderServiceImpl service = new PurchaseOrderServiceImpl(orders, suppliers, products);
+    private final StockBatchService stock = mock(StockBatchService.class);
+    private final PurchaseOrderServiceImpl service = new PurchaseOrderServiceImpl(orders, suppliers, products, stock);
 
     private Supplier supplier;
 

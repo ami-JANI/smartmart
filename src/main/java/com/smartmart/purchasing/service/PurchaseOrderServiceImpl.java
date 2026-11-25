@@ -2,6 +2,9 @@ package com.smartmart.purchasing.service;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.smartmart.inventory.domain.SaleUnit;
 import com.smartmart.inventory.service.ProductService;
 import com.smartmart.inventory.service.ProductSummary;
+import com.smartmart.inventory.service.StockBatchData;
+import com.smartmart.inventory.service.StockBatchService;
 import com.smartmart.purchasing.domain.PurchaseOrder;
 import com.smartmart.purchasing.domain.PurchaseOrderLine;
 import com.smartmart.purchasing.domain.PurchaseOrderRuleException;
@@ -31,6 +36,7 @@ class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final PurchaseOrderRepository orders;
     private final SupplierRepository suppliers;
     private final ProductService products;
+    private final StockBatchService stock;
 
     @Override
     @Transactional(readOnly = true)
@@ -83,6 +89,29 @@ class PurchaseOrderServiceImpl implements PurchaseOrderService {
         lock(id).cancel();
     }
 
+    /** Basis path tests: docs/testing/basis-paths.md, "Purchase order receiving". */
+    @Override
+    @Transactional
+    public void receive(Long orderId, List<DeliveryLineData> delivery) {
+        PurchaseOrder order = lock(orderId);
+        Map<Long, DeliveryLineData> arrived = new LinkedHashMap<>();
+        for (DeliveryLineData line : delivery) {
+            if (!hasArrived(line)) {
+                continue;
+            }
+            if (!hasBatchNumber(line)) {
+                throw new PurchaseOrderRuleException("batchNumber", "Enter a batch number for every line received");
+            }
+            if (arrived.put(line.lineId(), line) != null) {
+                throw new PurchaseOrderRuleException("lineId", "A line is listed twice in this delivery");
+            }
+        }
+        order.receive(quantitiesOf(arrived));
+        for (DeliveryLineData line : arrived.values()) {
+            addBatch(order.line(line.lineId()), line);
+        }
+    }
+
     @Override
     @Transactional
     public void close(Long id) {
@@ -112,6 +141,25 @@ class PurchaseOrderServiceImpl implements PurchaseOrderService {
             throw new PurchaseOrderRuleException("unitCost",
                     "The unit cost of " + product.name() + " must be 0 or more, with at most 2 decimal places");
         }
+    }
+
+    private static boolean hasArrived(DeliveryLineData line) {
+        return line.quantity() != null && line.quantity().signum() != 0;
+    }
+
+    private static boolean hasBatchNumber(DeliveryLineData line) {
+        return line.batchNumber() != null && !line.batchNumber().isBlank();
+    }
+
+    private static Map<Long, BigDecimal> quantitiesOf(Map<Long, DeliveryLineData> arrived) {
+        Map<Long, BigDecimal> quantities = new LinkedHashMap<>();
+        arrived.forEach((lineId, line) -> quantities.put(lineId, line.quantity()));
+        return quantities;
+    }
+
+    private void addBatch(PurchaseOrderLine ordered, DeliveryLineData line) {
+        stock.add(ordered.getProductId(), new StockBatchData(line.batchNumber().strip(), line.quantity(),
+                ordered.getUnitCost(), line.expiryDate()));
     }
 
     private static boolean isPositive(BigDecimal quantity) {
