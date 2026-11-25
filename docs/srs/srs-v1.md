@@ -4,14 +4,14 @@
 | --- | --- |
 | Version | 1.0 (draft for team review) |
 | Date | 2026-11-01 |
-| Covers | User management (Auth), Inventory, Point of sale (POS), Suppliers |
+| Covers | User management (Auth), Inventory, Point of sale (POS), Suppliers, Purchase orders |
 | Jira | SCRUM-18 |
 
 ## 1. Introduction
 
 ### 1.1 Purpose
 
-This document states what SmartMart must do for its first three modules and for suppliers, so that each Jira story has testable acceptance criteria. It is the reference for design, testing and the sprint demos. The rest of Purchasing, and Reporting, are specified in a later version.
+This document states what SmartMart must do for its first three modules and for suppliers and purchase orders, so that each Jira story has testable acceptance criteria. It is the reference for design, testing and the sprint demos. Supplier returns and Reporting are specified in a later version.
 
 ### 1.2 Scope
 
@@ -21,8 +21,9 @@ SmartMart is a management system for **one supermarket branch** (README). Versio
 - **Inventory:** categories, products, stock batches with expiry dates, low-stock thresholds.
 - **Point of sale:** cart, discounts and promotions, cash payment, invoice, stock deduction.
 - **Suppliers:** the supplier records that purchase orders will use.
+- **Purchase orders:** ordering from a supplier, approval, and receiving the goods into stock (added 25 Nov 2026 for SCRUM-36).
 
-Out of scope for v1: purchase orders, receiving, supplier returns, reports and dashboard (later SRS versions); multi-branch features; payment gateways; scale and scanner hardware drivers; the stretch goals in the README.
+Out of scope for v1: supplier returns, reports and dashboard (later SRS versions); multi-branch features; payment gateways; scale and scanner hardware drivers; the stretch goals in the README.
 
 ### 1.3 Definitions
 
@@ -50,9 +51,9 @@ Out of scope for v1: purchase orders, receiving, supplier returns, reports and d
 | Role | Main work | Uses |
 | --- | --- | --- |
 | Administrator | Manages user accounts and roles | User management |
-| Manager | Reviews stock and expiry; defines discounts and promotions | Inventory views, discounts, promotions |
+| Manager | Reviews stock and expiry; defines discounts and promotions; approves purchase orders | Inventory views, discounts, promotions, purchase orders |
 | Cashier | Runs checkout | POS |
-| Inventory staff | Maintains categories, products, stock batches and suppliers | Inventory, Suppliers |
+| Inventory staff | Maintains categories, products, stock batches and suppliers; raises purchase orders and receives the goods | Inventory, Suppliers, purchase orders |
 
 A user can hold more than one role. Access rules are in FR-AUTH-5.
 
@@ -273,6 +274,11 @@ Each requirement has an ID, a statement and acceptance criteria (AC). The Jira c
 | FR-PUR-1 | Inventory staff add and edit suppliers. | SCRUM-35 |
 | FR-PUR-2 | Suppliers can be listed and searched. | SCRUM-35 |
 | FR-PUR-3 | A supplier no longer used can be deactivated, and is kept for its history. | SCRUM-35 |
+| FR-PUR-4 | Inventory staff raise a purchase order as a draft. | SCRUM-36 |
+| FR-PUR-5 | A manager submits (approves) a draft, or cancels a draft or submitted order. | SCRUM-36 |
+| FR-PUR-6 | Inventory staff receive goods against a submitted order, in one delivery or several. Each received line becomes a stock batch. | SCRUM-36 |
+| FR-PUR-7 | A manager closes an order once nothing more will arrive. | SCRUM-36 |
+| FR-PUR-8 | Purchase orders can be listed by status. | SCRUM-36 |
 
 **Supplier fields**
 
@@ -297,6 +303,47 @@ Each requirement has an ID, a statement and acceptance criteria (AC). The Jira c
 - **FR-PUR-3**
   - Suppliers are not deleted. An inactive supplier stays in the list, marked as inactive, and can be made active again.
   - Purchase orders (SCRUM-36) can only be raised against active suppliers.
+
+**Purchase order states**
+
+
+| Status | Submit | Receive | Cancel | Close |
+| --- | --- | --- | --- | --- |
+| Draft | Submitted | no | Cancelled | no |
+| Submitted | no | Partially received or Received | Cancelled | no |
+| Partially received | no | Partially received or Received | no | Closed |
+| Received | no | no | no | Closed |
+| Closed | no | no | no | no |
+| Cancelled | no | no | no | no |
+
+**Purchase order lines**
+
+| Field | Rule |
+| --- | --- |
+| Product | Required, an active product; each product at most once per order |
+| Quantity | Required, more than 0; a whole number for products sold by piece, at most 3 decimal places for products sold by kg |
+| Unit cost | Required, 0 or more, in taka with 2 decimal places |
+
+**Acceptance criteria**
+
+- **FR-PUR-4**
+  - An order has a supplier, an optional note of up to 255 characters, and at least one line. A new order is a Draft.
+  - An inactive supplier is refused with "Choose an active supplier". An inactive product is refused with "<product> is not active".
+  - Every rule in the purchase order lines table is checked; a product listed twice is refused.
+  - The order total is the sum of quantity × unit cost over its lines.
+- **FR-PUR-5**
+  - Only the actions marked in the states table are allowed. Any other action is refused with "A <status> purchase order cannot be <action>", for example "A received purchase order cannot be cancelled", and the order is unchanged.
+- **FR-PUR-6**
+  - For each line the person enters the quantity that arrived (blank or 0 for none), a batch number, and an expiry date if the goods expire.
+  - A quantity more than what is still outstanding on the line is refused, and nothing from that delivery is saved.
+  - Each received line adds a stock batch for its product, at the line's unit cost, so the stock and the stock alerts update at once (FR-INV-6, FR-INV-8).
+  - When every line is fully received the order becomes Received; otherwise it becomes Partially received.
+  - The delivery, the order and the new batches are saved in one transaction. Two people receiving the same order at the same time cannot together receive more than was ordered.
+- **FR-PUR-7**
+  - A Received order can be closed. A Partially received order can also be closed when the supplier will not send the rest; the outstanding quantities are then never received.
+- **FR-PUR-8**
+  - The list shows each order's number, supplier, status, date and total, newest first, filtered by status if one is chosen. It reads from the replica.
+  - One order's page reads from the primary, so it always shows the latest status before the next action.
 
 ## 4. Non-functional requirements
 
@@ -329,6 +376,7 @@ Each requirement has an ID, a statement and acceptance criteria (AC). The Jira c
 | SCRUM-32 Invoice | FR-POS-13 |
 | SCRUM-34 Stock alerts | FR-INV-8, 9 |
 | SCRUM-35 Suppliers | FR-PUR-1 to 3 |
+| SCRUM-36 Purchase orders | FR-PUR-4 to 8 |
 | none yet | FR-POS-6 |
 
 ## 6. Open issues
