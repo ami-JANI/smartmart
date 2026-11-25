@@ -220,3 +220,18 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `ce5780d` feat(ui): link the dashboard for every role (ShahariarEmon112)
 - `16d70ce` feat(ui): make the dashboard fill every row at any width (ShahariarEmon112)
 - `4f1bb3f` docs(repo): record the per-role dashboard and the demo login (ShahariarEmon112)
+
+### 2026-11-25, pushed by ami-JANI
+
+- `41cb788` docs(srs): add purchase order requirements (ami-JANI), SCRUM-36
+- `1dd0554` feat(db): add purchase order tables (ami-JANI), SCRUM-36
+- `dc5958d` feat(purchasing): add purchase orders with the State pattern (ami-JANI), SCRUM-36
+- `16ac27b` feat(purchasing): add the purchase order service (ami-JANI), SCRUM-36
+- `a75b1dd` feat(purchasing): receive purchase orders into stock (ami-JANI), SCRUM-36
+- `d3cbb19` docs(purchasing): add basis paths for purchase order receiving (ami-JANI), SCRUM-36
+- `56fa904` docs(uml): add purchase orders to the class diagram and ERD (ami-JANI), SCRUM-36
+- `d6c6601` docs(purchasing): record the purchase order decisions (ami-JANI), SCRUM-36, SCRUM-54
+- `1521486` docs(repo): note purchase orders in context.md (ami-JANI), SCRUM-36, SCRUM-54
+- `e4278a6` feat(purchasing): add the purchase order pages (ShahariarEmon112), SCRUM-54
+- `3afed55` feat(ui): add purchase orders to the menu and home page (ShahariarEmon112), SCRUM-54
+- `9241517` docs(repo): describe the purchase order pages (ShahariarEmon112), SCRUM-54
