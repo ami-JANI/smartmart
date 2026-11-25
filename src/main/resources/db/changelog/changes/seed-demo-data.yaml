@@ -4,7 +4,7 @@
 #
 # Runs only when the "demo" Liquibase context is on (LIQUIBASE_CONTEXTS=demo in
 # .env). The tests and CI leave it off. Expiry dates are relative to the day the
-# data is loaded. Demo logins: manager, cashier and stock, all with the password
+# data is loaded. Demo logins: manager, cashier, stock and demo (every role), all with the password
 # "smartmart-demo" (README, "Demo data"). Never turn this on for a real shop.
 databaseChangeLog:
   - changeSet:
@@ -95,3 +95,19 @@ databaseChangeLog:
               INSERT INTO suppliers (name, contact_person, phone, email, address, active, created_at, updated_at) VALUES
                 ('Khulna Rice Traders', 'Selim Reza', '+880 1711-200300', 'orders@khulnarice.example', 'Boro Bazar, Khulna', true, now(), now()),
                 ('Fresh Dairy Ltd',     'Ayesha Khan', '+880 1819-445566', NULL, 'Sonadanga, Khulna', true, now(), now());
+
+  # One login with every role, so the whole team can click through every page
+  # without logging out. Same demo password as the others.
+  - changeSet:
+      id: seed-demo-all-roles
+      author: smartmart
+      context: demo
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              INSERT INTO users (username, full_name, password_hash, active, created_at, updated_at) VALUES
+                ('demo', 'Demo (every role)', '$2a$12$5VGMFG5Dy.V28qqRvsHB/eEjHhywDpgmBuLv2D.2VIhAYgYUwuYAi', true, now(), now());
+              INSERT INTO user_roles (user_id, role_id)
+                SELECT u.id, r.id FROM users u CROSS JOIN roles r WHERE u.username = 'demo';
