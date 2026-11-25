@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!--/*
+  Receive a delivery against a purchase order (SCRUM-54, FR-PUR-6). Inventory staff.
+
+  Model attributes
+    order         PurchaseOrderDetail (id, supplierName, status, lines)
+    orderLines    map of lineId to its PurchaseOrderLineView, for names and outstanding quantities
+    deliveryForm  lines (lineId, quantity, batchNumber, expiryDate), one per line still outstanding,
+                  bound with BindingResult
+    activeNav     "purchase-orders"
+  Request
+    POST /purchase-orders/{id}/receive
+  Lines left blank or 0 received nothing. Each received line becomes a stock batch at the line's unit cost.
+  A refusal (too much, a missing batch number) saves nothing and shows above the table.
+*/-->
+<html lang="en" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Receive delivery - SmartMart</title>
+</head>
+<body>
+<main id="main-content" class="container" th:with="o=${order}">
+    <div class="page-header">
+        <h1 th:text="'Receive delivery: ' + ${'PO-%06d'.formatted(o.id)}">Receive delivery: PO-000001</h1>
+        <a class="btn btn-secondary" th:href="@{/purchase-orders/{id}(id=${o.id})}" href="#">Cancel</a>
+    </div>
+    <p class="muted" th:text="${o.supplierName} + ' · ' + ${o.status.label}">Khulna Rice Traders · Submitted</p>
+
+    <form th:action="@{/purchase-orders/{id}/receive(id=${o.id})}" th:object="${deliveryForm}" method="post"
+          class="form card" novalidate>
+        <p class="alert alert-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+            <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</span>
+        </p>
+
+        <div class="table-wrap">
+            <table class="table table-stack po-lines">
+                <caption>Enter what arrived. Leave a line blank if none of it came.</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col" class="num">Outstanding</th>
+                    <th scope="col">Received now</th>
+                    <th scope="col">Batch number</th>
+                    <th scope="col">Expiry date</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="line, i : *{lines}" th:with="v=${orderLines[line.lineId]}">
+                    <td data-label="Product">
+                        <input type="hidden" th:field="*{lines[__${i.index}__].lineId}">
+                        <strong th:text="${v.productName}">Miniket rice</strong>
+                    </td>
+                    <td data-label="Outstanding" class="num" th:text="${v.outstanding.stripTrailingZeros().toPlainString()}">50</td>
+                    <td data-label="Received now">
+                        <input type="text" inputmode="decimal" th:field="*{lines[__${i.index}__].quantity}" th:attr="aria-label='Received now, ' + ${v.productName}">
+                        <p class="field-error" th:if="${#fields.hasErrors('lines[__${i.index}__].quantity')}" th:errors="*{lines[__${i.index}__].quantity}">Error</p>
+                    </td>
+                    <td data-label="Batch number">
+                        <input type="text" maxlength="50" autocomplete="off" th:field="*{lines[__${i.index}__].batchNumber}" th:attr="aria-label='Batch number, ' + ${v.productName}">
+                    </td>
+                    <td data-label="Expiry date">
+                        <input type="date" th:field="*{lines[__${i.index}__].expiryDate}" th:attr="aria-label='Expiry date, ' + ${v.productName}">
+                        <p class="field-error" th:if="${#fields.hasErrors('lines[__${i.index}__].expiryDate')}" th:errors="*{lines[__${i.index}__].expiryDate}">Error</p>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(deliveryForm.lines)}">
+                    <td colspan="5" class="table-empty">Nothing is outstanding on this order.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="hint">Leave the expiry date empty for goods that do not expire.</p>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Receive into stock</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

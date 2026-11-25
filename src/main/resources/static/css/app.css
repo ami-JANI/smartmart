@@ -63,6 +63,7 @@
 [data-section="alerts"]     { --accent: var(--alerts);     --accent-soft: var(--alerts-soft); }
 [data-section="categories"] { --accent: var(--categories); --accent-soft: var(--categories-soft); }
 [data-section="suppliers"]  { --accent: var(--suppliers);  --accent-soft: var(--suppliers-soft); }
+[data-section="purchase-orders"]  { --accent: var(--suppliers);  --accent-soft: var(--suppliers-soft); }
 [data-section="users"]      { --accent: var(--users);      --accent-soft: var(--users-soft); }
 [data-section="dashboard"]  { --accent: var(--dashboard);  --accent-soft: var(--dashboard-soft); }
 [data-section="reports"]    { --accent: var(--dashboard);  --accent-soft: var(--dashboard-soft); }
@@ -605,6 +606,18 @@ main > h1::before, .page-header h1::before {
 .report-grid h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
 .report-generated { margin: 0 0 1rem; }
 .table tfoot th, .table tfoot td { font-weight: 700; border-top: 2px solid var(--color-border); }
+
+/* ---------- Purchase orders ---------- */
+.po-lines td { vertical-align: top; }
+.po-lines select, .po-lines input { width: 100%; min-width: 0; min-height: var(--control-height); padding: .5rem .75rem;
+    font: inherit; color: inherit; background: #fff; border: 1px solid var(--color-input-border); border-radius: var(--radius); }
+.po-lines .field-error { font-size: .85rem; }
+.po-meta { display: grid; gap: .5rem 1.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); margin: 0 0 1.25rem; }
+.po-meta div { min-width: 0; }
+.po-meta dt { color: var(--color-muted); font-size: .85rem; font-weight: 600; }
+.po-meta dd { margin: .15rem 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.po-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.25rem 0 0; }
+.po-actions form { margin: 0; }
 
 /* ---------- Message pages: 401, 403, 404, 429, 5xx (SCRUM-39) ---------- */
 
