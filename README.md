@@ -106,7 +106,9 @@ To see every part of the app working straight away, `.env.example` turns on a sm
 | `stock` | Inventory staff | Products, categories, suppliers, stock alerts |
 | `manager` | Manager | Dashboard: sales this month against last month, a 30-day chart, best sellers, top members, sales drops and live stock; a printable daily sales report; stock and alerts, read only |
 
-All three use the password `smartmart-demo`. The administrator is still `ADMIN_USERNAME`.
+| `demo` | Every role | Every page in one login, for trying the whole app without logging out |
+
+All four use the password `smartmart-demo`. The administrator is still `ADMIN_USERNAME`. Every role has a Dashboard showing the parts its work covers.
 
 The demo also has six members (phones `01711000101` to `01711000106`) and about two months of past sales, so the dashboard has something to show.
 

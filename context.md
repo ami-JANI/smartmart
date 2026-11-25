@@ -108,7 +108,7 @@ Snapshot as of **17 Nov 2026** (Sprint 3). For anything newer, read the [Change 
 | Inventory | Category tree, products with unique barcodes, stock batches with expiry, first-expiry-first-out deduction, low-stock and near-expiry alerts (`stock_alerts` table, 7-day default) |
 | Point of sale | Barcode and weighed-item cart with undo; the cashier picks one percentage or flat discount (seeded through Liquibase); cash checkout through `CheckoutFacade` saves the sale, its lines and payment and deducts stock in one transaction. The invoice page (`/pos/invoices/{saleId}`, SCRUM-32) shows the sale straight after payment. Members are registered by phone (`/pos/members`, `customers` table) and can be added to a sale, which records `sales.customer_id`. No buy-X-get-Y promotions. |
 | Purchasing | Supplier management. Purchase orders, receiving and returns not built. |
-| Reporting | Manager dashboard (`/dashboard`): today and month-to-date sales against the same days last month, a 30-day chart, best sellers, top members, products selling less than last month, and live stock for every product. Daily sales report (`/reports/daily`, SCRUM-55): totals and products sold on a chosen day, print-friendly. Both read the replica. |
+| Reporting | Dashboard (`/dashboard`) for every role, showing only what each role covers (cashier: today and members; stock: inventory; admin: accounts; manager: all). For managers: today and month-to-date sales against the same days last month, a 30-day chart, best sellers, top members, products selling less than last month, and live stock for every product. Daily sales report (`/reports/daily`, SCRUM-55): totals and products sold on a chosen day, print-friendly. Both read the replica. |
 
 Jira on 17 Nov 2026: SCRUM-30 and 31 (Jani) are In Review; SCRUM-32 (invoice page, Prottoy) is To Do; SCRUM-28, 29 and 33 are Done.
 
@@ -132,7 +132,7 @@ Setup steps are in the [README](README.md#getting-started). Things that trip peo
 - On Jani's Windows machine an Oracle listener holds port 8080. Run the app with `--server.port=8090`, or map `"8090:8080"` in `compose.yaml` locally without committing it.
 - Without Docker (for example in a cloud sandbox), one local PostgreSQL 16 can serve both URLs. Everything passes except `DataSourceRoutingTests.readOnlyTransactionRunsOnReplica`, which needs a real replica.
 - `.env` holds the database passwords and the first admin login. Copy it from `.env.example`; never commit it.
-- **Nothing to see after logging in?** A fresh database has only the administrator, who may open only the Users page. `LIQUIBASE_CONTEXTS=demo` (in `.env.example`) loads a sample shop and logins `cashier`, `stock` and `manager` (password `smartmart-demo`); see the README section "Demo data". After login every user reaches a home page with a card for each part their roles may open.
+- **Nothing to see after logging in?** A fresh database has only the administrator, who may open only the Users page. `LIQUIBASE_CONTEXTS=demo` (in `.env.example`) loads a sample shop and logins `cashier`, `stock`, `manager` and `demo` with every role (password `smartmart-demo`); see the README section "Demo data". After login every user reaches a home page with a card for each part their roles may open.
 - CI (`.github/workflows/build.yml`) runs `./mvnw verify` with both databases on every push to `main`. `commit-messages.yml` checks every pushed commit message.
 
 ## Change log
