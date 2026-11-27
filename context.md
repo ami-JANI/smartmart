@@ -250,3 +250,7 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 ### 2026-11-27, pushed by Shahriar1290
 
 - `73160df` feat(auth): grant admin full endpoint access and manager privileges (Shahriar1290), SCRUM-63
+
+### 2026-11-27, pushed by Shahriar1290
+
+- `f4402a8` feat(ui): display all navigation items and manager controls to admin (Shahriar1290), SCRUM-64
