@@ -22,6 +22,11 @@ smartmart:
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
+  # Monitoring (SCRUM-59 to SCRUM-62). Prometheus logs in to /actuator/prometheus
+  # with HTTP Basic as "prometheus" and this password; blank turns scraping off.
+  monitoring:
+    metrics-password: ${METRICS_PASSWORD:}
+    grafana-url: ${GRAFANA_URL:http://localhost:3000}
   store:
     low-stock-default: 10
     near-expiry-days-default: 7
@@ -37,3 +42,40 @@ smartmart:
       jdbc-url: ${DB_REPLICA_URL}
       username: ${DB_USER}
       password: ${DB_PASSWORD}
+
+# Actuator (SCRUM-59, SCRUM-60). /actuator/health and its liveness and
+# readiness groups are public and show only UP or DOWN; administrators also see
+# the details. Metrics are for administrators, and the Prometheus endpoint for
+# the Prometheus scraper only (SecurityConfig).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      roles: ADMIN
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState, primaryDatabase, replicaDatabase
+  health:
+    # Replaced by primaryDatabase and replicaDatabase (DatabaseHealthConfig).
+    db:
+      enabled: false
+  info:
+    env:
+      enabled: true
+  metrics:
+    tags:
+      application: smartmart
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+info:
+  app:
+    name: SmartMart
+    description: Super shop management system for one branch

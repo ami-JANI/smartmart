@@ -8,6 +8,8 @@
     username        the logged-in user
     roles           role names; decide which cards show
     openAlertCount  open stock alerts, for INVENTORY_STAFF and MANAGER
+    systemHealth    for ADMIN only: name and up (true or false) of the application and each database
+    grafanaUrl      where the Monitoring links point
     activeNav       "home"
   Request
     GET /
@@ -113,6 +115,23 @@
             <h2>Users</h2>
             <p>Create accounts, give them roles and deactivate users who leave.</p>
             <a class="btn btn-secondary" th:href="@{/users}" href="/users">Manage users</a>
+        </li>
+
+        <li class="home-card" data-section="monitoring" th:if="${admin and systemHealth != null}">
+            <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('pulse')}"></svg></span>
+            <h2>System health</h2>
+            <ul class="health-list">
+                <li th:each="check : ${systemHealth}">
+                    <span th:text="${check.name}">Primary database</span>
+                    <span class="badge badge-ok" th:if="${check.up}">Up</span>
+                    <span class="badge badge-bad" th:unless="${check.up}">Down</span>
+                </li>
+            </ul>
+            <div class="home-actions">
+                <a class="btn btn-secondary" th:href="${grafanaUrl}" href="http://localhost:3000"
+                   target="_blank" rel="noopener noreferrer">Open Grafana<span class="visually-hidden"> (new tab)</span></a>
+                <a class="btn btn-secondary" th:href="@{/actuator/health}" href="/actuator/health">Health details</a>
+            </div>
         </li>
     </ul>
 </main>

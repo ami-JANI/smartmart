@@ -66,6 +66,7 @@
 [data-section="purchase-orders"]  { --accent: var(--suppliers);  --accent-soft: var(--suppliers-soft); }
 [data-section="users"]      { --accent: var(--users);      --accent-soft: var(--users-soft); }
 [data-section="dashboard"]  { --accent: var(--dashboard);  --accent-soft: var(--dashboard-soft); }
+[data-section="monitoring"] { --accent: var(--dashboard);  --accent-soft: var(--dashboard-soft); }
 [data-section="reports"]    { --accent: var(--dashboard);  --accent-soft: var(--dashboard-soft); }
 [data-section="members"]    { --accent: var(--users);      --accent-soft: var(--users-soft); }
 
@@ -606,6 +607,13 @@ main > h1::before, .page-header h1::before {
 .report-grid h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
 .report-generated { margin: 0 0 1rem; }
 .table tfoot th, .table tfoot td { font-weight: 700; border-top: 2px solid var(--color-border); }
+
+/* ---------- System health card (administrators) ---------- */
+.health-list { list-style: none; margin: 0 0 1rem; padding: 0; }
+.health-list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .45rem 0; border-bottom: 1px solid var(--color-border); }
+.health-list li:last-child { border-bottom: 0; }
+.home-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: auto; }
+.home-actions .btn { margin-top: 0; }
 
 /* ---------- Purchase orders ---------- */
 .po-lines td { vertical-align: top; }

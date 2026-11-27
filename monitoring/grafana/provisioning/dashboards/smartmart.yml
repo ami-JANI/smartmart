@@ -1,0 +1,13 @@
+# Loads every dashboard JSON in /var/lib/grafana/dashboards into the
+# "SmartMart" folder when Grafana starts (SCRUM-61). Change the JSON files in
+# monitoring/grafana/dashboards, not in the Grafana UI.
+apiVersion: 1
+
+providers:
+  - name: smartmart
+    folder: SmartMart
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

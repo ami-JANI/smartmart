@@ -2,6 +2,21 @@
 
 Design decisions about the SmartMart system, newest first. Each entry gives the date, the decision, and why (GUIDELINES.md section 10).
 
+## 2026-11-27: Monitoring with Actuator, Prometheus and Grafana
+
+**Decision.**
+
+- Spring Boot Actuator exposes health, info, metrics and the Prometheus format (SCRUM-59, SCRUM-60). `/actuator/health` and its liveness and readiness groups are public but show only UP or DOWN; administrators also see the details. `/actuator/metrics` is for administrators.
+- The default `db` health check is replaced by `primaryDatabase` and `replicaDatabase`, which ask each server directly and report whether it is in recovery and, on the replica, how many seconds it lags. Readiness needs both, because reads go to the replica.
+- `/actuator/prometheus` has its own security chain with HTTP Basic for one scraper account, `prometheus`, whose password is `METRICS_PASSWORD`. Shop figures such as revenue stay private, and Prometheus does not need a user account. Without the password, the endpoint is closed.
+- Business metrics: `smartmart.sales` (completed sales), `smartmart.sales.revenue` (taka, VAT included), `smartmart.checkout.duration` (tagged completed or refused) and the gauge `smartmart.stock.alerts.open`. The counters start from 0 on every restart; the dashboards use `increase()`, which handles that.
+- Prometheus and Grafana run in Compose, with pinned image versions. Grafana's data source and both dashboards (`monitoring/grafana`) are provisioned from files, so they are the same on every machine and are changed in Git, not in the Grafana UI.
+- Administrators get a Monitoring link to Grafana and a System health card (SCRUM-62). The link's address is `GRAFANA_URL`.
+
+**Why.** The team planned monitoring as epic SCRUM-58. Emon built SCRUM-59 and SCRUM-60 together with his SCRUM-61 and SCRUM-62, so the whole chain could be tested end to end.
+
+**Alternatives considered.** A separate management port for Actuator: rejected because administrators could then not open the health details with their normal login. Leaving `/actuator/prometheus` public: rejected because it shows revenue.
+
 ## 2026-11-25: A dashboard for every role, and a demo login with every role
 
 **Decision.**

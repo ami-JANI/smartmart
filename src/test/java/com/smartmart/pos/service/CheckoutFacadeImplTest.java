@@ -28,6 +28,8 @@ import com.smartmart.pos.domain.Sale;
 import com.smartmart.pos.domain.SaleLine;
 import com.smartmart.pos.repository.SaleRepository;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 /**
  * Basis path tests for checkout (docs/testing/basis-paths.md section 3).
  * The transaction is replaced by a direct call; the database tests in
@@ -40,8 +42,9 @@ class CheckoutFacadeImplTest {
     private final CartService carts = mock(CartService.class);
     private final StockBatchService stock = mock(StockBatchService.class);
     private final SaleRepository sales = mock(SaleRepository.class);
+    private final SimpleMeterRegistry meters = new SimpleMeterRegistry();
     private final CheckoutFacadeImpl checkout = new CheckoutFacadeImpl(carts, new CashPayment(), stock, sales,
-            TransactionOperations.withoutTransaction(), Clock.fixed(NOW, ZoneOffset.UTC));
+            TransactionOperations.withoutTransaction(), Clock.fixed(NOW, ZoneOffset.UTC), meters);
 
     private static CartLineView line(long productId, String price, String quantity, String total) {
         return new CartLineView(productId, "Item " + productId, "100" + productId, "PIECE",
@@ -140,5 +143,28 @@ class CheckoutFacadeImplTest {
                 .isInstanceOf(InsufficientStockException.class).hasMessage("Not enough stock for Item 2");
         verify(sales, never()).save(any());
         verify(carts, never()).clear();
+    }
+
+    @Test
+    void aCompletedSaleIsCountedWithItsValueAndTiming() {
+        cart(List.of(line(1, "500.00", "1", "500.00")), 7L, "500.00", "50.00", "450.00");
+        saveGivesId(44);
+
+        checkout.completeSale(5L, new PaymentDetails(new BigDecimal("500")));
+
+        assertThat(meters.get("smartmart.sales").counter().count()).isEqualTo(1);
+        assertThat(meters.get("smartmart.sales.revenue").counter().count()).isEqualTo(450.0);
+        assertThat(meters.get("smartmart.checkout.duration").tag("outcome", "completed").timer().count()).isEqualTo(1);
+    }
+
+    @Test
+    void aRefusedSaleIsTimedButNotCounted() {
+        cart(List.of(), null, "0.00", "0.00", "0.00");
+
+        assertThatThrownBy(() -> checkout.completeSale(5L, new PaymentDetails(BigDecimal.TEN)))
+                .isInstanceOf(CartRuleException.class);
+
+        assertThat(meters.get("smartmart.sales").counter().count()).isZero();
+        assertThat(meters.get("smartmart.checkout.duration").tag("outcome", "refused").timer().count()).isEqualTo(1);
     }
 }

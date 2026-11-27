@@ -133,6 +133,7 @@ Setup steps are in the [README](README.md#getting-started). Things that trip peo
 - Without Docker (for example in a cloud sandbox), one local PostgreSQL 16 can serve both URLs. Everything passes except `DataSourceRoutingTests.readOnlyTransactionRunsOnReplica`, which needs a real replica.
 - `.env` holds the database passwords and the first admin login. Copy it from `.env.example`; never commit it.
 - **Nothing to see after logging in?** A fresh database has only the administrator, who may open only the Users page. `LIQUIBASE_CONTEXTS=demo` (in `.env.example`) loads a sample shop and logins `cashier`, `stock`, `manager` and `demo` with every role (password `smartmart-demo`); see the README section "Demo data". After login every user reaches a home page with a card for each part their roles may open.
+- Monitoring (SCRUM-59 to SCRUM-62): `/actuator/health` is public; Prometheus (port 9090) and Grafana (port 3000) run in Compose. They need `METRICS_PASSWORD` and `GRAFANA_ADMIN_PASSWORD` in `.env` (README, "Monitoring").
 - CI (`.github/workflows/build.yml`) runs `./mvnw verify` with both databases on every push to `main`. `commit-messages.yml` checks every pushed commit message.
 
 ## Change log
@@ -235,3 +236,13 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `e4278a6` feat(purchasing): add the purchase order pages (ShahariarEmon112), SCRUM-54
 - `3afed55` feat(ui): add purchase orders to the menu and home page (ShahariarEmon112), SCRUM-54
 - `9241517` docs(repo): describe the purchase order pages (ShahariarEmon112), SCRUM-54
+
+### 2026-11-27, pushed by ShahariarEmon112
+
+- `d1ca3e8` build(deps): add actuator and the prometheus registry (ShahariarEmon112), SCRUM-59, SCRUM-60
+- `372b4f3` feat(api): add actuator health checks and secure its endpoints (ShahariarEmon112), SCRUM-59, SCRUM-60
+- `89303d5` feat(pos): count sales, revenue and checkout time (ShahariarEmon112), SCRUM-60
+- `1d9424c` feat(inventory): publish the number of open stock alerts (ShahariarEmon112), SCRUM-60
+- `dc7791a` build: add prometheus and grafana with provisioned dashboards (ShahariarEmon112), SCRUM-60, SCRUM-61
+- `c199cb2` feat(ui): show admins system health and a monitoring link (ShahariarEmon112), SCRUM-62
+- `377e390` docs(repo): document monitoring and its decisions (ShahariarEmon112), SCRUM-59, SCRUM-60, SCRUM-61, SCRUM-62
