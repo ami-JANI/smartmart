@@ -1,0 +1,29 @@
+# Prometheus scrape configuration (SCRUM-60). compose.yaml starts Prometheus
+# with this file; it reads SmartMart's /actuator/prometheus every 15 seconds,
+# logging in as "prometheus" with METRICS_PASSWORD from .env (the start command
+# writes it to /tmp/metrics-password).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: smartmart
+    metrics_path: /actuator/prometheus
+    basic_auth:
+      username: prometheus
+      password_file: /tmp/metrics-password
+    static_configs:
+      # The application inside Docker Compose.
+      - targets: ["app:8080"]
+        labels:
+          runs: compose
+      # The application started on the host with ./mvnw spring-boot:run, on
+      # the default port or on 8081 or 8090 when 8080 is taken (README).
+      # Ports with nothing running show as down on the Prometheus targets page.
+      - targets: ["host.docker.internal:8080", "host.docker.internal:8081", "host.docker.internal:8090"]
+        labels:
+          runs: host
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
