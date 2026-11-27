@@ -246,3 +246,7 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `dc7791a` build: add prometheus and grafana with provisioned dashboards (ShahariarEmon112), SCRUM-60, SCRUM-61
 - `c199cb2` feat(ui): show admins system health and a monitoring link (ShahariarEmon112), SCRUM-62
 - `377e390` docs(repo): document monitoring and its decisions (ShahariarEmon112), SCRUM-59, SCRUM-60, SCRUM-61, SCRUM-62
+
+### 2026-11-27, pushed by Shahriar1290
+
+- `73160df` feat(auth): grant admin full endpoint access and manager privileges (Shahriar1290), SCRUM-63
