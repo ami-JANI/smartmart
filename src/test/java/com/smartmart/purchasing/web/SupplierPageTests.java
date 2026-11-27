@@ -222,10 +222,15 @@ class SupplierPageTests {
 
     @Test
     void otherRolesAreRefused() throws Exception {
-        for (String role : new String[] {"ADMIN", "MANAGER", "CASHIER"}) {
+        for (String role : new String[] {"MANAGER", "CASHIER"}) {
             mvc.perform(get("/suppliers").with(user("someone").roles(role))).andExpect(status().isForbidden());
             mvc.perform(post("/suppliers").with(user("someone").roles(role)).with(csrf())).andExpect(status().isForbidden());
         }
+    }
+
+    @Test
+    void adminCanAccessSuppliers() throws Exception {
+        mvc.perform(get("/suppliers").with(user("admin").roles("ADMIN"))).andExpect(status().isOk());
     }
 
     @Test

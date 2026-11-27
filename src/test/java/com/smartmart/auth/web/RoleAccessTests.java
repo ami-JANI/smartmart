@@ -46,11 +46,16 @@ class RoleAccessTests {
     }
 
     @Test
-    void adminManagesUsersOnly() throws Exception {
+    void adminHasFullAccessToAllPages() throws Exception {
         allowed(as("ADMIN", get("/users")));
-        refused(as("ADMIN", get("/pos")));
-        refused(as("ADMIN", get("/products")));
-        refused(as("ADMIN", get("/categories")));
+        allowed(as("ADMIN", get("/pos")));
+        allowed(as("ADMIN", get("/products")));
+        allowed(as("ADMIN", get("/categories")));
+        allowed(as("ADMIN", get("/suppliers")));
+        allowed(as("ADMIN", get("/purchase-orders")));
+        allowed(as("ADMIN", get("/alerts")));
+        allowed(as("ADMIN", get("/reports/daily")));
+        allowed(as("ADMIN", get("/dashboard")));
     }
 
     @Test
@@ -109,8 +114,8 @@ class RoleAccessTests {
     void staffRaiseAndReceiveOrdersWhileManagersApproveAndClose() throws Exception {
         allowed(as("INVENTORY_STAFF", get("/purchase-orders")));
         allowed(as("MANAGER", get("/purchase-orders")));
+        allowed(as("ADMIN", get("/purchase-orders")));
         refused(as("CASHIER", get("/purchase-orders")));
-        refused(as("ADMIN", get("/purchase-orders")));
         allowed(as("INVENTORY_STAFF", get("/purchase-orders/new")));
         refused(as("MANAGER", get("/purchase-orders/new")));
         refused(as("MANAGER", get("/purchase-orders/1/receive")));
@@ -119,10 +124,19 @@ class RoleAccessTests {
     }
 
     @Test
-    void onlyManagersOpenTheDailyReport() throws Exception {
+    void managersAndAdminsOpenTheDailyReport() throws Exception {
         allowed(as("MANAGER", get("/reports/daily")));
+        allowed(as("ADMIN", get("/reports/daily")));
         refused(as("CASHIER", get("/reports/daily")));
         refused(as("INVENTORY_STAFF", get("/reports/daily")));
-        refused(as("ADMIN", get("/reports/daily")));
+    }
+
+    @Test
+    void adminCanPerformManagerAndStaffPurchaseOrderActions() throws Exception {
+        allowed(as("ADMIN", get("/purchase-orders/new")));
+        allowed(as("ADMIN", get("/purchase-orders/1/receive")));
+        allowed(as("ADMIN", post("/purchase-orders/1/submit").with(csrf())));
+        allowed(as("ADMIN", post("/purchase-orders/1/cancel").with(csrf())));
+        allowed(as("ADMIN", post("/purchase-orders/1/close").with(csrf())));
     }
 }

@@ -42,6 +42,16 @@ class AlertModelAdviceTest {
     }
 
     @Test
+    void addsCountForAdminOnGetRequest() {
+        when(alertService.openAlertCount()).thenReturn(4L);
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/products");
+        Authentication auth = new TestingAuthenticationToken("admin", "pass",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        assertThat(advice.openAlertCount(request, auth)).isEqualTo(4L);
+    }
+
+    @Test
     void returnsNullOnPostRequest() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/products");
         Authentication auth = new TestingAuthenticationToken("staff", "pass",
