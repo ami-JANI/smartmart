@@ -5,6 +5,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -251,5 +252,17 @@ class ProductPageTests {
 
         mvc.perform(post("/categories/" + categoryId + "/delete").with(csrf()))
                 .andExpect(flash().attribute("error", "Cannot delete: this category has products or child categories"));
+    }
+
+    @Test
+    void adminSeesNewProductAndEditLinks() throws Exception {
+        Long id = createProduct("Admin Product", newBarcode(), "20");
+        mvc.perform(get("/products").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/products/new\"")));
+        mvc.perform(get("/products/" + id).with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Edit product")))
+                .andExpect(content().string(containsString("Add a batch")));
     }
 }

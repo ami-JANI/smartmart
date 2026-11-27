@@ -27,7 +27,7 @@
     <div class="page-header">
         <h1 th:text="${product.name}">Product name</h1>
         <a class="btn btn-secondary" th:href="@{/products/{id}/edit(id=${product.id})}" href="#"
-           th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">Edit product</a>
+           th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))}">Edit product</a>
     </div>
 
     <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
@@ -84,7 +84,7 @@
         </table>
     </div>
 
-    <section class="card form-narrow section-gap" th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">
+    <section class="card form-narrow section-gap" th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))}">
         <h2>Add a batch</h2>
         <form th:action="@{/products/{id}/batches(id=${product.id})}" th:object="${stockBatchForm}"
               action="#" method="post" class="form" novalidate>

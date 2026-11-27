@@ -239,5 +239,7 @@ class SupplierPageTests {
                 .andExpect(content().string(containsString("href=\"/suppliers\"")));
         mvc.perform(get("/products").with(user("someone").roles("MANAGER")))
                 .andExpect(content().string(not(containsString("href=\"/suppliers\""))));
+        mvc.perform(get("/products").with(user("admin").roles("ADMIN")))
+                .andExpect(content().string(containsString("href=\"/suppliers\"")));
     }
 }

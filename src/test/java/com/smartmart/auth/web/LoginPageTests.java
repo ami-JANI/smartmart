@@ -181,6 +181,21 @@ class LoginPageTests {
     }
 
     @Test
+    void adminSeesAllCardsOnHomeAndAllMenuLinks() throws Exception {
+        mvc.perform(get("/").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/users\"")))
+                .andExpect(content().string(containsString("href=\"/pos\"")))
+                .andExpect(content().string(containsString("href=\"/categories\"")))
+                .andExpect(content().string(containsString("href=\"/products\"")))
+                .andExpect(content().string(containsString("href=\"/suppliers\"")))
+                .andExpect(content().string(containsString("href=\"/purchase-orders\"")))
+                .andExpect(content().string(containsString("href=\"/alerts\"")))
+                .andExpect(content().string(containsString("href=\"/reports/daily\"")))
+                .andExpect(content().string(containsString("href=\"/dashboard\"")));
+    }
+
+    @Test
     void passwordsAreHashedWithBcryptStrength12() {
         assertThat(cashier.getPasswordHash()).startsWith("$2a$12$").doesNotContain(PASSWORD);
     }

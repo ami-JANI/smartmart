@@ -59,11 +59,11 @@ class DashboardPageTests {
     }
 
     @Test
-    void adminSeesUserAccountsOnly() throws Exception {
+    void adminSeesManagerSectionsAndUserAccounts() throws Exception {
         mvc.perform(get("/dashboard").with(user("test-admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("User accounts")))
-                .andExpect(content().string(not(containsString("Today's sales"))))
-                .andExpect(content().string(not(containsString("Inventory status"))));
+                .andExpect(content().string(containsString("Today's sales")))
+                .andExpect(content().string(containsString("Inventory status")));
     }
 }

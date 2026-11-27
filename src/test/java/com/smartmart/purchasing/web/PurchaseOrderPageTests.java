@@ -50,6 +50,7 @@ class PurchaseOrderPageTests {
 
     private static final RequestPostProcessor STAFF = user("test-stock").roles("INVENTORY_STAFF");
     private static final RequestPostProcessor MANAGER = user("test-manager").roles("MANAGER");
+    private static final RequestPostProcessor ADMIN = user("test-admin").roles("ADMIN");
 
     private final MockMvc mvc;
     private final PurchaseOrderService purchaseOrders;
@@ -212,5 +213,20 @@ class PurchaseOrderPageTests {
         mvc.perform(post(orderUrl() + "/close").with(MANAGER).with(csrf()))
                 .andExpect(redirectedUrl(orderUrl()))
                 .andExpect(flash().attribute("error", "A draft purchase order cannot be closed"));
+    }
+
+    @Test
+    void adminSeesSubmitAndCancelButtonsOnDraftOrder() throws Exception {
+        mvc.perform(get(orderUrl()).with(ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Submit (approve)")))
+                .andExpect(content().string(containsString("Cancel order")));
+    }
+
+    @Test
+    void adminSeesNewPurchaseOrderButtonOnList() throws Exception {
+        mvc.perform(get("/purchase-orders").with(ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/purchase-orders/new\"")));
     }
 }
