@@ -21,9 +21,9 @@
 </head>
 <body>
 <main id="main-content" class="container"
-      th:with="cashier=${roles != null and roles.contains('CASHIER')},
-               staff=${roles != null and roles.contains('INVENTORY_STAFF')},
-               manager=${roles != null and roles.contains('MANAGER')},
+      th:with="cashier=${roles != null and (roles.contains('CASHIER') or roles.contains('ADMIN'))},
+               staff=${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))},
+               manager=${roles != null and (roles.contains('MANAGER') or roles.contains('ADMIN'))},
                admin=${roles != null and roles.contains('ADMIN')},
                alerts=${openAlertCount != null ? openAlertCount : 0}">
     <section class="home-hero">
@@ -40,7 +40,8 @@
             <span class="home-icon"><svg th:replace="~{fragments/icons :: icon('cart')}"></svg></span>
             <h2>Point of sale</h2>
             <p>Scan items, apply a discount, take cash and show the invoice.</p>
-            <a class="btn btn-primary btn-large" th:href="@{/pos}" href="/pos" autofocus>Start a sale</a>
+            <a class="btn btn-primary btn-large" th:href="@{/pos}" href="/pos"
+               th:autofocus="${roles != null and roles.contains('CASHIER') and !roles.contains('ADMIN')}">Start a sale</a>
         </li>
 
         <li class="home-card" data-section="members" th:if="${cashier}">

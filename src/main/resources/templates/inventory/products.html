@@ -32,7 +32,7 @@
     <div class="page-header">
         <h1>Products</h1>
         <a class="btn btn-primary" th:href="@{/products/new}" href="/products/new"
-           th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">New product</a>
+           th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))}">New product</a>
     </div>
 
     <p class="alert alert-success" role="status" th:if="${message}" th:text="${message}">Saved.</p>
@@ -96,7 +96,7 @@
                 </td>
                 <td data-label="" class="actions">
                     <a class="btn btn-secondary btn-small" th:href="@{/products/{id}/edit(id=${p.id})}" href="#"
-                       th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">Edit<span class="visually-hidden"> <span th:text="${p.name}"></span></span></a>
+                       th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))}">Edit<span class="visually-hidden"> <span th:text="${p.name}"></span></span></a>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(page.content)}">

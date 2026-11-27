@@ -52,7 +52,7 @@
                     <a th:href="@{/dashboard}" href="/dashboard" th:attr="aria-current=${activeNav == 'dashboard'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('chart')}"></svg>Dashboard</a>
                 </li>
-                <li th:if="${roles != null and roles.contains('MANAGER')}">
+                <li th:if="${roles != null and (roles.contains('MANAGER') or roles.contains('ADMIN'))}">
                     <a th:href="@{/reports/daily}" href="/reports/daily" th:attr="aria-current=${activeNav == 'reports'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('report')}"></svg>Daily report</a>
                 </li>
@@ -65,33 +65,33 @@
                             th:replace="~{fragments/icons :: icon('pulse')}"></svg>Monitoring<span
                             class="visually-hidden"> (opens Grafana in a new tab)</span></a>
                 </li>
-                <li th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">
+                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))}">
                     <a th:href="@{/categories}" href="/categories" th:attr="aria-current=${activeNav == 'categories'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('tag')}"></svg>Categories</a>
                 </li>
-                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('MANAGER'))}">
+                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('MANAGER') or roles.contains('ADMIN'))}">
                     <a th:href="@{/products}" href="/products" th:attr="aria-current=${activeNav == 'products'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('box')}"></svg>Products</a>
                 </li>
-                <li th:if="${roles != null and roles.contains('INVENTORY_STAFF')}">
+                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))}">
                     <a th:href="@{/suppliers}" href="/suppliers" th:attr="aria-current=${activeNav == 'suppliers'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('truck')}"></svg>Suppliers</a>
                 </li>
-                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('MANAGER'))}">
+                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('MANAGER') or roles.contains('ADMIN'))}">
                     <a th:href="@{/purchase-orders}" href="/purchase-orders" th:attr="aria-current=${activeNav == 'purchase-orders'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('clipboard')}"></svg>Purchase orders</a>
                 </li>
-                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('MANAGER'))}">
+                <li th:if="${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('MANAGER') or roles.contains('ADMIN'))}">
                     <a th:href="@{/alerts}" href="/alerts" th:attr="aria-current=${activeNav == 'alerts'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('bell')}"></svg>Alerts<span
                             class="badge badge-warn nav-badge" th:if="${openAlertCount != null and openAlertCount > 0}"><span
                             th:text="${openAlertCount}">3</span><span class="visually-hidden"> open</span></span></a>
                 </li>
-                <li th:if="${roles != null and roles.contains('CASHIER')}">
+                <li th:if="${roles != null and (roles.contains('CASHIER') or roles.contains('ADMIN'))}">
                     <a th:href="@{/pos}" href="/pos" th:attr="aria-current=${activeNav == 'pos'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('cart')}"></svg>Point of sale</a>
                 </li>
-                <li th:if="${roles != null and roles.contains('CASHIER')}">
+                <li th:if="${roles != null and (roles.contains('CASHIER') or roles.contains('ADMIN'))}">
                     <a th:href="@{/pos/members}" href="/pos/members" th:attr="aria-current=${activeNav == 'members'} ? 'page'"><svg
                             th:replace="~{fragments/icons :: icon('id')}"></svg>Members</a>
                 </li>

@@ -20,8 +20,8 @@
 <body>
 <main id="main-content" class="container"
       th:with="o=${order}, s=${order.status.name()},
-               manager=${roles != null and roles.contains('MANAGER')},
-               staff=${roles != null and roles.contains('INVENTORY_STAFF')}">
+               manager=${roles != null and (roles.contains('MANAGER') or roles.contains('ADMIN'))},
+               staff=${roles != null and (roles.contains('INVENTORY_STAFF') or roles.contains('ADMIN'))}">
     <div class="page-header">
         <h1 th:text="'Purchase order ' + ${'PO-%06d'.formatted(o.id)}">Purchase order PO-000001</h1>
         <a class="btn btn-secondary" th:href="@{/purchase-orders}" href="/purchase-orders">&larr; All purchase orders</a>
