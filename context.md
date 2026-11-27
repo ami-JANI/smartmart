@@ -254,3 +254,7 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 ### 2026-11-27, pushed by Shahriar1290
 
 - `f4402a8` feat(ui): display all navigation items and manager controls to admin (Shahriar1290), SCRUM-64
+
+### 2026-11-27, pushed by Shahriar1290
+
+- `65b1028` docs(repo): rewrite README with full project documentation (Shahriar1290)
