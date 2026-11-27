@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -75,6 +77,14 @@ class SecurityConfig {
 
     /** Only the Prometheus scraper, with HTTP Basic and no session (SCRUM-60). */
     @Bean
+    RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.withDefaultRolePrefix()
+                .role(ADMIN).implies(MANAGER, INVENTORY_STAFF, CASHIER)
+                .build();
+    }
+
+    /** Only the Prometheus scraper, with HTTP Basic and no session (SCRUM-60). */
+    @Bean
     @Order(1)
     SecurityFilterChain metricsScrapeChain(HttpSecurity http, PasswordEncoder encoder,
             @Value("${smartmart.monitoring.metrics-password:}") String password) throws Exception {
@@ -102,21 +112,21 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/actuator/health/**", "/actuator/metrics/**").hasRole(ADMIN)
                         .requestMatchers("/").authenticated()
                         .requestMatchers("/users/**").hasRole(ADMIN)
-                        .requestMatchers("/pos/**").hasRole(CASHIER)
-                        .requestMatchers("/categories/**").hasRole(INVENTORY_STAFF)
-                        .requestMatchers(HttpMethod.GET, "/products/new", "/products/*/edit").hasRole(INVENTORY_STAFF)
-                        .requestMatchers(HttpMethod.GET, "/products", "/products/*").hasAnyRole(INVENTORY_STAFF, MANAGER)
-                        .requestMatchers("/products/**").hasRole(INVENTORY_STAFF)
-                        .requestMatchers("/suppliers/**").hasRole(INVENTORY_STAFF)
+                        .requestMatchers("/pos/**").hasAnyRole(CASHIER, ADMIN)
+                        .requestMatchers("/categories/**").hasAnyRole(INVENTORY_STAFF, ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/products/new", "/products/*/edit").hasAnyRole(INVENTORY_STAFF, ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/products", "/products/*").hasAnyRole(INVENTORY_STAFF, MANAGER, ADMIN)
+                        .requestMatchers("/products/**").hasAnyRole(INVENTORY_STAFF, ADMIN)
+                        .requestMatchers("/suppliers/**").hasAnyRole(INVENTORY_STAFF, ADMIN)
                         // Purchase orders (SCRUM-54): staff raise and receive, managers approve, cancel and close.
                         .requestMatchers(HttpMethod.POST, "/purchase-orders/*/submit", "/purchase-orders/*/cancel",
-                                "/purchase-orders/*/close").hasRole(MANAGER)
-                        .requestMatchers("/purchase-orders/new", "/purchase-orders/*/receive").hasRole(INVENTORY_STAFF)
-                        .requestMatchers(HttpMethod.POST, "/purchase-orders").hasRole(INVENTORY_STAFF)
-                        .requestMatchers(HttpMethod.GET, "/purchase-orders", "/purchase-orders/*").hasAnyRole(INVENTORY_STAFF, MANAGER)
-                        .requestMatchers("/alerts/**").hasAnyRole(INVENTORY_STAFF, MANAGER)
+                                "/purchase-orders/*/close").hasAnyRole(MANAGER, ADMIN)
+                        .requestMatchers("/purchase-orders/new", "/purchase-orders/*/receive").hasAnyRole(INVENTORY_STAFF, ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/purchase-orders").hasAnyRole(INVENTORY_STAFF, ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/purchase-orders", "/purchase-orders/*").hasAnyRole(INVENTORY_STAFF, MANAGER, ADMIN)
+                        .requestMatchers("/alerts/**").hasAnyRole(INVENTORY_STAFF, MANAGER, ADMIN)
                         .requestMatchers("/dashboard/**").hasAnyRole(ADMIN, MANAGER, CASHIER, INVENTORY_STAFF)
-                        .requestMatchers("/reports/**").hasRole(MANAGER)
+                        .requestMatchers("/reports/**").hasAnyRole(MANAGER, ADMIN)
                         .anyRequest().denyAll())
                 .addFilterBefore(new FreshRolesFilter(accounts), AnonymousAuthenticationFilter.class)
                 .addFilterBefore(new LoginLimitFilter(limiter), UsernamePasswordAuthenticationFilter.class)

@@ -28,7 +28,8 @@ class AlertModelAdvice {
         }
         boolean allowed = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_INVENTORY_STAFF")
-                        || a.getAuthority().equals("ROLE_MANAGER"));
+                        || a.getAuthority().equals("ROLE_MANAGER")
+                        || a.getAuthority().equals("ROLE_ADMIN"));
         return allowed ? alertService.openAlertCount() : null;
     }
 }
