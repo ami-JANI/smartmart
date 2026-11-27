@@ -236,3 +236,13 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 - `e4278a6` feat(purchasing): add the purchase order pages (ShahariarEmon112), SCRUM-54
 - `3afed55` feat(ui): add purchase orders to the menu and home page (ShahariarEmon112), SCRUM-54
 - `9241517` docs(repo): describe the purchase order pages (ShahariarEmon112), SCRUM-54
+
+### 2026-11-27, pushed by ShahariarEmon112
+
+- `d1ca3e8` build(deps): add actuator and the prometheus registry (ShahariarEmon112), SCRUM-59, SCRUM-60
+- `372b4f3` feat(api): add actuator health checks and secure its endpoints (ShahariarEmon112), SCRUM-59, SCRUM-60
+- `89303d5` feat(pos): count sales, revenue and checkout time (ShahariarEmon112), SCRUM-60
+- `1d9424c` feat(inventory): publish the number of open stock alerts (ShahariarEmon112), SCRUM-60
+- `dc7791a` build: add prometheus and grafana with provisioned dashboards (ShahariarEmon112), SCRUM-60, SCRUM-61
+- `c199cb2` feat(ui): show admins system health and a monitoring link (ShahariarEmon112), SCRUM-62
+- `377e390` docs(repo): document monitoring and its decisions (ShahariarEmon112), SCRUM-59, SCRUM-60, SCRUM-61, SCRUM-62
