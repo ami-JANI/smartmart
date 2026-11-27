@@ -133,6 +133,7 @@ Setup steps are in the [README](README.md#getting-started). Things that trip peo
 - Without Docker (for example in a cloud sandbox), one local PostgreSQL 16 can serve both URLs. Everything passes except `DataSourceRoutingTests.readOnlyTransactionRunsOnReplica`, which needs a real replica.
 - `.env` holds the database passwords and the first admin login. Copy it from `.env.example`; never commit it.
 - **Nothing to see after logging in?** A fresh database has only the administrator, who may open only the Users page. `LIQUIBASE_CONTEXTS=demo` (in `.env.example`) loads a sample shop and logins `cashier`, `stock`, `manager` and `demo` with every role (password `smartmart-demo`); see the README section "Demo data". After login every user reaches a home page with a card for each part their roles may open.
+- Monitoring (SCRUM-59 to SCRUM-62): `/actuator/health` is public; Prometheus (port 9090) and Grafana (port 3000) run in Compose. They need `METRICS_PASSWORD` and `GRAFANA_ADMIN_PASSWORD` in `.env` (README, "Monitoring").
 - CI (`.github/workflows/build.yml`) runs `./mvnw verify` with both databases on every push to `main`. `commit-messages.yml` checks every pushed commit message.
 
 ## Change log

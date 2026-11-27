@@ -133,6 +133,23 @@ If port 8080 is already in use (for example by an Oracle database service on Win
 
 For Docker Compose, change `"8080:8080"` under `app` in `compose.yaml` to, say, `"8090:8080"` on your machine only, and do not commit that change.
 
+### Monitoring
+
+SmartMart reports its health and metrics through Spring Boot Actuator. Prometheus collects them and Grafana shows them on two dashboards.
+
+| What | Where | Who |
+| --- | --- | --- |
+| Health, liveness, readiness | <http://localhost:8080/actuator/health> | Anyone (UP or DOWN only); administrators also see each database |
+| Metrics | <http://localhost:8080/actuator/metrics> | Administrators |
+| Prometheus | <http://localhost:9090> | Scrapes `/actuator/prometheus` with the `METRICS_PASSWORD` from `.env` |
+| Grafana | <http://localhost:3000> | Log in as `admin` with `GRAFANA_ADMIN_PASSWORD` from `.env` |
+
+`docker compose up -d --build` starts Prometheus and Grafana with the rest. If you run the application on the host instead, start only them with `docker compose up -d prometheus grafana`; Prometheus also looks for the application on host ports 8080, 8081 and 8090.
+
+Grafana opens on **SmartMart: sales and stock** (sales, revenue, checkout time, open stock alerts). **SmartMart: JVM and system** shows CPU, memory, garbage collection, HTTP traffic and database connections. Administrators see a System health card on the home page and a Monitoring link in the menu.
+
+Add `METRICS_PASSWORD`, `GRAFANA_ADMIN_PASSWORD` and `GRAFANA_URL` from `.env.example` to an older `.env`. Without `METRICS_PASSWORD`, Prometheus cannot read the metrics.
+
 ### Run the tests
 
 ```sh
