@@ -2,16 +2,21 @@ package com.smartmart.common.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.function.Supplier;
+
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import jakarta.persistence.EntityManager;
 import liquibase.integration.spring.SpringLiquibase;
 
 /**
@@ -25,26 +30,43 @@ class DataSourceRoutingTests {
 
     private final PlatformTransactionManager transactionManager;
     private final JdbcTemplate jdbc;
+    private final EntityManager entityManager;
     private final SpringLiquibase liquibase;
     private final DataSource primaryDataSource;
+    private final ApplicationContext context;
 
     @Autowired
     DataSourceRoutingTests(PlatformTransactionManager transactionManager, JdbcTemplate jdbc,
-                           SpringLiquibase liquibase, @Qualifier("primaryDataSource") DataSource primaryDataSource) {
+                           EntityManager entityManager, SpringLiquibase liquibase,
+                           @Qualifier("primaryDataSource") DataSource primaryDataSource,
+                           ApplicationContext context) {
         this.transactionManager = transactionManager;
         this.jdbc = jdbc;
+        this.entityManager = entityManager;
         this.liquibase = liquibase;
         this.primaryDataSource = primaryDataSource;
+        this.context = context;
     }
 
     @Test
     void readOnlyTransactionRunsOnReplica() {
-        assertThat(answeredByReplica(true)).isTrue();
+        assertThat(inTransaction(true, () -> jdbc.queryForObject(IS_REPLICA, Boolean.class))).isTrue();
     }
 
     @Test
     void readWriteTransactionRunsOnPrimary() {
-        assertThat(answeredByReplica(false)).isFalse();
+        assertThat(inTransaction(false, () -> jdbc.queryForObject(IS_REPLICA, Boolean.class))).isFalse();
+    }
+
+    @Test
+    void readWriteJpaTransactionAfterReadOnlyStillRunsOnPrimary() {
+        assertThat(inTransaction(true, () -> (Boolean) entityManager.createNativeQuery(IS_REPLICA).getSingleResult())).isTrue();
+        assertThat(inTransaction(false, () -> (Boolean) entityManager.createNativeQuery(IS_REPLICA).getSingleResult())).isFalse();
+    }
+
+    @Test
+    void openInViewIsDisabledSoConnectionsAreNotPinnedAcrossTransactions() {
+        assertThat(context.getBeansOfType(OpenEntityManagerInViewInterceptor.class)).isEmpty();
     }
 
     @Test
@@ -57,9 +79,9 @@ class DataSourceRoutingTests {
         assertThat(liquibase.getDataSource()).isSameAs(primaryDataSource);
     }
 
-    private Boolean answeredByReplica(boolean readOnly) {
+    private Boolean inTransaction(boolean readOnly, Supplier<Boolean> query) {
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
         transaction.setReadOnly(readOnly);
-        return transaction.execute(status -> jdbc.queryForObject(IS_REPLICA, Boolean.class));
+        return transaction.execute(status -> query.get());
     }
 }
