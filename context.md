@@ -258,3 +258,7 @@ Appended automatically by `.github/workflows/context-log.yml` after each push to
 ### 2026-11-27, pushed by Shahriar1290
 
 - `65b1028` docs(repo): rewrite README with full project documentation (Shahriar1290)
+
+### 2026-11-28, pushed by Shahriar1290
+
+- `65fc3a2` fix(db): disable open-in-view to prevent replica pinning (Shahriar1290), SCRUM-65
