@@ -11,7 +11,10 @@ spring:
     # "none" matches no context, so only the changesets without one run.
     contexts: ${LIQUIBASE_CONTEXTS:none}
   # Liquibase owns the schema; Hibernate only checks that the entities match.
+  # Disable OSIV so each @Transactional call acquires and routes its own connection
+  # (prevents read-only @ControllerAdvice queries from pinning a GET request to the replica).
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
 
